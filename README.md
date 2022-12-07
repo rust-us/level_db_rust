@@ -32,3 +32,23 @@ LevelDB for rust
 
 ## 编码和git规范
 [编码和git规范](doc/CodeStyle.md)
+
+## RoadMap
+1. 1.0.0 版本, 完成 util 相关的内容
+
+
+| 功能模块                          | 完成人          |
+|-------------------------------|--------------|
+| Arena (Memory Management)     | wangboo      |
+| Slice                         | wangboo      |
+| BloomFilter                   | colagy       |
+| Cache                         | colagy       |
+| Coding (Primitive Type SerDe) | colagy       |
+| Comparator                    | fengyang     |
+| Status                        | fengyang     |
+| Random                        | fengyang     |
+| CRC                           | lxd5866      |
+| Env                           | lxd5866      |
+| Hash                          | lxd5866      |
+| MutexLock                     | kazeseiriou  |
+| Histgram                      | kazeseiriou  |

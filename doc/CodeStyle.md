@@ -9,7 +9,7 @@
 8. cargo不允许引用第三方库
 
 # 2. 分支管理规范
-1. master作为主分支
-2. feat/xx 作为开发分支
-3. 其它人从主分支checkout分支
+1. master作为release分支, 该分支是受保护的,任何人没有权限提交
+2. dev作为开发分支, 新功能从该分支拉取代码并合并到该分支
+3. feat/1.0.0_util_xx 作为开发分支
 4. 开发分支提交到git, 然后发起 merge_request, merge 必须超过2个人同意
