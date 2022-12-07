@@ -7,6 +7,7 @@
 ## Snapshot / VersionSet - yuanyang, zhangtao, canghai
 ## WriteBatch
 ## TableCache
+
 # Table
 ## Block
 ## FilterBlock
@@ -15,6 +16,7 @@
 ## Table Build
 ## Recovery
 ## SStable - canghai
+
 # Util
 ## Arena (Memory Management) - wangboo
 ## BloomFilter - yuanyang
@@ -30,6 +32,7 @@
 ## Status - yuanyang
 ## Random - yuanyang
 ## Slice - wangboo
+
 # Traits
 ## public trait defined in leveldb include dir
 # 
