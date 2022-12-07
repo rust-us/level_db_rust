@@ -27,5 +27,8 @@ LevelDB for rust
 4.  新建 Pull Request
 
 
-#### 特技
+## TODO
+[TODO和分工](doc/TODOList.md)
 
+## 编码和git规范
+[编码和git规范](doc/CodeStyle.md)
