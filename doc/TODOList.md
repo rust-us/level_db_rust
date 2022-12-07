@@ -1,10 +1,10 @@
 ## DB
 1. Build / Compaction
 2. DB implements
-3. Log - WAL canghai
-4. Memtable - wangxu
-5. SkipList - wangxu
-6. Snapshot / VersionSet - yuanyang, zhangtao, canghai
+3. Log
+4. Memtable
+5. SkipList
+6. Snapshot / VersionSet
 7. WriteBatch
 8. TableCache
 
@@ -15,21 +15,22 @@
 4. Table Level Iterator (Empty / MergingIterator / TwoLevelIterator)
 5. Table Build
 6. Recovery
-7. SStable - canghai
+7. SStable
 # Util
-1. Arena (Memory Management) - wangboo
-2. BloomFilter - yuanyang
-3. Cache - wangxu
-4. Coding (Primitive Type SerDe) - wangxu
-5. Comparator - yuanyang
-6. CRC - canghai
-7. Env - canghai
-8. Hash - canghai
-9. Histgram - zhengcheng
-10. Logging - zhoujian
-11. MutexLock - zhengcheng
-12. Status - yuanyang
-13. Random - yuanyang
-14. Slice - wangboo
+1. Arena (Memory Management) 
+2. BloomFilter
+3. Cache
+4. Coding (Primitive Type SerDe)
+5. Comparator 
+6. CRC
+7. Env
+8. Hash
+9. Histgram
+10. Logging
+11. MutexLock
+12. Status
+13. Random
+14. Slice
 ## Traits
 1. public trait defined in leveldb include dir
+
