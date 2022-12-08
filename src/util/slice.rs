@@ -2,6 +2,7 @@ use std::alloc::{alloc, Layout};
 use std::borrow::Cow;
 use std::ops::Deref;
 use std::{ptr, slice};
+use std::cmp::Ordering;
 use std::ptr::{copy, NonNull};
 
 pub struct Slice {
@@ -119,6 +120,14 @@ impl PartialEq for Slice {
     fn eq(&self, _other: &Self) -> bool {
         todo!()
     }
+}
+
+impl PartialOrd for Slice {
+    /// 判断两个 slice 的大小关系
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+        todo!()
+    }
+
 }
 
 impl core::ops::Index<usize> for Slice {
