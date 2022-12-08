@@ -1,8 +1,8 @@
+use std::{ptr, slice};
 use std::alloc::{alloc, Layout};
 use std::borrow::Cow;
-use std::ops::Deref;
-use std::{ptr, slice};
 use std::cmp::Ordering;
+use std::ops::Deref;
 use std::ptr::{copy, NonNull};
 
 pub struct Slice {
@@ -117,17 +117,40 @@ impl Into<Slice> for &mut str {
 
 impl PartialEq for Slice {
     /// 判断两个 Slice 是否相同
-    fn eq(&self, _other: &Self) -> bool {
-        todo!()
+    fn eq(&self, other: &Self) -> bool {
+        return self.len == other.len && unsafe {
+            memcmp(
+                self.data.as_ptr() as *const i8,
+                other.data.as_ptr() as *const i8,
+                self.len,
+            ) == 0
+        };
     }
 }
 
 impl PartialOrd for Slice {
     /// 判断两个 slice 的大小关系
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        todo!()
+        match self.len.partial_cmp(&other.len) {
+            Some(Ordering::Equal) => {
+                let cmp = unsafe {
+                    memcmp(
+                        self.data.as_ptr() as *const i8,
+                        other.data.as_ptr() as *const i8,
+                        self.len,
+                    )
+                };
+                if cmp == 0 {
+                    Some(Ordering::Equal)
+                } else if cmp > 0 {
+                    Some(Ordering::Greater)
+                } else {
+                    Some(Ordering::Less)
+                }
+            }
+            op => op
+        }
     }
-
 }
 
 impl core::ops::Index<usize> for Slice {
@@ -143,6 +166,7 @@ impl core::ops::Index<usize> for Slice {
 impl Deref for Slice {
     type Target = [u8];
 
+    /// Slice 解引用到 &[u8]
     fn deref(&self) -> &Self::Target {
         unsafe {
             slice::from_raw_parts(self.data.as_ptr(), self.len)
