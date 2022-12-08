@@ -1,7 +1,6 @@
-use crate::util::Slice;
+use crate::util::slice::Slice;
 
 pub trait Iterator {
-
     fn valid(&self) -> bool;
 
     fn seek_to_first(&mut self);
@@ -19,6 +18,4 @@ pub trait Iterator {
     fn value(&self) -> &Slice;
 }
 
-trait AAA {
-
-}
+trait AAA {}

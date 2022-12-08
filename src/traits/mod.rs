@@ -1,4 +1,4 @@
-use crate::util::Slice;
+use crate::util::slice::Slice;
 
 mod iterator;
 mod comparator;
