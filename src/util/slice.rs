@@ -1,6 +1,7 @@
 use std::alloc::{alloc, Layout};
-use std::borrow::{Borrow, Cow};
-use std::ptr;
+use std::borrow::Cow;
+use std::ops::Deref;
+use std::{ptr, slice};
 use std::ptr::{copy, NonNull};
 
 pub struct Slice {
@@ -46,7 +47,7 @@ impl Slice {
         }
         let len = self.len - n;
         unsafe {
-            let data = alloc(Layout::array(len).unwrap());
+            let data = alloc(Layout::array::<u8>(len).unwrap());
             copy(self.data.as_ptr().offset(n as isize), data, len);
             Self {
                 data: NonNull::new_unchecked(data),
@@ -76,7 +77,7 @@ impl<'a> Slice {
         let str = unsafe {
             String::from_raw_parts(self.data.as_ptr(), self.len, self.len)
         };
-        Cow::Borrowed(&str)
+        Cow::Owned(str)
     }
 }
 
@@ -95,19 +96,19 @@ impl Into<Slice> for String {
         unsafe {
             Slice {
                 data: NonNull::new_unchecked(self.as_mut_ptr()),
-                len: str.len(),
+                len: self.len(),
             }
         }
     }
 }
 
-impl Into<Slice> for &str {
+impl Into<Slice> for &mut str {
     /// 通过 &str 构造一个 Slice
-    fn into(mut self) -> Slice {
+    fn into(self) -> Slice {
         unsafe {
             Slice {
                 data: NonNull::new_unchecked(self.as_mut_ptr()),
-                len: slice.len(),
+                len: self.len(),
             }
         }
     }
@@ -115,22 +116,27 @@ impl Into<Slice> for &str {
 
 impl PartialEq for Slice {
     /// 判断两个 Slice 是否相同
-    fn eq(&self, other: &Self) -> bool {
+    fn eq(&self, _other: &Self) -> bool {
         todo!()
     }
 }
 
-impl core::ops::Index<isize> for Slice {
+impl core::ops::Index<usize> for Slice {
     type Output = u8;
 
     /// 获取某个下标的数据
-    fn index(&self, index: isize) -> &Self::Output {
-        if index < self.len as isize {
-            unsafe {
-                &self.data.as_ptr().offset(index).read()
-            }
-        } else {
-            &0_u8
+    fn index(&self, index: usize) -> &Self::Output {
+        assert!(index < self.len);
+        &(**self)[index]
+    }
+}
+
+impl Deref for Slice {
+    type Target = [u8];
+
+    fn deref(&self) -> &Self::Target {
+        unsafe {
+            slice::from_raw_parts(self.data.as_ptr(), self.len)
         }
     }
 }
@@ -138,7 +144,9 @@ impl core::ops::Index<isize> for Slice {
 impl Drop for Slice {
     /// 释放内存
     fn drop(&mut self) {
-        let _: String = self.into();
+        unsafe {
+            let _ = String::from_raw_parts(self.data.as_ptr(), self.len, self.len);
+        }
     }
 }
 
