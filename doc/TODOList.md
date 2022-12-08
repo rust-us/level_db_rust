@@ -16,6 +16,7 @@
 5. Table Build
 6. Recovery
 7. SStable
+8. 
 # Util
 1. Arena (Memory Management) 
 2. BloomFilter
@@ -31,6 +32,7 @@
 12. Status
 13. Random
 14. Slice
+
 ## Traits
 1. public trait defined in leveldb include dir
 
