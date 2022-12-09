@@ -2,6 +2,7 @@ use std::{ptr, slice};
 use std::alloc::{alloc, Layout};
 use std::borrow::Cow;
 use std::cmp::Ordering;
+use std::mem::ManuallyDrop;
 use std::ops::Deref;
 use std::ptr::{copy, NonNull};
 
@@ -108,7 +109,7 @@ impl Into<Slice> for &str {
     fn into(self) -> Slice {
         unsafe {
             Slice {
-                data: NonNull::new_unchecked(self.as_ptr() as *mut u8),
+                data: NonNull::new_unchecked(self.to_owned().as_ptr().to_owned() as *mut u8),
                 len: self.len(),
             }
         }

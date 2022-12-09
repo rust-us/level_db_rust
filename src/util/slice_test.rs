@@ -3,6 +3,22 @@ mod test {
     use crate::util::slice::Slice;
 
     #[test]
+    fn test_new() {
+        let mut a: Slice = "abc".into();
+        unsafe {
+            let str = String::from_raw_parts((*a).as_mut_ptr(), 3, 3);
+            println!("str: {}", str);
+        }
+        // let str: &[u8] = &*a;
+        // println!("str: {:?}", String::from_utf8_lossy(str));
+        // assert_eq!("123".as_bytes(), str);
+
+        // let b: Slice = "abc".into();
+        // let str1: String = b.into();
+        // assert_eq!(String::from("abc"), str1);
+    }
+
+    #[test]
     fn test_size() {
         let slice: Slice = String::from("123").into();
         assert_eq!(3, slice.size());
