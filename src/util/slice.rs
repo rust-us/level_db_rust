@@ -103,12 +103,24 @@ impl Into<Slice> for String {
     }
 }
 
-impl Into<Slice> for &mut str {
+impl Into<Slice> for &str {
     /// 通过 &str 构造一个 Slice
     fn into(self) -> Slice {
         unsafe {
             Slice {
-                data: NonNull::new_unchecked(self.as_mut_ptr()),
+                data: NonNull::new_unchecked(self.as_ptr() as *mut u8),
+                len: self.len(),
+            }
+        }
+    }
+}
+
+impl Into<Slice> for Vec<u8> {
+    /// 通过 &str 构造一个 Slice
+    fn into(self) -> Slice {
+        unsafe {
+            Slice {
+                data: NonNull::new_unchecked(self.as_ptr() as *mut u8),
                 len: self.len(),
             }
         }
@@ -174,12 +186,15 @@ impl Deref for Slice {
     }
 }
 
-impl Drop for Slice {
-    /// 释放内存
-    fn drop(&mut self) {
-        unsafe {
-            let _ = String::from_raw_parts(self.data.as_ptr(), self.len, self.len);
-        }
-    }
-}
+// impl Drop for Slice {
+//     /// 释放内存
+//     fn drop(&mut self) {
+//         if self.len > 0 {
+//             unsafe {
+//                 let str = Vec::from_raw_parts(self.data.as_ptr(), self.len, self.len);
+//                 println!("drop: {:?}", &str);
+//             }
+//         }
+//     }
+// }
 
