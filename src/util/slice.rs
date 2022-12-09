@@ -2,12 +2,12 @@ use std::{ptr, slice};
 use std::alloc::{alloc, Layout};
 use std::borrow::Cow;
 use std::cmp::Ordering;
+use std::mem::ManuallyDrop;
 use std::ops::Deref;
 use std::ptr::{copy, NonNull};
 
 pub struct Slice {
-    data: NonNull<u8>,
-    len: usize,
+    data: Vec<u8>,
 }
 
 #[allow(improper_ctypes)]
@@ -20,8 +20,7 @@ impl Default for Slice {
     fn default() -> Self {
         unsafe {
             Self {
-                data: NonNull::new_unchecked(ptr::null_mut()),
-                len: 0,
+                data: Vec::new()
             }
         }
     }
@@ -31,98 +30,67 @@ impl Slice {
     /// 获取 slice 长度
     #[inline]
     pub fn size(&self) -> usize {
-        self.len
+        self.data.len()
     }
 
     /// 判断 slice 是否为空
     #[inline]
     pub fn empty(&self) -> bool {
-        self.len == 0
+        self.data.is_empty()
     }
 
     /// 移除头部 n 个元素
     pub fn remove_prefix(&self, n: usize) -> Slice {
-        assert!(self.len >= n);
-        if self.len == 0 {
+        assert!(self.size() >= n);
+        if self.size() == 0 {
             return Slice::default();
         }
-        let len = self.len - n;
         unsafe {
-            let data = alloc(Layout::array::<u8>(len).unwrap());
-            copy(self.data.as_ptr().offset(n as isize), data, len);
+            let sub_data = &(*self.data)[n..self.size()];
             Self {
-                data: NonNull::new_unchecked(data),
-                len,
+                data: Vec::from(sub_data)
             }
         }
     }
 
     /// 判断本 Slice 是否以 other 为开始
     pub fn starts_with(&self, other: &Self) -> bool {
-        assert!(other.len <= self.len);
-        if other.len == 0 {
+        assert!(other.size() <= self.size());
+        if other.size() == 0 {
             return true;
         }
-        return self.len >= other.len && unsafe {
+        return self.size() >= other.size() && unsafe {
             memcmp(
                 self.data.as_ptr() as *const i8,
                 other.data.as_ptr() as *const i8,
-                other.len) == 0
+                other.size()) == 0
         };
     }
 }
 
 impl<'a> Slice {
     /// 借取 Slice 中的数据, 调用方只拥有读权限
-    pub fn borrow_data(&self) -> Cow<'a, String> {
+    pub fn borrow_data(&mut self) -> Cow<'a, String> {
         let str = unsafe {
-            String::from_raw_parts(self.data.as_ptr(), self.len, self.len)
+            String::from_raw_parts(self.data.as_mut_ptr(), self.size(), self.size())
         };
         Cow::Owned(str)
     }
 }
 
-impl Into<String> for Slice {
+impl From<Slice> for String {
     /// 将 Slice 内数据的所有权移交给 String
-    fn into(self) -> String {
+    fn from(s: Slice) -> Self {
         unsafe {
-            String::from_raw_parts(self.data.as_ptr(), self.len, self.len)
+            String::from_utf8_unchecked(s.data)
         }
     }
 }
 
-impl Into<Slice> for String {
-    /// 通过 String 构造一个 Slice
-    fn into(mut self) -> Slice {
-        unsafe {
-            Slice {
-                data: NonNull::new_unchecked(self.as_mut_ptr()),
-                len: self.len(),
-            }
-        }
-    }
-}
-
-impl Into<Slice> for &str {
-    /// 通过 &str 构造一个 Slice
-    fn into(self) -> Slice {
-        unsafe {
-            Slice {
-                data: NonNull::new_unchecked(self.as_ptr() as *mut u8),
-                len: self.len(),
-            }
-        }
-    }
-}
-
-impl Into<Slice> for Vec<u8> {
-    /// 通过 &str 构造一个 Slice
-    fn into(self) -> Slice {
-        unsafe {
-            Slice {
-                data: NonNull::new_unchecked(self.as_ptr() as *mut u8),
-                len: self.len(),
-            }
+impl <R: AsRef<str>> From<R> for Slice {
+    fn from(r: R) -> Self {
+        Self {
+            data: Vec::from(r.as_ref())
         }
     }
 }
@@ -130,11 +98,11 @@ impl Into<Slice> for Vec<u8> {
 impl PartialEq for Slice {
     /// 判断两个 Slice 是否相同
     fn eq(&self, other: &Self) -> bool {
-        return self.len == other.len && unsafe {
+        return self.size() == other.size() && unsafe {
             memcmp(
                 self.data.as_ptr() as *const i8,
                 other.data.as_ptr() as *const i8,
-                self.len,
+                self.size(),
             ) == 0
         };
     }
@@ -143,13 +111,13 @@ impl PartialEq for Slice {
 impl PartialOrd for Slice {
     /// 判断两个 slice 的大小关系
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match self.len.partial_cmp(&other.len) {
+        match self.size().partial_cmp(&other.size()) {
             Some(Ordering::Equal) => {
                 let cmp = unsafe {
                     memcmp(
                         self.data.as_ptr() as *const i8,
                         other.data.as_ptr() as *const i8,
-                        self.len,
+                        self.size(),
                     )
                 };
                 if cmp == 0 {
@@ -170,7 +138,7 @@ impl core::ops::Index<usize> for Slice {
 
     /// 获取某个下标的数据
     fn index(&self, index: usize) -> &Self::Output {
-        assert!(index < self.len);
+        assert!(index < self.size());
         &(**self)[index]
     }
 }
@@ -181,20 +149,8 @@ impl Deref for Slice {
     /// Slice 解引用到 &[u8]
     fn deref(&self) -> &Self::Target {
         unsafe {
-            slice::from_raw_parts(self.data.as_ptr(), self.len)
+            self.data.deref()
         }
     }
 }
-
-// impl Drop for Slice {
-//     /// 释放内存
-//     fn drop(&mut self) {
-//         if self.len > 0 {
-//             unsafe {
-//                 let str = Vec::from_raw_parts(self.data.as_ptr(), self.len, self.len);
-//                 println!("drop: {:?}", &str);
-//             }
-//         }
-//     }
-// }
 

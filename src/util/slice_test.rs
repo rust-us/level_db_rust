@@ -3,9 +3,52 @@ mod test {
     use crate::util::slice::Slice;
 
     #[test]
+    fn test_from() {
+        let mut a = Slice::from("123");
+        assert_eq!(String::from("123"), String::from(a))
+
+    }
+
+    #[test]
+    fn test_addr() {
+        let a = 123_u32;
+        let slice = a.to_le_bytes();
+        unsafe {
+            let a_addr = &a as *const u32 as usize;
+            let slice_addr = slice.as_ptr() as usize;
+            println!("a_addr: {}, slice_addr: {}", a_addr, slice_addr);
+        }
+    }
+
+    #[test]
     fn test_size() {
-        let slice: Slice = String::from("123").into();
-        assert_eq!(3, slice.size());
+        let mut a: Vec<u8> = Vec::with_capacity(4);
+        // 把 u32 编码到4个byte中, 在内存中结构为 [a0, a1, a2, a3, ....]
+        // 方式1, 用位移来编码
+        let len = 12_u32; // 长度
+        a.push(len as u8);
+        a.push((len >> 8) as u8);
+        a.push((len >> 16) as u8);
+        a.push((len >> 24) as u8);
+
+        // 方式2, 获取到内存地址直接写
+        // unsafe {
+        //     a.as_mut_ptr().cast::<u32>().write(12);
+        //     指针待偏移量可以这样写
+        //     a.as_mut_ptr().cast::<u32>().offset(0).write(12);
+        //     a.set_len(4);
+        // }
+
+
+        // 取出数据校验, a 这个 vec 指针指向的数据为 [a0, a1, a2, a3, ....],
+        // 读取地址前4个byte到u32中, 比较原始值
+        let value = unsafe {
+            a.as_ptr().cast::<u32>().read()
+        };
+        assert_eq!(12, value);
+
+        // let slice: Slice = String::from("123").into();
+        // assert_eq!(3, slice.size());
     }
 
     #[test]
