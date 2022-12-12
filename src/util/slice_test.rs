@@ -10,6 +10,9 @@ mod test {
         // from String
         let a1 = Slice::from(String::from("123"));
         assert_eq!(String::from("123"), String::from(a1));
+
+        let a2 = Slice::from_buf([30_u8, 31, 32].as_mut_slice());
+        assert_eq!(String::from("012"), String::from(a2));
     }
 
     #[test]
