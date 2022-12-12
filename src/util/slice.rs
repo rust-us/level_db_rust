@@ -22,6 +22,14 @@ impl Default for Slice {
 }
 
 impl Slice {
+    /// 从 &mut [u8] 转到 Slice
+    pub fn from_buf(buf: &mut [u8]) -> Self {
+        unsafe {
+            Self {
+                data: Vec::from_raw_parts(buf.as_mut_ptr(), buf.len(), buf.len())
+            }
+        }
+    }
     /// 获取 slice 长度
     #[inline]
     pub fn size(&self) -> usize {
