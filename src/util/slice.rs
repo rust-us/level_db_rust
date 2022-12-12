@@ -23,11 +23,11 @@ impl Default for Slice {
 
 impl Slice {
     /// 从 &mut [u8] 转到 Slice
-    pub fn from_buf(buf: &mut [u8]) -> Self {
-        unsafe {
-            Self {
-                data: Vec::from_raw_parts(buf.as_mut_ptr(), buf.len(), buf.len())
-            }
+    /// # Unsafe
+    /// 这里目前存在内存泄漏和double free问题, 先别用
+    pub unsafe fn from_buf(buf: &mut [u8]) -> Self {
+        Self {
+            data: Vec::from_raw_parts(buf.as_mut_ptr(), buf.len(), buf.len())
         }
     }
     /// 获取 slice 长度
@@ -67,6 +67,20 @@ impl Slice {
                 other.size()) == 0
         };
     }
+
+    pub fn merge(&mut self, mut other: Self, joiner: Option<String>) {
+        if other.empty() {
+            return;
+        }
+        match joiner {
+            None => self.data.append(&mut other.data),
+            Some(mut j) => unsafe {
+                self.data.append(j.as_mut_vec());
+                self.data.append(&mut other.data);
+            }
+        }
+    }
+
 }
 
 impl<'a> Slice {
