@@ -1,47 +1,19 @@
-const B: u8 = 128;
+use std::mem::size_of;
 
-///
-///
-///
-pub trait Coding {
-    fn varint32(self, buf: &mut [u8]);
-}
+use crate::util::data_ptr::DataPtr;
 
-impl Coding for u32
-{
-    fn varint32(self, buf: &mut [u8]) {
-        // if self < 1 << 7 {
-        //     buf[0] = self as u8;
-        // } else if self < 1 << 14 {
-        //     buf[0] = self | B;
-        //     println!("{:b}", buf[0]);
-        //     buf[1] = buf[0] >> 7;
-        //     println!("{:b}", buf[1]);
-        // } else if self < 1 << 21 {
-        //     buf[0] = (self | B as u8) as u8;
-        //     println!("{:b}", buf[0]);
-        //     buf[1] = (buf[0] >> 7) | B;
-        //     println!("{:b}", buf[1]);
-        //     buf[2] = buf[1] >> 14;
-        //     println!("{:b}", buf[2]);
-        // } else if self < 1 << 28 {
-        //     buf[0] = (self | B as u8) as u8;
-        //     println!("{:b}", buf[0]);
-        //     buf[1] = (buf[0] >> 7) | B;
-        //     println!("{:b}", buf[1]);
-        //     buf[2] = (buf[1] >> 14) | B;
-        //     println!("{:b}", buf[2]);
-        //     buf[3] = buf[2] >> 21;
-        // } else {
-        //     buf[0] = (self | B as u8) as u8;
-        //     println!("{:b}", buf[0]);
-        //     buf[1] = (buf[0] >> 7) | B;
-        //     println!("{:b}", buf[1]);
-        //     buf[2] = (buf[1] >> 14) | B;
-        //     println!("{:b}", buf[2]);
-        //     buf[3] = (buf[2] >> 21) | B;
-        //     println!("{:b}", buf[3]);
-        //     buf[4] = buf[3] >> 28;
-        // }
+/// 编解码特性
+/// LevelDB需要支持的基本类型都需要实现此特质, 如 u8, i8, u32 等
+pub trait Coding<T: Sized> {
+
+    fn write(self, ptr: DataPtr) -> DataPtr;
+
+    fn read(ptr: DataPtr) -> T;
+
+    fn read_once(ptr: DataPtr) -> (T, DataPtr) {
+        let value: T = Self::read(ptr);
+        unsafe {
+            (value, ptr.offset(size_of::<T>() as isize))
+        }
     }
 }
