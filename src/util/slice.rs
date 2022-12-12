@@ -1,10 +1,7 @@
-use std::{ptr, slice};
-use std::alloc::{alloc, Layout};
+use std::mem;
 use std::borrow::Cow;
 use std::cmp::Ordering;
-use std::mem::ManuallyDrop;
 use std::ops::Deref;
-use std::ptr::{copy, NonNull};
 
 pub struct Slice {
     data: Vec<u8>,
@@ -18,10 +15,8 @@ extern {
 impl Default for Slice {
     /// 构造一个空的 Slice
     fn default() -> Self {
-        unsafe {
-            Self {
-                data: Vec::new()
-            }
+        Self {
+            data: Vec::new()
         }
     }
 }
@@ -45,11 +40,9 @@ impl Slice {
         if self.size() == 0 {
             return Slice::default();
         }
-        unsafe {
-            let sub_data = &(*self.data)[n..self.size()];
-            Self {
-                data: Vec::from(sub_data)
-            }
+        let sub_data = &(*self.data)[n..self.size()];
+        Self {
+            data: Vec::from(sub_data)
         }
     }
 
@@ -71,10 +64,11 @@ impl Slice {
 impl<'a> Slice {
     /// 借取 Slice 中的数据, 调用方只拥有读权限
     pub fn borrow_data(&mut self) -> Cow<'a, String> {
-        let str = unsafe {
-            String::from_raw_parts(self.data.as_mut_ptr(), self.size(), self.size())
-        };
-        Cow::Owned(str)
+        unsafe {
+            // String & Vec<u8> has the same layout
+            let s: &String = mem::transmute(&self.data);
+            Cow::Borrowed(s)
+        }
     }
 }
 
@@ -148,9 +142,7 @@ impl Deref for Slice {
 
     /// Slice 解引用到 &[u8]
     fn deref(&self) -> &Self::Target {
-        unsafe {
-            self.data.deref()
-        }
+            &*self.data
     }
 }
 
