@@ -22,12 +22,11 @@ impl Default for Slice {
 }
 
 impl Slice {
-    /// 从 &mut [u8] 转到 Slice
-    /// # Unsafe
-    /// 这里目前存在内存泄漏和double free问题, 先别用
-    pub unsafe fn from_buf(buf: &mut [u8]) -> Self {
+
+    /// 从 &mut [u8] 转到 Slice, 这里存在内存拷贝开销
+    pub fn from_buf(buf: &mut [u8]) -> Self {
         Self {
-            data: Vec::from_raw_parts(buf.as_mut_ptr(), buf.len(), buf.len())
+            data: buf.to_owned()
         }
     }
     /// 获取 slice 长度
