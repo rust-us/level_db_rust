@@ -3,11 +3,14 @@ use std::cmp::Ordering;
 use crate::traits::comparator_trait::{ComparatorTrait};
 use crate::util::slice::Slice;
 
+///  BytewiseComparatorImpl是按字典逐字节序进行比较
+///  也就是说 i>helloworld，因为先比较i和h，i>h，比较直接结束
 pub struct BytewiseComparatorImpl {}
 
 impl ComparatorTrait for BytewiseComparatorImpl {
+
     fn compare(&self, a: &Slice, b: &Slice) -> Option<Ordering> {
-        todo!()
+        a.partial_cmp(b)
     }
 
     fn get_name() -> String {
@@ -23,6 +26,13 @@ impl ComparatorTrait for BytewiseComparatorImpl {
     }
 }
 
+impl Default for BytewiseComparatorImpl {
+    fn default() -> Self {
+        Self{}
+    }
+}
+
+/// InternalKeyComparator
 pub struct InternalKeyComparator {
     // fn user_comparator(&self) -> Box<Comparator> {
     //     todo!()
@@ -37,7 +47,7 @@ impl ComparatorTrait for InternalKeyComparator {
     // todo  InternalKeyComparator 的构造方法
 
     fn compare(&self, a: &Slice, b: &Slice) -> Option<Ordering> {
-        a.partial_cmp(b)
+        todo!()
     }
 
     fn get_name() -> String {
@@ -53,6 +63,7 @@ impl ComparatorTrait for InternalKeyComparator {
     }
 }
 
+/// ReverseKeyComparator
 pub struct ReverseKeyComparator {
 
 }
