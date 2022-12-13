@@ -68,12 +68,12 @@ mod test {
                                                       String::from(msg2).into());
 
         let binding = error.to_string();
-        let errorMsg = binding.as_str();
-        println!("{}", errorMsg);
+        let error_msg = binding.as_str();
+        println!("{}", error_msg);
 
-        let expectString: String = format!("Invalid argument: {}{}{}", String::from(msg1), COLON_WHITE_SPACE,
+        let expect_string: String = format!("Invalid argument: {}{}{}", String::from(msg1), COLON_WHITE_SPACE,
                                            String::from(msg2));
-        assert_eq!(expectString,  errorMsg);
+        assert_eq!(expect_string,  error_msg);
     }
 
     #[test]

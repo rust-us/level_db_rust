@@ -28,12 +28,27 @@ pub trait ComparatorTrait {
     /// ```
     fn compare(&self, a: &Slice, b: &Slice) -> Option<Ordering>;
 
-    // 返回comparator的名字
+    /// 返回comparator的名字
     fn get_name() -> String;
 
-    /// 找到start、limit之间最短的字符串，如“helloworld”和”hellozoomer”之间最短的key可以是”hellox”。
-    /// 如果 start < limit，就在[start,limit)中找到一个短字符串，并赋给*start返回。
-    /// 当然返回的*start可能没变化（start==limit），此时这个函数相当于啥都没干，这也是正确的。
+    /// 函数：用于减少像index blocks这样的内部数据结构占用的空间, 其中的*start和*key参数都是IN OUT的。
+    ///
+    /// 这个函数的作用就是：
+    /// 如果*start < limit，就在[startlimit,)中找到一个短字符串，并赋给*start返回. 如“helloworld”和”hellozoomer”之间最短的key可以是”hellox”。
+    /// 简单的comparator实现可能不改变*start(start==limit)，这也是正确的
+    ///
+    /// # Arguments
+    ///
+    /// * `start`:
+    /// * `limit`:
+    ///
+    /// returns: String
+    ///
+    /// # Examples
+    ///
+    /// ```
+    ///
+    /// ```
     fn find_shortest_separator(&self, start: &String, limit:&Slice) -> String;
 
     /// 减少像index blocks这样的内部数据结构占用的空间

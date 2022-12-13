@@ -1,4 +1,5 @@
 use std::fmt::Error;
+use std::ops::Deref;
 use crate::traits::status_trait::StatusTrait;
 use crate::util::r#const::COLON_WHITE_SPACE;
 use crate::util::slice::Slice;
@@ -14,13 +15,32 @@ pub enum LevelError {
     KIOError(Option<Slice>),
 }
 
-impl Default for LevelError {
-    fn default() -> LevelError {
-        KOk
-    }
-}
-
 impl StatusTrait for LevelError {
+    fn is_default(&self) -> bool {
+        self.is_ok()
+    }
+
+    fn into_msg(self) -> Option<Slice> {
+        match self {
+            KOk => None,
+            /// 以后可能会差异化处理，因此不做 _ 的默认输出
+            KNotFound(slice) => {
+                slice
+            },
+            KCorruption(slice) => {
+                slice
+            },
+            KNotSupported(slice) => {
+                slice
+            },
+            KInvalidArgument(slice) => {
+                slice
+            },
+            KIOError(slice) => {
+                slice
+            },
+        }
+    }
 
     fn is_ok(&self) -> bool {
         match self {
@@ -64,72 +84,6 @@ impl StatusTrait for LevelError {
         }
     }
 
-    fn ok() -> LevelError {
-        KOk
-    }
-
-    fn not_found(mut msg: Slice, msg2: Slice) -> LevelError {
-        &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
-        KNotFound(Some(msg))
-    }
-
-    fn corruption(mut msg: Slice, msg2: Slice) -> LevelError {
-        &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
-        KCorruption(Some(msg))
-    }
-
-    fn not_supported(mut msg: Slice, msg2: Slice) -> LevelError {
-        &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
-        KNotSupported(Some(msg))
-    }
-
-    fn invalid_argument(mut msg: Slice, msg2: Slice) -> LevelError {
-        &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
-        KInvalidArgument(Some(msg))
-    }
-
-    fn io_error(mut msg: Slice, msg2: Slice) -> LevelError {
-        &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
-        KIOError(Some(msg))
-    }
-
-    fn is_default(&self) -> bool {
-        self.is_ok()
-    }
-
-    fn into_code(&self) -> u32 {
-        match self {
-            KOk => {0},
-            KNotFound(_) => {1},
-            KCorruption(_) => {2},
-            KNotSupported(_) => {3},
-            KInvalidArgument(_) => {4},
-            KIOError(_) => {5},
-        }
-    }
-
-    fn into_msg(self) -> Option<Slice> {
-        match self {
-            KOk => None,
-            /// 以后可能会差异化处理，因此不做 _ 的默认输出
-            KNotFound(slice) => {
-                slice
-            },
-            KCorruption(slice) => {
-                slice
-            },
-            KNotSupported(slice) => {
-                slice
-            },
-            KInvalidArgument(slice) => {
-                slice
-            },
-            KIOError(slice) => {
-                slice
-            },
-        }
-    }
-
     #[inline]
     fn to_string(self) -> String {
         if self.is_default() {
@@ -149,19 +103,53 @@ impl StatusTrait for LevelError {
 
         format!("{}{}", msg_type, error_msg)
     }
+
+    fn ok() -> LevelError {
+        KOk
+    }
+
+    fn not_found(mut msg: Slice, msg2: Slice) -> LevelError {
+        let _ = &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
+        KNotFound(Some(msg))
+    }
+
+    fn corruption(mut msg: Slice, msg2: Slice) -> LevelError {
+        let _ = &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
+        KCorruption(Some(msg))
+    }
+
+    fn not_supported(mut msg: Slice, msg2: Slice) -> LevelError {
+        let _ = &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
+        KNotSupported(Some(msg))
+    }
+
+    fn invalid_argument(mut msg: Slice, msg2: Slice) -> LevelError {
+        let _ = &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
+        KInvalidArgument(Some(msg))
+    }
+
+    fn io_error(mut msg: Slice, msg2: Slice) -> LevelError {
+        let _ = &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
+        KIOError(Some(msg))
+    }
 }
 
+impl Default for LevelError {
+    fn default() -> LevelError {
+        KOk
+    }
+}
 
-impl TryFrom<u32> for LevelError {
+impl TryFrom<i32> for LevelError {
     type Error = String;
 
-    /// 错误码转 LevelError
+    /// i32 错误码转 LevelError
     ///
     /// # Arguments
     ///
     /// * `value`:  错误码的值
     ///
-    /// returns: Result<LevelError, <LevelError as TryFrom<u32>>::Error>
+    /// returns: Result<LevelError, <LevelError as TryFrom<i32>>::Error>
     ///
     /// # Examples
     ///
@@ -169,7 +157,7 @@ impl TryFrom<u32> for LevelError {
     ///        let rs: LevelError = LevelError::try_from(3)?;
     ///         assert!(&rs.is_not_supported_error());
     /// ```
-    fn try_from(value: u32) -> Result<Self, Self::Error> {
+    fn try_from(value: i32) -> Result<Self, Self::Error> {
         match value {
             0 => Ok(KOk),
             1 => Ok(KNotFound(None)),
@@ -182,3 +170,21 @@ impl TryFrom<u32> for LevelError {
         }
     }
 }
+
+// impl Deref for LevelError {
+//     type Target = i32;
+//
+//     /// StatusTrait 解引用到 i32
+//     fn deref(&self) -> &Self::Target {
+//         let le = match self {
+//             KOk => 0,
+//             KNotFound(_) => 1,
+//             KCorruption(_) => 2,
+//             KNotSupported(_) => 3,
+//             KInvalidArgument(_) => 4,
+//             KIOError(_) => 5,
+//         };
+//
+//         &*le
+//     }
+// }

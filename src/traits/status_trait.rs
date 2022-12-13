@@ -1,6 +1,9 @@
 use crate::util::slice::Slice;
 use crate::util::status::LevelError;
 
+/// db 中的返回状态，将错误号和错误信息封装成Status类，统一进行处理。
+/// 在 leveldb的实现里， 为了节省空间Status将返回码(code), 错误信息message及长度打包存储于一个字符串数组中， 来存储错误信息。
+/// 在该项目中， 使用LevelError 和 Slice 存储错误信息
 pub trait StatusTrait {
 
     /// 判断 状态是否为默认值
@@ -16,8 +19,6 @@ pub trait StatusTrait {
     ///  assert!(err.is_default());
     /// ```
     fn is_default(&self) -> bool;
-
-    fn into_code(&self) -> u32;
 
     fn into_msg(self) -> Option<Slice>;
 
