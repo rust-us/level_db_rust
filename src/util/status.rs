@@ -1,62 +1,54 @@
 /// 使用 Status 这个类来得到你的函数的返回的状态
 ///
-use std::borrow::{Borrow, Cow};
-use std::fmt::Debug;
-use std::ptr;
-use std::ptr::{NonNull, null};
 use crate::util::slice::Slice;
-use crate::util::status::LevelError::{kCorruption, kInvalidArgument, kIOError, kNotFound, kNotSupported, kOk};
+use crate::util::status::LevelError::{KCorruption, KIOError, KInvalidArgument, KNotSupported, KNotFound, KOk};
 
 /// Status 的状态
 pub enum LevelError {
-    kOk,
-    kNotFound(Option<Slice>),
-    kCorruption(Option<Slice>),
-    kNotSupported(Option<Slice>),
-    kInvalidArgument(Option<Slice>),
-    kIOError(Option<Slice>),
+    KOk,
+    KNotFound(Option<Slice>),
+    KCorruption(Option<Slice>),
+    KNotSupported(Option<Slice>),
+    KInvalidArgument(Option<Slice>),
+    KIOError(Option<Slice>),
 
 }
 
 impl Default for LevelError {
     fn default() -> Self {
-        kOk
+        KOk
     }
 }
 
 impl LevelError {
     pub fn get_code(&self) -> u32 {
         match self {
-            kOk => {0},
-            kNotFound(_) => {1},
-            kCorruption(_) => {2},
-            kNotSupported(_) => {3},
-            kInvalidArgument(_) => {4},
-            kIOError(_) => {5},
+            KOk => {0},
+            KNotFound(_) => {1},
+            KCorruption(_) => {2},
+            KNotSupported(_) => {3},
+            KInvalidArgument(_) => {4},
+            KIOError(_) => {5},
         }
     }
 
     /// 得到 error 中的 slice 信息
     pub fn into_msg(self) -> Option<Slice> {
         match self {
-            kOk => {None},
-            kNotFound(slice) => {
+            KOk => {None},
+            KNotFound(slice) => {
                 slice
             },
-            kCorruption(slice) => {
-                // println!("The slice to be {:?}", slice);
+            KCorruption(slice) => {
                 slice
             },
-            kNotSupported(slice) => {
-                // println!("The slice to be {:?}", slice);
+            KNotSupported(slice) => {
                 slice
             },
-            kInvalidArgument(slice) => {
-                // println!("The slice to be {:?}", slice);
+            KInvalidArgument(slice) => {
                 slice
             },
-            kIOError(slice) => {
-                // println!("The slice to be {:?}", slice);
+            KIOError(slice) => {
                 slice
             },
         }
@@ -64,13 +56,13 @@ impl LevelError {
 
     /// 判断 状态是否为默认值
     fn is_default(&self) -> bool {
-        self.ok()
+        self.is_ok()
     }
 
     /// Returns true iff the status indicates success.
-    pub fn ok(&self) -> bool {
+    pub fn is_ok(&self) -> bool {
         match self {
-            kOk => true,
+            KOk => true,
             _ => false
         }
     }
@@ -78,7 +70,7 @@ impl LevelError {
     /// Returns true iff the status indicates a NotFound error.
     pub fn is_not_found(&self) -> bool {
         match self {
-            kNotFound(_) => true,
+            KNotFound(_) => true,
             _ => false
         }
     }
@@ -86,7 +78,7 @@ impl LevelError {
     /// Returns true iff the status indicates a Corruption error.
     pub fn is_corruption(&self) -> bool {
         match self {
-            kCorruption(_) => true,
+            KCorruption(_) => true,
             _ => false
         }
     }
@@ -94,7 +86,7 @@ impl LevelError {
     /// Returns true iff the status indicates an IOError.
     pub fn is_io_error(&self) -> bool {
         match self {
-            kIOError(_) => true,
+            KIOError(_) => true,
             _ => false
         }
     }
@@ -102,7 +94,7 @@ impl LevelError {
     /// Returns true iff the status indicates a NotSupportedError.
     pub fn is_not_supported_error(&self) -> bool {
         match self {
-            kNotSupported(_) => true,
+            KNotSupported(_) => true,
             _ => false
         }
     }
@@ -110,7 +102,7 @@ impl LevelError {
     /// Returns true iff the status indicates an InvalidArgument.
     pub fn is_invalid_argument(&self) -> bool {
         match self {
-            kInvalidArgument(_) => true,
+            KInvalidArgument(_) => true,
             _ => false
         }
     }
@@ -126,22 +118,22 @@ impl LevelError {
         let mut _type: &str = "";
 
         match self {
-            kOk => {
+            KOk => {
                 _type = "OK";
             },
-            kNotFound(_)  => {
+            KNotFound(_)  => {
                 _type = "NotFound: ";
             },
-            kCorruption(_)  => {
+            KCorruption(_)  => {
                 _type = "Corruption: ";
             },
-            kNotSupported(_)  => {
+            KNotSupported(_)  => {
                 _type = "Not implemented: ";
             },
-            kInvalidArgument(_)  => {
+            KInvalidArgument(_)  => {
                 _type = "Invalid argument: ";
             },
-            kIOError(_)  => {
+            KIOError(_)  => {
                 _type = "IO error: ";
             }
         }
@@ -152,35 +144,41 @@ impl LevelError {
     }
 }
 
-// 这一组函数用来组合指定的状态信息
+/// 这一组函数用来组合指定的状态信息
 impl<'a> LevelError {
     /// 返回 ok 的 Status
-    pub fn OK() -> LevelError {
-        kOk
+    pub fn ok() -> LevelError {
+        KOk
     }
 
     /// 返回 not_found 的 Status
-    pub fn not_found(msg: Slice, msg2: Slice) -> LevelError {
-        kNotFound(Some(msg))
+    pub fn not_found(mut msg: Slice, msg2: Slice) -> LevelError {
+        msg.merge(msg2, Some(String::from(": ")));
+        KNotFound(Some(msg))
     }
 
     /// 返回 Corruption 的 Status
-    pub fn corruption(msg: Slice, msg2: Slice) -> LevelError {
-        kCorruption(Some(msg))
+    pub fn corruption(mut msg: Slice, msg2: Slice) -> LevelError {
+        msg.merge(msg2, Some(String::from(": ")));
+        KCorruption(Some(msg))
     }
 
     /// 返回 NotSupported 的 Status
-    pub fn not_supportedfound(msg: Slice, msg2: Slice) -> LevelError {
-        LevelError::kNotSupported(Some(msg))
+    pub fn not_supportedfound(mut msg: Slice, msg2: Slice) -> LevelError {
+        msg.merge(msg2, Some(String::from(": ")));
+        KNotSupported(Some(msg))
     }
 
     /// 返回 InvalidArgument 的 Status
-    pub fn invalid_argument(msg: Slice, msg2: Slice) -> LevelError {
-        LevelError::kInvalidArgument(Some(msg))
+    pub fn invalid_argument(mut msg: Slice, msg2: Slice) -> LevelError {
+        msg.merge(msg2, Some(String::from(": ")));
+        KInvalidArgument(Some(msg))
     }
 
     /// 返回 IOError 的 Status
-    pub fn io_error(msg: Slice, msg2: Slice) -> LevelError {
-        LevelError::kIOError(Some(msg))
+    pub fn io_error(mut msg: Slice, msg2: Slice) -> LevelError {
+        msg.merge(msg2, Some(String::from(": ")));
+        KIOError(Some(msg))
     }
+
 }

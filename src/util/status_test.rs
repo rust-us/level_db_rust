@@ -11,10 +11,10 @@ mod test {
         let err: LevelError = LevelError::io_error(String::from(msg1).into(),
                                         String::from(msg2).into());
         let slice: Option<Slice> = err.into_msg();
-        assert_eq!("abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc",
+        assert_eq!("abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc: 456456456456456456456456456456456456456456456456",
                    String::from(slice.unwrap()));
 
-        let err: LevelError = LevelError::OK();
+        let err: LevelError = LevelError::ok();
         let slice: Option<Slice> = err.into_msg();
         assert!(Option::None == slice);
     }
