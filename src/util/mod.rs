@@ -23,3 +23,6 @@ pub mod filter_policy;
 
 /// 定义别名
 pub type ResultT<T> = result::Result<T, LevelError>;
+
+pub mod histogram;
+mod histogram_test;
