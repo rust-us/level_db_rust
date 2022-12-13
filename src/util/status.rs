@@ -1,7 +1,5 @@
 use std::fmt::Error;
 use crate::traits::status_trait::StatusTrait;
-/// 使用 Status 这个类来得到函数的返回的状态
-///
 use crate::util::r#const::COLON_WHITE_SPACE;
 use crate::util::slice::Slice;
 use crate::util::status::LevelError::{KCorruption, KIOError, KInvalidArgument, KNotSupported, KNotFound, KOk};
