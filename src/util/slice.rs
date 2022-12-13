@@ -24,7 +24,7 @@ impl Default for Slice {
 impl Slice {
 
     /// 从 &mut [u8] 转到 Slice, 这里存在内存拷贝开销
-    pub fn from_buf(buf: &mut [u8]) -> Self {
+    pub fn from_buf(buf: &[u8]) -> Self {
         Self {
             data: buf.to_owned()
         }
