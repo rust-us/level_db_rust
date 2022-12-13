@@ -73,12 +73,10 @@ impl Arena {
             self.alloc_bytes_remaining = ARENA_BLOCK_SIZE - bytes;
             let layout = Layout::from_size_align_unchecked(ARENA_BLOCK_SIZE, align);
             let new_block = self.allocate_new_block(layout);
-            unsafe {
-                let ptr = new_block.as_ptr() as *mut u8;
-                let result = slice::from_raw_parts_mut(ptr, bytes);
-                self.alloc_ptr = Some(NonNull::new_unchecked(ptr.offset(bytes as isize)));
-                result
-            }
+            let ptr = new_block.as_ptr() as *mut u8;
+            let result = slice::from_raw_parts_mut(ptr, bytes);
+            self.alloc_ptr = Some(NonNull::new_unchecked(ptr.offset(bytes as isize)));
+            result
         }
     }
 
