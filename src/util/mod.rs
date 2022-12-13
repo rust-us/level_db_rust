@@ -15,9 +15,12 @@ pub use arena::Arena;
 
 pub mod status;
 mod status_test;
-mod comparator;
+pub mod comparator;
 mod comparator_test;
 mod crc;
+pub mod bloom_filter;
+mod bloom_filter_test;
+pub mod filter_policy;
 
 /// 定义别名
 pub type Result<T> = result::Result<T, LevelError>;
