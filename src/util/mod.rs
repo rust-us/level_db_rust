@@ -1,6 +1,9 @@
 use crate::util::status::LevelError;
 use std::result;
 
+/// 常量定义
+pub mod r#const;
+
 pub mod slice;
 mod slice_test;
 pub mod coding;
@@ -12,6 +15,8 @@ pub use arena::Arena;
 
 pub mod status;
 mod status_test;
+mod comparator;
+mod comparator_test;
 
 /// 定义别名
 pub type Result<T> = result::Result<T, LevelError>;
