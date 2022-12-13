@@ -34,7 +34,11 @@ impl Status {
     /// ```
     ///
     /// ```
-    pub fn wrapper(err: LevelError, slice: Slice) -> Status {
+    pub fn wrapper(err: LevelError, mut slice: Slice) -> Status {
+        if err.is_ok() {
+            slice = Slice::default();
+        }
+
         Self {
             err,
             msg: slice
@@ -50,6 +54,31 @@ impl Status {
         }
     }
 
+    pub fn is_ok(&self) -> bool {
+        self.err.is_ok()
+    }
+
+    pub fn is_not_found(&self) -> bool {
+        self.err.is_not_found()
+    }
+
+    pub fn is_corruption(&self) -> bool {
+        self.err.is_corruption()
+    }
+
+    pub fn is_io_error(&self) -> bool {
+        self.err.is_io_error()
+    }
+
+    pub fn is_not_supported_error(&self) -> bool {
+        self.err.is_not_supported_error()
+    }
+
+    pub fn is_invalid_argument(&self) -> bool {
+        self.err.is_invalid_argument()
+    }
+
+    /// 请注意， err 的所有权会发生转移！！！
     pub fn get_error(self) -> LevelError {
         self.err
     }
@@ -93,7 +122,7 @@ impl Status {
     /// ```
     #[inline]
     pub fn to_string(self) -> String {
-        let err = self.err;
+        let err = &self.err;
 
         let msg_type = match &err {
             KOk => "OK",
@@ -126,7 +155,7 @@ pub enum LevelError {
 }
 
 impl LevelError {
-    pub fn is_ok(self) -> bool {
+    pub fn is_ok(&self) -> bool {
         match self {
             KOk => true,
             _ => false
