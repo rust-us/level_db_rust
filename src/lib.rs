@@ -1,3 +1,5 @@
+#![feature(concat_idents)]
+
 mod db;
 mod table;
 mod util;
