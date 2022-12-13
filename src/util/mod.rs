@@ -22,4 +22,4 @@ mod bloom_filter_test;
 pub mod filter_policy;
 
 /// 定义别名
-pub type Result<T> = result::Result<T, LevelError>;
+pub type ResultT<T> = result::Result<T, LevelError>;
