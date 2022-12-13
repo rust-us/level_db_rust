@@ -17,6 +17,7 @@ pub mod status;
 mod status_test;
 mod comparator;
 mod comparator_test;
+mod crc;
 
 /// 定义别名
 pub type Result<T> = result::Result<T, LevelError>;
