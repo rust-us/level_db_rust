@@ -62,26 +62,3 @@ impl ComparatorTrait for InternalKeyComparator {
         todo!()
     }
 }
-
-/// ReverseKeyComparator
-pub struct ReverseKeyComparator {
-
-}
-
-impl ComparatorTrait for ReverseKeyComparator {
-    fn compare(&self, a: &Slice, b: &Slice) -> Option<Ordering> {
-        todo!()
-    }
-
-    fn get_name() -> String {
-        String::from("leveldb.ReverseBytewiseComparator")
-    }
-
-    fn find_shortest_separator(&self, start: &String, limit: &Slice) -> String {
-        todo!()
-    }
-
-    fn find_short_successor(&self, key: &String) -> String {
-        todo!()
-    }
-}

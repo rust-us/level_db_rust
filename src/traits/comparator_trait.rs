@@ -51,8 +51,20 @@ pub trait ComparatorTrait {
     /// ```
     fn find_shortest_separator(&self, start: &String, limit:&Slice) -> String;
 
-    /// 减少像index blocks这样的内部数据结构占用的空间
-    /// 将 key变成一个比原*key大的短字符串，并赋值给 key返回。
+    /// 找一个 >= key的短字符串, key变成一个比原*key大的短字符串，并返回。
+    /// 简单的comparator实现可能不改变 key，这也是正确的
+    ///
+    /// # Arguments
+    ///
+    /// * `key`:
+    ///
+    /// returns: String
+    ///
+    /// # Examples
+    ///
+    /// ```
+    ///
+    /// ```
     fn find_short_successor(&self, key: &String) -> String;
 
 }

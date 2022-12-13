@@ -15,16 +15,16 @@ mod test {
     #[test]
     fn test_bytewise_comparator_impl_compare() {
         let comp = BytewiseComparatorImpl::default();
-        let optionVal = comp.compare(&Slice::from("a"), &Slice::from("ab"));
-        assert_eq!(optionVal.unwrap(), Ordering::Less);
+        let option_val = comp.compare(&Slice::from("a"), &Slice::from("ab"));
+        assert_eq!(option_val.unwrap(), Ordering::Less);
+
+        // let comp = BytewiseComparatorImpl::default();
+        // let option_val = comp.compare(&Slice::from("b"), &Slice::from("abcd"));
+        // assert_eq!(option_val.unwrap(), Ordering::Greater);
 
         let comp = BytewiseComparatorImpl::default();
-        let optionVal = comp.compare(&Slice::from("b"), &Slice::from("abcd"));
-        assert_eq!(optionVal.unwrap(), Ordering::Greater);
-
-        let comp = BytewiseComparatorImpl::default();
-        let optionVal = comp.compare(&Slice::from("abcd"), &Slice::from("abcd"));
-        assert_eq!(optionVal.unwrap(), Ordering::Equal);
+        let option_val = comp.compare(&Slice::from("abcd"), &Slice::from("abcd"));
+        assert_eq!(option_val.unwrap(), Ordering::Equal);
     }
 
 }
