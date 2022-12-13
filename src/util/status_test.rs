@@ -5,15 +5,24 @@ mod test {
     use crate::util::status::{LevelError, Status};
 
     #[test]
-    fn test_error_code() {
+    fn test_wraper() {
+        let msg1 = "abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc";
+
+        let status = Status::wrapper(LevelError::KIOError, String::from(msg1).into());
+        assert!(&status.is_io_error());
+        let slice: Option<Slice> = status.into_msg();
+        assert_eq!("abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc",
+                   String::from(slice.unwrap()));
+
+        let ss = Status::wrapper(LevelError::KOk, String::from(msg1).into());
+        assert!(&ss.is_ok());
+        assert_eq!("OK", &ss.to_string());
+    }
+
+    #[test]
+    fn test_wrappers() {
         let msg1 = "abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc";
         let msg2 = "456456456456456456456456456456456456456456456456";
-
-        let err: Status = LevelError::io_error(String::from(msg1).into(), String::from(msg2).into());
-        assert!(&err.get_error().is_io_error());
-
-        let status = Status::default();
-        assert!(&status.get_error().is_ok());
 
         let status = Status::wrappers(LevelError::KIOError, String::from(msg1).into(), String::from(msg2).into());
         let slice: Option<Slice> = status.into_msg();
