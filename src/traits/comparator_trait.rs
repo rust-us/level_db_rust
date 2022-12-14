@@ -31,11 +31,14 @@ pub trait ComparatorTrait {
     /// 返回comparator的名字
     fn get_name() -> String;
 
-    /// 函数：用于减少像index blocks这样的内部数据结构占用的空间, 其中的*start和*key参数都是IN OUT的。
+    /// 函数：找到start、limit之间最短的字符串，如“helloworld”和”hellozoomer”之间最短的key可以是”hellox”
     ///
-    /// 这个函数的作用就是：
-    /// 如果*start < limit，就在[startlimit,)中找到一个短字符串，并赋给*start返回. 如“helloworld”和”hellozoomer”之间最短的key可以是”hellox”。
-    /// 简单的comparator实现可能不改变*start(start==limit)，这也是正确的
+    /// 作用是：
+    /// 作用是，如果start < limit,就把start修改为*start和limit的共同前缀后面多一个字符加1
+    /// 例如：
+    /// start:    helloWorld
+    /// limit:     helloZookeeper
+    /// 由于 *start < limit, 所以调用 FindShortSuccessor(start, limit)之后，start变成： helloX (保留前缀，第一个不相同的字符+1)
     ///
     /// # Arguments
     ///

@@ -2,7 +2,7 @@
 mod test {
     use std::cmp::Ordering;
     use crate::traits::comparator_trait::ComparatorTrait;
-    use crate::util::comparator::{BytewiseComparatorImpl, InternalKeyComparator};
+    use crate::util::comparator::{BytewiseComparatorImpl};
     use crate::util::slice::Slice;
 
     #[test]
