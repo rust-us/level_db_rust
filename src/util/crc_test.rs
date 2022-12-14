@@ -1,4 +1,5 @@
-use crate::util::crc::CRC;
+use crate::util::crc::{AsCrc, CRC};
+use crate::util::slice::Slice;
 
 #[test]
 fn test_crc() {
@@ -28,6 +29,23 @@ fn test_extend() {
     let crc = CRC::extend(init_crc, "world".as_bytes());
     let value = CRC::value("hello world".as_bytes());
     assert_eq!(value, crc);
+}
+
+#[test]
+fn test_as_crc() {
+    let expect = CRC::value("123".as_bytes());
+    let crc0 = "123".as_crc();
+    assert_eq!(expect, crc0);
+    let crc1 = String::from("123").as_crc();
+    assert_eq!(expect, crc1);
+    let crc2 = Slice::from("123").as_crc();
+    assert_eq!(expect, crc2);
+    let buf = "123".as_bytes();
+    let crc3 = buf.as_crc();
+    assert_eq!(expect, crc3);
+    let crc4 = Vec::from(buf).as_crc();
+    assert_eq!(expect, crc4);
+
 }
 
 #[test]
