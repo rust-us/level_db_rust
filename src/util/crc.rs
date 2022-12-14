@@ -1,4 +1,3 @@
-use std::alloc::Layout;
 use crate::traits::coding_trait::CodingTrait;
 use crate::util::coding::Coding;
 
@@ -50,6 +49,52 @@ const K_BYTE_EXTENSION_TABLE: [u32; 256] = [
 0xf36e6f75, 0x0105ec76, 0x12551f82, 0xe03e9c81, 0x34f4f86a, 0xc69f7b69,
 0xd5cf889d, 0x27a40b9e, 0x79b737ba, 0x8bdcb4b9, 0x988c474d, 0x6ae7c44e,
 0xbe2da0a5, 0x4c4623a6, 0x5f16d052, 0xad7d5351];
+
+const K_STRIDE_EXTENSION_TABLE0: [u32; 256] = [
+    0x00000000, 0x30d23865, 0x61a470ca, 0x517648af, 0xc348e194, 0xf39ad9f1,
+    0xa2ec915e, 0x923ea93b, 0x837db5d9, 0xb3af8dbc, 0xe2d9c513, 0xd20bfd76,
+    0x4035544d, 0x70e76c28, 0x21912487, 0x11431ce2, 0x03171d43, 0x33c52526,
+    0x62b36d89, 0x526155ec, 0xc05ffcd7, 0xf08dc4b2, 0xa1fb8c1d, 0x9129b478,
+    0x806aa89a, 0xb0b890ff, 0xe1ced850, 0xd11ce035, 0x4322490e, 0x73f0716b,
+    0x228639c4, 0x125401a1, 0x062e3a86, 0x36fc02e3, 0x678a4a4c, 0x57587229,
+    0xc566db12, 0xf5b4e377, 0xa4c2abd8, 0x941093bd, 0x85538f5f, 0xb581b73a,
+    0xe4f7ff95, 0xd425c7f0, 0x461b6ecb, 0x76c956ae, 0x27bf1e01, 0x176d2664,
+    0x053927c5, 0x35eb1fa0, 0x649d570f, 0x544f6f6a, 0xc671c651, 0xf6a3fe34,
+    0xa7d5b69b, 0x97078efe, 0x8644921c, 0xb696aa79, 0xe7e0e2d6, 0xd732dab3,
+    0x450c7388, 0x75de4bed, 0x24a80342, 0x147a3b27, 0x0c5c750c, 0x3c8e4d69,
+    0x6df805c6, 0x5d2a3da3, 0xcf149498, 0xffc6acfd, 0xaeb0e452, 0x9e62dc37,
+    0x8f21c0d5, 0xbff3f8b0, 0xee85b01f, 0xde57887a, 0x4c692141, 0x7cbb1924,
+    0x2dcd518b, 0x1d1f69ee, 0x0f4b684f, 0x3f99502a, 0x6eef1885, 0x5e3d20e0,
+    0xcc0389db, 0xfcd1b1be, 0xada7f911, 0x9d75c174, 0x8c36dd96, 0xbce4e5f3,
+    0xed92ad5c, 0xdd409539, 0x4f7e3c02, 0x7fac0467, 0x2eda4cc8, 0x1e0874ad,
+    0x0a724f8a, 0x3aa077ef, 0x6bd63f40, 0x5b040725, 0xc93aae1e, 0xf9e8967b,
+    0xa89eded4, 0x984ce6b1, 0x890ffa53, 0xb9ddc236, 0xe8ab8a99, 0xd879b2fc,
+    0x4a471bc7, 0x7a9523a2, 0x2be36b0d, 0x1b315368, 0x096552c9, 0x39b76aac,
+    0x68c12203, 0x58131a66, 0xca2db35d, 0xfaff8b38, 0xab89c397, 0x9b5bfbf2,
+    0x8a18e710, 0xbacadf75, 0xebbc97da, 0xdb6eafbf, 0x49500684, 0x79823ee1,
+    0x28f4764e, 0x18264e2b, 0x18b8ea18, 0x286ad27d, 0x791c9ad2, 0x49cea2b7,
+    0xdbf00b8c, 0xeb2233e9, 0xba547b46, 0x8a864323, 0x9bc55fc1, 0xab1767a4,
+    0xfa612f0b, 0xcab3176e, 0x588dbe55, 0x685f8630, 0x3929ce9f, 0x09fbf6fa,
+    0x1baff75b, 0x2b7dcf3e, 0x7a0b8791, 0x4ad9bff4, 0xd8e716cf, 0xe8352eaa,
+    0xb9436605, 0x89915e60, 0x98d24282, 0xa8007ae7, 0xf9763248, 0xc9a40a2d,
+    0x5b9aa316, 0x6b489b73, 0x3a3ed3dc, 0x0aecebb9, 0x1e96d09e, 0x2e44e8fb,
+    0x7f32a054, 0x4fe09831, 0xddde310a, 0xed0c096f, 0xbc7a41c0, 0x8ca879a5,
+    0x9deb6547, 0xad395d22, 0xfc4f158d, 0xcc9d2de8, 0x5ea384d3, 0x6e71bcb6,
+    0x3f07f419, 0x0fd5cc7c, 0x1d81cddd, 0x2d53f5b8, 0x7c25bd17, 0x4cf78572,
+    0xdec92c49, 0xee1b142c, 0xbf6d5c83, 0x8fbf64e6, 0x9efc7804, 0xae2e4061,
+    0xff5808ce, 0xcf8a30ab, 0x5db49990, 0x6d66a1f5, 0x3c10e95a, 0x0cc2d13f,
+    0x14e49f14, 0x2436a771, 0x7540efde, 0x4592d7bb, 0xd7ac7e80, 0xe77e46e5,
+    0xb6080e4a, 0x86da362f, 0x97992acd, 0xa74b12a8, 0xf63d5a07, 0xc6ef6262,
+    0x54d1cb59, 0x6403f33c, 0x3575bb93, 0x05a783f6, 0x17f38257, 0x2721ba32,
+    0x7657f29d, 0x4685caf8, 0xd4bb63c3, 0xe4695ba6, 0xb51f1309, 0x85cd2b6c,
+    0x948e378e, 0xa45c0feb, 0xf52a4744, 0xc5f87f21, 0x57c6d61a, 0x6714ee7f,
+    0x3662a6d0, 0x06b09eb5, 0x12caa592, 0x22189df7, 0x736ed558, 0x43bced3d,
+    0xd1824406, 0xe1507c63, 0xb02634cc, 0x80f40ca9, 0x91b7104b, 0xa165282e,
+    0xf0136081, 0xc0c158e4, 0x52fff1df, 0x622dc9ba, 0x335b8115, 0x0389b970,
+    0x11ddb8d1, 0x210f80b4, 0x7079c81b, 0x40abf07e, 0xd2955945, 0xe2476120,
+    0xb331298f, 0x83e311ea, 0x92a00d08, 0xa272356d, 0xf3047dc2, 0xc3d645a7,
+    0x51e8ec9c, 0x613ad4f9, 0x304c9c56, 0x009ea433
+];
 
 const K_STRIDE_EXTENSION_TABLE1: [u32; 256] = [
     0x00000000, 0x54075546, 0xa80eaa8c, 0xfc09ffca, 0x55f123e9, 0x01f676af,
@@ -196,7 +241,7 @@ pub struct CRC {}
 /// step1, Process one byte at a time.
 macro_rules! step1 {
     ($data: tt, $s: tt, $l: tt) => {
-        let c = ($l & 0xff) ^ ($data[0] as u32);
+        let c = ($l & 0xff) ^ ($data[$s] as u32);
         $s+=1;
         $l = K_BYTE_EXTENSION_TABLE[c as usize] ^ ($l >> 8);
     }
@@ -204,22 +249,22 @@ macro_rules! step1 {
 
 /// Process one of the 4 strides of 4-byte data.
 macro_rules! step4 {
-    ($name: ident, $data: tt, $i: tt) => {
-        $name = Coding::decode_fixed32(&$data[$i*4..]) ^
+    ($name: ident, $data: tt, $s: tt, $i: tt) => {
+        $name = Coding::decode_fixed32(&$data[$s+$i*4..]) ^
             K_STRIDE_EXTENSION_TABLE3[$name as u8 as usize] ^
             K_STRIDE_EXTENSION_TABLE2[($name >> 8) as u8 as usize] ^
-            K_STRIDE_EXTENSION_TABLE2[($name >> 16) as u8 as usize] ^
-            K_STRIDE_EXTENSION_TABLE2[($name >> 24) as u8 as usize];
+            K_STRIDE_EXTENSION_TABLE1[($name >> 16) as u8 as usize] ^
+            K_STRIDE_EXTENSION_TABLE0[($name >> 24) as u8 as usize];
     }
 }
 
 /// Process a 16-byte swath of 4 strides, each of which has 4 bytes of data.
 macro_rules! step16 {
     ($c0: tt, $c1: tt, $c2: tt, $c3: tt, $data: tt, $s: tt) => {
-        step4!($c0, $data, 0);
-        step4!($c1, $data, 1);
-        step4!($c2, $data, 2);
-        step4!($c3, $data, 3);
+        step4!($c0, $data, $s, 0);
+        step4!($c1, $data, $s, 1);
+        step4!($c2, $data, $s, 2);
+        step4!($c3, $data, $s, 3);
         $s += 16;
     }
 }
@@ -250,16 +295,18 @@ impl CRC {
     /// # Examples
     ///
     /// ```
-    ///let init_crc = CRC::value([1_u8,2,3,4,5].as_ref());
-    ///let crc = CRC::extend(init_crc, [1_u8,2,3,4,5].as_ref());
+    ///let init_crc = CRC::value(&[1_u8,2,3,4,5]);
+    ///let crc = CRC::extend(init_crc, &[1_u8,2,3,4,5]);
     /// ```
     pub fn extend(init_crc: u32, data: &[u8]) -> u32 {
+        // s: start_offset, n: data length, l: result crc
         let mut s = 0_usize;
         let n = data.len();
         let mut l = init_crc ^ K_CRC32_XOR;
 
         // 4 byte align offset
         let x = ptr_align_by4_offset(data.as_ptr());
+        // println!("x: {}, l: {:x}, n: {}", x, l, n);
         while s < x {
             step1!(data, s, l);
         }
@@ -270,17 +317,32 @@ impl CRC {
             let mut crc2 = Coding::decode_fixed32(&data[(s+8)..]);
             let mut crc3 = Coding::decode_fixed32(&data[(s+12)..]);
             s += 16;
+            // println!("c0: {:x}, c1: {:x}, c2: {:x}, c3: {:x}, s: {}", crc0, crc1, crc2, crc3, s);
             while (n - s) >= 16 {
                 step16!(crc0, crc1, crc2, crc3, data, s);
+                // println!("step16, c0: {:x}, c1: {:x}, c2: {:x}, c3: {:x}, s: {}", crc0, crc1, crc2, crc3, s);
             }
             while (n-s) >= 4 {
-                step4!(crc0, data, 0);
+                step4!(crc0, data, s, 0);
                 // swap variables
                 (crc1, crc2, crc3) = (crc0, crc1, crc2);
                 s += 4;
+                // println!("step4, c0: {:x}, c1: {:x}, c2: {:x}, c3: {:x}, s: {}", crc0, crc1, crc2, crc3, s);
             }
+            // Combine the 4 partial stride results.
+            l = 0;
+            stepw!(crc0, l);
+            stepw!(crc1, l);
+            stepw!(crc2, l);
+            stepw!(crc3, l);
         }
-        todo!()
+
+        while s != n {
+            step1!(data, s, l);
+            // println!("step1, l: {:x}, s: {}", l, s);
+        }
+
+        l ^ K_CRC32_XOR
     }
 
 

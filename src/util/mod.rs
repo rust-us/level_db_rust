@@ -27,3 +27,4 @@ pub type ResultT<T> = result::Result<T, LevelError>;
 
 pub mod histogram;
 mod histogram_test;
+mod crc_test;
