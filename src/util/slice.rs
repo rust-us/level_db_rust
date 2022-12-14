@@ -102,6 +102,12 @@ impl From<Slice> for String {
     }
 }
 
+impl From<Slice> for Vec<u8> {
+    fn from(s: Slice) -> Self {
+        s.data
+    }
+}
+
 impl <R: AsRef<str>> From<R> for Slice {
     fn from(r: R) -> Self {
         Self {
