@@ -1,3 +1,4 @@
+use std::alloc::Layout;
 use crate::traits::coding_trait::CodingTrait;
 use crate::util::coding::Coding;
 
@@ -192,23 +193,45 @@ const K_STRIDE_EXTENSION_TABLE3: [u32; 256] = [
 
 pub struct CRC {}
 
-// step1, Process one byte at a time.
+/// step1, Process one byte at a time.
 macro_rules! step1 {
-    () => {
-        let c = (l & 0xff) ^ data[s];
-        s+=1;
-        l = K_BYTE_EXTENSION_TABLE[c] ^ (l >> 8);
+    ($data: tt, $s: tt, $l: tt) => {
+        let c = ($l & 0xff) ^ ($data[0] as u32);
+        $s+=1;
+        $l = K_BYTE_EXTENSION_TABLE[c as usize] ^ ($l >> 8);
     }
 }
 
-// Process one of the 4 strides of 4-byte data.
+/// Process one of the 4 strides of 4-byte data.
 macro_rules! step4 {
-    ($name: ident, $s: expr) => {
-        $ident = Coding::decode_fixed32(&data[$s*4..]) ^
-            K_STRIDE_EXTENSION_TABLE3[$ident as u8] ^
-            K_STRIDE_EXTENSION_TABLE2[($ident >> 8) as u8] ^
-            K_STRIDE_EXTENSION_TABLE2[($ident >> 16) as u8] ^
-            K_STRIDE_EXTENSION_TABLE2[($ident >> 24) as u8];
+    ($name: ident, $data: tt, $i: tt) => {
+        $name = Coding::decode_fixed32(&$data[$i*4..]) ^
+            K_STRIDE_EXTENSION_TABLE3[$name as u8 as usize] ^
+            K_STRIDE_EXTENSION_TABLE2[($name >> 8) as u8 as usize] ^
+            K_STRIDE_EXTENSION_TABLE2[($name >> 16) as u8 as usize] ^
+            K_STRIDE_EXTENSION_TABLE2[($name >> 24) as u8 as usize];
+    }
+}
+
+/// Process a 16-byte swath of 4 strides, each of which has 4 bytes of data.
+macro_rules! step16 {
+    ($name: ident, $data: tt, $s: tt) => {
+        step4!($name, $data, 0);
+        step4!($name, $data, 1);
+        step4!($name, $data, 2);
+        step4!($name, $data, 3);
+        $s += 16;
+    }
+}
+
+/// Process 4 bytes that were already loaded into a word.
+macro_rules! stepw {
+    ($w: tt, $l: tt) => {
+        $w ^= $l;
+        for _ in 0..4 {
+            $w = ($w >> 8) ^ K_BYTE_EXTENSION_TABLE[$w as u8 as usize];
+        }
+        $l = $w;
     }
 }
 
@@ -235,9 +258,22 @@ impl CRC {
         let n = data.len();
         let mut l = init_crc ^ K_CRC32_XOR;
 
-        // step1!();
 
 
+        step1!(data, s, l);
+        let mut crc0 = 0_u32;
+        let mut crc1 = 0_u32;
+        let mut crc2 = 0_u32;
+        let mut crc3 = 0_u32;
+        step4!(crc0, data, 0);
+
+        step16!(crc0, data, s);
+        step16!(crc1, data, s);
+        step16!(crc2, data, s);
+        step16!(crc3, data, s);
+
+        let mut w = 12_u32;
+        stepw!(w, l);
 
         todo!()
     }
@@ -297,6 +333,13 @@ impl CRC {
     pub fn unmask(masked_crc: u32) -> u32 {
         let rot = masked_crc - K_MASK_DELTA;
         (rot >> 17) | (rot << 15)
+    }
+
+    /// 指针对齐到 4byte 需要的偏移量
+    fn ptr_align_by4_offset(ptr: *const u8) -> usize {
+        let addr = ptr as usize;
+        // eg: addr = 10, output = 8
+        (addr+3) & !(addr-3)
     }
 
 }
