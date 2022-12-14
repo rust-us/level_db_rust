@@ -215,11 +215,11 @@ macro_rules! step4 {
 
 /// Process a 16-byte swath of 4 strides, each of which has 4 bytes of data.
 macro_rules! step16 {
-    ($name: ident, $data: tt, $s: tt) => {
-        step4!($name, $data, 0);
-        step4!($name, $data, 1);
-        step4!($name, $data, 2);
-        step4!($name, $data, 3);
+    ($c0: tt, $c1: tt, $c2: tt, $c3: tt, $data: tt, $s: tt) => {
+        step4!($c0, $data, 0);
+        step4!($c1, $data, 1);
+        step4!($c2, $data, 2);
+        step4!($c3, $data, 3);
         $s += 16;
     }
 }
@@ -258,23 +258,28 @@ impl CRC {
         let n = data.len();
         let mut l = init_crc ^ K_CRC32_XOR;
 
+        // 4 byte align offset
+        let x = ptr_align_by4_offset(data.as_ptr());
+        while s < x {
+            step1!(data, s, l);
+        }
 
-
-        step1!(data, s, l);
-        let mut crc0 = 0_u32;
-        let mut crc1 = 0_u32;
-        let mut crc2 = 0_u32;
-        let mut crc3 = 0_u32;
-        step4!(crc0, data, 0);
-
-        step16!(crc0, data, s);
-        step16!(crc1, data, s);
-        step16!(crc2, data, s);
-        step16!(crc3, data, s);
-
-        let mut w = 12_u32;
-        stepw!(w, l);
-
+        if n - s >= 16 {
+            let mut crc0 = Coding::decode_fixed32(&data[s..]) ^ l;
+            let mut crc1 = Coding::decode_fixed32(&data[(s+4)..]);
+            let mut crc2 = Coding::decode_fixed32(&data[(s+8)..]);
+            let mut crc3 = Coding::decode_fixed32(&data[(s+12)..]);
+            s += 16;
+            while (n - s) >= 16 {
+                step16!(crc0, crc1, crc2, crc3, data, s);
+            }
+            while (n-s) >= 4 {
+                step4!(crc0, data, 0);
+                // swap variables
+                (crc1, crc2, crc3) = (crc0, crc1, crc2);
+                s += 4;
+            }
+        }
         todo!()
     }
 
@@ -335,11 +340,14 @@ impl CRC {
         (rot >> 17) | (rot << 15)
     }
 
-    /// 指针对齐到 4byte 需要的偏移量
-    fn ptr_align_by4_offset(ptr: *const u8) -> usize {
-        let addr = ptr as usize;
-        // eg: addr = 10, output = 8
-        (addr+3) & !(addr-3)
-    }
 
+
+}
+
+/// 指针对齐到 4byte 需要的偏移量
+fn ptr_align_by4_offset(ptr: *const u8) -> usize {
+    let addr = ptr as usize;
+    // eg: addr = 10, output = 2
+    // (addr+3) & !(addr-3)
+    addr % 4
 }
