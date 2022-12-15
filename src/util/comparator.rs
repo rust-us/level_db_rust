@@ -68,8 +68,8 @@ impl ComparatorTrait for BytewiseComparatorImpl {
     }
 
     fn find_short_successor(&self, key: &String) -> String {
-        /// 找到第一个可以++的字符，执行++后，截断字符串；
-        /// 如果找不到说明 key的字符都是 u8::MAX，直接返回
+        // 找到第一个可以++的字符，执行++后，截断字符串；
+        // 如果找不到说明 key的字符都是 u8::MAX，直接返回
         let key_len = key.len();
 
         let mut key_char_vec: Vec<u8>  = key.as_bytes().to_vec();
@@ -84,7 +84,6 @@ impl ComparatorTrait for BytewiseComparatorImpl {
                 return short_successor_val;
             }
         }
-        ///  key is a run of u8::MAX.  Leave it alone.
 
         Slice::from_buf(key.as_bytes()).into()
     }
@@ -104,7 +103,7 @@ pub struct InternalKeyComparator {
 impl ComparatorTrait for InternalKeyComparator {
     // todo  InternalKeyComparator 的构造方法
 
-    fn compare(&self, a: &Slice, b: &Slice) -> Option<Ordering> {
+    fn compare(&self, _a: &Slice, _b: &Slice) -> Option<Ordering> {
         todo!()
     }
 
@@ -112,11 +111,11 @@ impl ComparatorTrait for InternalKeyComparator {
         String::from("leveldb.InternalKeyComparator")
     }
 
-    fn find_shortest_separator(&self, start: &String, limit: &Slice) -> String {
+    fn find_shortest_separator(&self, _start: &String, _limit: &Slice) -> String {
         todo!()
     }
 
-    fn find_short_successor(&self, key: &String) -> String {
+    fn find_short_successor(&self, _key: &String) -> String {
         todo!()
     }
 }
