@@ -113,7 +113,6 @@ impl CodingTrait for Coding {
     }
 
     fn get_length_prefixed_slice(input: &mut Slice) -> Slice {
-        let len = 0_u32;
         let decode = Coding::get_varint32(input);
         Slice::from_buf(decode.to_le_bytes().as_mut_slice())
     }

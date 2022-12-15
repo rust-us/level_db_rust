@@ -17,6 +17,7 @@ pub mod status;
 mod status_test;
 pub mod comparator;
 mod comparator_test;
+mod crc;
 pub mod bloom_filter;
 mod bloom_filter_test;
 pub mod filter_policy;
@@ -26,3 +27,4 @@ pub type ResultT<T> = result::Result<T, LevelError>;
 
 pub mod histogram;
 mod histogram_test;
+mod crc_test;
