@@ -3,7 +3,7 @@ mod test {
     use std::cmp::Ordering;
     use std::io::Write;
     use crate::traits::comparator_trait::ComparatorTrait;
-    use crate::util::comparator::{BytewiseComparatorImpl};
+    use crate::util::comparator::{BytewiseComparatorImpl, InternalKeyComparator};
     use crate::util::slice::Slice;
 
     #[test]
@@ -120,6 +120,12 @@ mod test {
         expect_u8_max_vec.write("i".as_bytes()).expect("panic message");
         assert_eq!(find_short_successor_val,
                    String::from(Slice::from_buf(expect_u8_max_vec.as_slice())));
+    }
+
+    #[test]
+    fn test_internal_key_comparator_get_name() {
+        let name = InternalKeyComparator::get_name();
+        assert_eq!("leveldb.InternalKeyComparator", name);
     }
 
 }
