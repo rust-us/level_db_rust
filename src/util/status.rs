@@ -1,5 +1,4 @@
 use std::fmt::{Display, Error, Formatter};
-use std::ops::Deref;
 use crate::util::r#const::COLON_WHITE_SPACE;
 use crate::util::ResultT;
 use crate::util::slice::Slice;
@@ -78,6 +77,10 @@ impl Status {
         self.err.is_invalid_argument()
     }
 
+    pub fn get_error_string(&self) -> String {
+        self.err.to_string()
+    }
+
     /// 请注意， err 的所有权会发生转移！！！
     pub fn get_error(self) -> LevelError {
         self.err
@@ -102,8 +105,8 @@ impl Status {
     /// assert_eq!("abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc: 456456456456456456456456456456456456456456456456",
     ///                                      String::from(slice.unwrap()));
     /// ```
-    pub fn into_msg(self) -> Option<Slice> {
-        Some(self.msg)
+    pub fn into_msg(self) -> Slice {
+        self.msg
     }
 
 
@@ -143,6 +146,29 @@ impl Status {
         format!("{}{}", msg_type, error_msg)
     }
 }
+
+// impl Display for Status {
+//     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+//         let mut print = String::new();
+//
+//         if self.is_ok() {
+//             print.push_str("OK");
+//             write!(f, "{}", print);
+//
+//             return Ok(());
+//         }
+//
+//         print.push_str(&self.get_error_string());
+//
+//         let slice: &Slice = &self.msg;
+//         let errMsg = String::from(slice);
+//         print.push_str(errMsg.as_str());
+//
+//         write!(f, "{}", print);
+//
+//         Ok(())
+//     }
+// }
 
 /// Status 的状态
 pub enum LevelError {
@@ -316,32 +342,23 @@ impl TryFrom<i32> for LevelError {
     }
 }
 
-// /// 实现Display，自动提供to_string
-// impl Display for LevelError {
-//     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-//         let mut print = String::new();
-//
-//         if self.is_default() {
-//             print.push_str("OK");
-//             return write!(f, "{}", print);
-//         }
-//
-//         let msg_type = match self {
-//             KOk => "OK",
-//             KNotFound(_)  => "NotFound: ",
-//             KCorruption(_)  => "Corruption: ",
-//             KNotSupported(_)  => "Not implemented: ",
-//             KInvalidArgument(_)  => "Invalid argument: ",
-//             KIOError(_)  => "IO error: "
-//         };
-//         print.push_str(msg_type);
-//
-//         let mut msg_err: Slice =  self.into_msg().unwrap();
-//         print.push_str(msg_err.borrow_data().as_str());
-//
-//         write!(f, "{}", print)
-//     }
-// }
+impl Display for LevelError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut print = String::new();
+
+        let msg_type = match &self {
+            KOk => "OK",
+            KNotFound  => "NotFound: ",
+            KCorruption  => "Corruption: ",
+            KNotSupported  => "Not implemented: ",
+            KInvalidArgument  => "Invalid argument: ",
+            KIOError  => "IO error: "
+        };
+        print.push_str(msg_type);
+
+        write!(f, "{}", print)
+    }
+}
 
 // impl Deref for LevelError {
 //     type Target = i32;
