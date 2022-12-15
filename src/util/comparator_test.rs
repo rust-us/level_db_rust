@@ -1,6 +1,7 @@
 
 mod test {
     use std::cmp::Ordering;
+    use std::io::Write;
     use crate::traits::comparator_trait::ComparatorTrait;
     use crate::util::comparator::{BytewiseComparatorImpl};
     use crate::util::slice::Slice;
@@ -70,8 +71,55 @@ mod test {
     fn test_bytewise_comparator_impl_find_short_successor() {
         let comp = BytewiseComparatorImpl::default();
         let find_short_successor_val = comp.find_short_successor(&String::from("helloWorld"));
-        println!("find_short_successor_val: {}", &find_short_successor_val);
-        assert_eq!(find_short_successor_val, "a");
+        assert_eq!(find_short_successor_val, "i");
+
+
+        let comp = BytewiseComparatorImpl::default();
+        let find_short_successor_val = comp.find_short_successor(&String::from("a"));
+        assert_eq!(find_short_successor_val, "b");
+
+
+        let comp = BytewiseComparatorImpl::default();
+        let find_short_successor_val = comp.find_short_successor(&String::from("123"));
+        assert_eq!(find_short_successor_val, "2");
+
+
+        // 只有 u8::MAX
+        let u8_max_vec: Vec<u8> = vec![u8::MAX];
+        let u8_max_str = String::from(Slice::from_buf(u8_max_vec.as_slice()));
+
+        let comp = BytewiseComparatorImpl::default();
+        let find_short_successor_val = comp.find_short_successor(&u8_max_str);
+        assert_eq!(u8_max_str, find_short_successor_val);
+
+
+        // u8max 结尾
+        let mut u8_vec: Vec<u8> = vec![];
+        u8_vec.write(&String::from("helloWorld").as_bytes().to_vec());
+        u8_vec.push(u8::MAX);
+
+        let u8_array_str = String::from(Slice::from_buf(u8_vec.as_slice()));
+
+        let comp = BytewiseComparatorImpl::default();
+        let find_short_successor_val = comp.find_short_successor(&u8_array_str);
+        assert_eq!(find_short_successor_val, "i");
+
+
+        // u8max 开头
+        let mut u8_vec: Vec<u8> = vec![];
+        u8_vec.push(u8::MAX);
+        u8_vec.write(&String::from("helloWorld").as_bytes().to_vec());
+        let u8_max_str = String::from(Slice::from_buf(u8_vec.as_slice()));
+
+        let comp = BytewiseComparatorImpl::default();
+        let find_short_successor_val = comp.find_short_successor(&u8_max_str);
+
+        // 只有 u8::MAX
+        let mut expect_u8_max_vec: Vec<u8> = vec![];
+        expect_u8_max_vec.push(u8::MAX);
+        expect_u8_max_vec.write("i".as_bytes()).expect("panic message");
+        assert_eq!(find_short_successor_val,
+                   String::from(Slice::from_buf(expect_u8_max_vec.as_slice())));
     }
 
 }

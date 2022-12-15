@@ -36,6 +36,7 @@ impl ComparatorTrait for BytewiseComparatorImpl {
         // let start_char_vec: Vec<char> = start.chars().collect::<Vec<_>>();
         // let limit_char_vec: Vec<char> = limit.to_vec().iter().map(|b| *b as char).collect::<Vec<_>>();
 
+        assert_eq!(u8::MAX, 255);
         while diff_index < min_length &&
             start_char_vec[diff_index] == limit_char_vec[diff_index]
         {
@@ -49,10 +50,10 @@ impl ComparatorTrait for BytewiseComparatorImpl {
         } else{
             // 尝试执行字符start[diff_index]++， 设置start长度为diff_index+1，并返回
             // ++条件：字符 < oxff 并且字符+1 < limit上该index的字符
-            let diff_byte = start_char_vec[diff_index];
+            let diff_byte: u8 = start_char_vec[diff_index];
             // let diff_char = diff_byte as char;
 
-            if diff_byte < 0xff &&
+            if diff_byte < u8::MAX &&
                 // 且 start 中的差异字符的next 小于 limit中的diff_index的字符，
                 // 则将 start 差异字符位置+1的元素变更为 差异字符的next
                 (diff_byte + 1) < limit_char_vec[diff_index] {
@@ -67,7 +68,25 @@ impl ComparatorTrait for BytewiseComparatorImpl {
     }
 
     fn find_short_successor(&self, key: &String) -> String {
-        String::from("a")
+        /// 找到第一个可以++的字符，执行++后，截断字符串；
+        /// 如果找不到说明 key的字符都是 u8::MAX，直接返回
+        let key_len = key.len();
+
+        let mut key_char_vec: Vec<u8>  = key.as_bytes().to_vec();
+        for i in 0..key_len {
+            let byte_val: u8 = key_char_vec[i];
+            if byte_val != u8::MAX {
+                key_char_vec[i] = byte_val + 1;
+
+                let short_successor: &[u8] = &key_char_vec[0..i+1];
+
+                let short_successor_val:  String= Slice::from_buf(short_successor).into();
+                return short_successor_val;
+            }
+        }
+        ///  key is a run of u8::MAX.  Leave it alone.
+
+        Slice::from_buf(key.as_bytes()).into()
     }
 }
 

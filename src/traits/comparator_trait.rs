@@ -68,7 +68,7 @@ pub trait ComparatorTrait {
     /// ```
     fn find_shortest_separator(&self, start: &String, limit:&Slice) -> String;
 
-    /// 用于找到比key大的最短字符串，如传入“helloworld”，返回的key可能是“i”而已。
+    /// 用于找到比key大的最短字符串，如传入“helloworld”，返回的key可能是“i”
     ///
     /// 找一个 >= key的短字符串, key变成一个比原key大的短字符串，并返回。
     ///
