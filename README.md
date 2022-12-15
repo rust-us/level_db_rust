@@ -46,9 +46,9 @@ LevelDB for rust
 | Coding (Primitive Type SerDe) | colagy          |      |
 | Comparator                    | fengyang        | 85%  |
 | Status                        | fengyang        | 100% |
-| BloomFilter                   | fengyang        |      |
+| BloomFilter                   | fengyang        | 0%   |
 | CRC                           | wangboo、lxd5866 |      |
 | Env                           | lxd5866         |      |
-| Hash                          | lxd5866         |      |
+| Hash                          | fengyang         | 30%  |
 | MutexLock                     | kazeseiriou     |      |
 | Histgram                      | kazeseiriou     |      |
