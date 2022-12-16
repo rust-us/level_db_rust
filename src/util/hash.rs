@@ -6,7 +6,7 @@ use crate::util::coding::Coding;
 pub struct Hash {}
 
 impl<'a> Hash {
-    ///
+    /// 计算 data 的 hash
     ///
     /// # Arguments
     ///
