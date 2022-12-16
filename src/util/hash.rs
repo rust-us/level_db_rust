@@ -21,14 +21,23 @@ impl<'a> Hash {
     /// ```
     ///
     /// ```
-    pub fn hash(data: String, data_size: usize, seed: u32) -> u32 {
+    pub fn hash(mut data: String, data_size: usize, seed: u32) -> u32 {
+        let data_u8_vec;
+        unsafe {
+            data_u8_vec = data.as_mut_vec();
+        }
+
+        Hash::hash_char(data_u8_vec, data_size, seed)
+    }
+
+    pub fn hash_char(data: &Vec<u8>, data_size: usize, seed: u32) -> u32 {
         let murmur_hash : u32 = 0xc6a4a793;
         let r : u32 = 24;
 
         let limit: usize = data_size;
         let mul_first = data_size.mul(murmur_hash as usize); // x = data_size * murmur_hash
         let mut h: usize = seed.bitxor(mul_first as u32) as usize;  // h = seed ^ x
-        
+
         // 每次按照四字节长度读取字节流中的数据 w，并使用普通的哈希函数计算哈希值。
         let mut position: usize = 0;
         while position + 4 <= limit {
