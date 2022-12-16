@@ -15,4 +15,8 @@ impl FilterPolicy for BloomFilterPolicy {
     fn create_filter(&self, keys: Slice, n: u32) -> String {
         todo!()
     }
+
+    fn key_may_match(key: &Slice, filter: &Slice) -> bool {
+        todo!()
+    }
 }
