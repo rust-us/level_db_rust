@@ -19,7 +19,9 @@ impl<'a> Hash {
     /// # Examples
     ///
     /// ```
-    ///
+    /// let data3: Vec<u8> = vec![0xe2, 0x99, 0xa5];
+    /// let hash_val = Hash::hash_char(&data3, data3.len(), 0xbc9f1d34);    ///
+    /// assert_eq!(0x323c078f, hash_val);
     /// ```
     pub fn hash(mut data: String, data_size: usize, seed: u32) -> u32 {
         let data_u8_vec;
@@ -36,7 +38,7 @@ impl<'a> Hash {
 
         let limit: usize = data_size;
         let mul_first = data_size.mul(murmur_hash as usize); // x = data_size * murmur_hash
-        let mut h: usize = seed.bitxor(mul_first as u32) as usize;  // h = seed ^ x
+        let mut h: u32 = seed.bitxor(mul_first as u32);  // h = seed ^ x
 
         // 每次按照四字节长度读取字节流中的数据 w，并使用普通的哈希函数计算哈希值。
         let mut position: usize = 0;
@@ -51,9 +53,9 @@ impl<'a> Hash {
 
             // /计算过程中使用了自然溢出特性
             // h += w
-            h = h.wrapping_add(w as usize);
+            h = h.wrapping_add(w);
             // h *= m
-            h = h.wrapping_mul(murmur_hash as usize);
+            h = h.wrapping_mul(murmur_hash);
             // ^ 按位异或 bitxor , >> 右移位 shr, << 左移位 shl
             // h ^= (h >> 16) == h ^= h.shr(16);
             h = h.bitxor(h.wrapping_shr(16));
@@ -61,33 +63,40 @@ impl<'a> Hash {
 
         // 四字节读取则为了加速，最终可能剩下 3/2/1 个多余的字节，
         // 将剩下的字节转化到 h 里面
-        let cu = limit - position;
-        match cu {
-            3 => {
-                let us: &[u8] = data[position..].as_ref();
-                h = h.wrapping_add((us[2] as u32).wrapping_shl(16) as usize);
-                h = h.wrapping_add((us[1] as u32).wrapping_shl(8) as usize);
-                h = h.wrapping_add(us[0].into());
-            },
-            2 => {
-                let us: &[u8] = data[position..].as_ref();
-                h = h.wrapping_add((us[1] as u32).wrapping_shl(8) as usize);
-                h = h.wrapping_add(us[0].into());
-            },
-            1 => {
-                let us: &[u8] = data[position..].as_ref();
-                h = h.wrapping_add(us[0].into());
-                // h *= m
-                h = h.wrapping_mul(murmur_hash as usize);
-                // h ^= (h >> r) == h ^= h.shr(r);
-                h = h.bitxor(h.wrapping_shr(r));
-            },
-            _ => {}
-        };
+        let mut mark: usize = 0;
+        while limit - position - mark != 0 {
+            match limit - position - mark {
+                3 => {
+                    let us: &[u8] = data[position..].as_ref();
+                    let as_us: u32 = us[2] as u32;
+                    h = h.wrapping_add(as_us.wrapping_shl(16));
 
-        println!("hash usize: {}", h);
-        println!("hash u32: {}", h as u32);
+                    mark += 1;
+                },
+                2 => {
+                    let us: &[u8] = data[position..].as_ref();
+                    let as_us: u32 = us[1] as u32;
+                    h = h.wrapping_add( as_us.wrapping_shl(8));
 
-        h as u32
+                    mark += 1;
+                },
+                1 => {
+                    let us: &[u8] = data[position..].as_ref();
+                    let as_us: u32 = us[0] as u32;
+                    h = h.wrapping_add(as_us);
+                    // h *= m
+                    h = h.wrapping_mul(murmur_hash);
+                    // h ^= (h >> r) ==> h ^= h.shr(r);
+                    h = h.bitxor(h.wrapping_shr(r));
+
+                    mark += 1;
+                },
+                _ => {
+                    println!("0")
+                }
+            };
+        }
+
+        h
     }
 }
