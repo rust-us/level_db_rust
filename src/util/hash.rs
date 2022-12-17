@@ -1,7 +1,12 @@
 use std::ops::{BitXor, Mul};
+use std::mem::size_of;
+use std::slice as stds;
 
 use crate::traits::coding_trait::CodingTrait;
 use crate::util::coding::Coding;
+use crate::util::crc::AsCrc;
+use crate::util::r#const::HASH_DEFAULT_SEED;
+use crate::util::slice;
 use crate::util::slice::Slice;
 
 /// 一种可以计算 hash 的特质
@@ -16,7 +21,9 @@ pub trait ToHash {
 /// ```
 impl<T: Sized> ToHash for Vec<T> {
     fn to_hash(&self) -> u32 {
-        todo!()
+        let v_v = self.as_slice();
+
+        v_v.to_hash()
     }
 }
 
@@ -24,11 +31,18 @@ impl<T: Sized> ToHash for Vec<T> {
 /// Sample:
 /// ```
 /// let buf = ['a','b','c'];
-/// let hash = &buf.to_hash();
+/// let hash_val = &buf.as_slice().to_hash();
 /// ```
 impl<T: Sized> ToHash for &[T] {
+    #[inline]
     fn to_hash(&self) -> u32 {
-        todo!()
+        let ptr_u8 = self.as_ptr() as *const _ as *const u8;
+
+        let data = unsafe {
+            stds::from_raw_parts(ptr_u8, size_of::<T>() * self.len())
+        };
+
+        Hash::hash_code(data, HASH_DEFAULT_SEED)
     }
 }
 
@@ -39,19 +53,19 @@ impl<T: Sized> ToHash for &[T] {
 /// ```
 impl ToHash for &str {
     fn to_hash(&self) -> u32 {
-        todo!()
+        Hash::hash_code(self.as_bytes(), HASH_DEFAULT_SEED)
     }
 }
 
 impl ToHash for Slice {
     fn to_hash(&self) -> u32 {
-        todo!()
+        Hash::hash_code(self.to_vec().as_slice(), HASH_DEFAULT_SEED)
     }
 }
 
 impl ToHash for String {
     fn to_hash(&self) -> u32 {
-        todo!()
+        Hash::hash_code(self.as_bytes(), HASH_DEFAULT_SEED)
     }
 }
 
@@ -59,7 +73,7 @@ impl ToHash for String {
 pub struct Hash {}
 
 impl Hash {
-    pub fn hash_char(data: &[u8], seed: u32) -> u32 {
+    pub fn hash_code(data: &[u8], seed: u32) -> u32 {
         let murmur_hash: u32 = 0xc6a4a793;
         let r: u32 = 24;
 
