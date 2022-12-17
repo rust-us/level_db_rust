@@ -3,15 +3,15 @@ use crate::util::hash::{Hash};
 #[test]
 fn test_hash() {
     let val = "aabbccd";
-    let hash_val = Hash::hash(String::from(val), val.len(), 3);
+    let hash_val = Hash::hash_char(val.as_bytes(), 3);
     println!("hash:{}", hash_val);
 
     let val = "aabbcc";
-    let hash_val = Hash::hash(String::from(val), val.len(), 3);
+    let hash_val = Hash::hash_char(val.as_bytes(), 3);
     println!("hash:{}", hash_val);
 
     let val = "aabbc";
-    let hash_val = Hash::hash(String::from(val), val.len(), 3);
+    let hash_val = Hash::hash_char(val.as_bytes(), 3);
     println!("hash:{}", hash_val);
 }
 
@@ -34,20 +34,20 @@ fn test_hash_code() {
                                0x02, 0x00, 0x00, 0x00,
                                0x00, 0x00, 0x00, 0x00];
 
-    let hash_val = Hash::hash_char(&vec![0], 0, 0xbc9f1d34);
+    let hash_val = Hash::hash_char(&vec![0],0xbc9f1d34);
     assert_eq!(0xbc9f1d34, hash_val);
 
-    let hash_val = Hash::hash_char(&data1, data1.len(), 0xbc9f1d34);
+    let hash_val = Hash::hash_char(&data1, 0xbc9f1d34);
     assert_eq!(0xef1345c4, hash_val);
 
-    let hash_val = Hash::hash_char(&data2, data2.len(), 0xbc9f1d34);
+    let hash_val = Hash::hash_char(&data2, 0xbc9f1d34);
     assert_eq!(0x5b663814, hash_val);
-    let hash_val = Hash::hash_char(&data3, data3.len(), 0xbc9f1d34);
+    let hash_val = Hash::hash_char(&data3, 0xbc9f1d34);
     assert_eq!(0x323c078f, hash_val);
 
-    let hash_val = Hash::hash_char(&data4, data4.len(), 0xbc9f1d34);
+    let hash_val = Hash::hash_char(&data4, 0xbc9f1d34);
     assert_eq!(0xed21633a, hash_val);
 
-    let hash_val = Hash::hash_char(&data5, data5.len(), 0x12345678);
+    let hash_val = Hash::hash_char(&data5, 0x12345678);
     assert_eq!(0xf333dabb, hash_val);
 }
