@@ -21,6 +21,7 @@ mod crc_test;
 pub mod bloom_filter;
 mod bloom_filter_test;
 pub mod filter_policy;
+mod filter_policy_test;
 
 /// 定义别名
 pub type ResultT<T> = result::Result<T, LevelError>;
