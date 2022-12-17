@@ -57,12 +57,26 @@ impl ToHash for &str {
     }
 }
 
+/// 实现了 Slice 转 ToHash 的特质
+/// Sample:
+/// ```
+///     let val = "aabbccd";
+///     let slice: Slice = Slice::from_buf(val.as_bytes());
+///     let slice_hash_val = slice.to_hash();
+/// ```
 impl ToHash for Slice {
     fn to_hash(&self) -> u32 {
         Hash::hash_code(self.to_vec().as_slice(), HASH_DEFAULT_SEED)
     }
 }
 
+/// 实现了 String 转 ToHash 的特质
+/// Sample:
+/// ```
+///     let val = "aabbccd";
+///     let val_s = String::from(val);
+///     let string_hash_val = val_s.to_hash();
+/// ```
 impl ToHash for String {
     fn to_hash(&self) -> u32 {
         Hash::hash_code(self.as_bytes(), HASH_DEFAULT_SEED)

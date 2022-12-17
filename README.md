@@ -44,7 +44,7 @@ LevelDB for rust
 | Random                        | colagy          |      |
 | Cache                         | colagy          |      |
 | Coding (Primitive Type SerDe) | colagy          |      |
-| Comparator                    | fengyang        | 85%  |
+| Comparator                    | fengyang        | 90%  |
 | Status                        | fengyang        | 100% |
 | BloomFilter                   | fengyang        | 10%  |
 | CRC                           | wangboo、lxd5866 |      |
