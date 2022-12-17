@@ -14,7 +14,7 @@ pub trait ToHash {
     fn to_hash(&self) -> u32;
 }
 
-/// 所有基本类型 u8, i8, u16, u32 ... 的数组都可以实现 hash 值计算
+/// 所有基本类型 u8, i8, u16, u32 ... 的Vec都可以实现 hash 值计算
 /// Sample:
 /// ```
 /// let hash = vec!['a','b','c'].to_hash();
