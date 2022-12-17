@@ -34,7 +34,7 @@ fn test_hash_code() {
                                0x02, 0x00, 0x00, 0x00,
                                0x00, 0x00, 0x00, 0x00];
 
-    let hash_val = Hash::hash_char(&vec![0],0xbc9f1d34);
+    let hash_val = Hash::hash_char(&vec![],0xbc9f1d34);
     assert_eq!(0xbc9f1d34, hash_val);
 
     let hash_val = Hash::hash_char(&data1, 0xbc9f1d34);

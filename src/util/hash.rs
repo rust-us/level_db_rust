@@ -72,7 +72,8 @@ impl Hash {
         while position + 4 <= limit {
             //每次解码前4个字节，直到最后剩下小于4个字节
             // rust的 &[u8] 是胖指针，带长度信息的，会做range check，所以是安全的。
-            let w = Coding::decode_fixed32(&data[position..]);
+            // 虽然decode_fixed32 中也是解码4字节，但传入整个data在方法上不明确，因此传 [position..(position + 4)], 可以更加方便理解，对性能无影响
+            let w = Coding::decode_fixed32(&data[position..(position + 4)]);
 
             // 向后移动4个字节
             position += 4;
