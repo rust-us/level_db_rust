@@ -62,7 +62,7 @@ impl<T> MutexLock<T> {
     ///
     /// ```
     /// let mutex_lock = MutexLock::new(0);
-    /// let lock = mutex_lock.get_lock();    ///
+    /// let lock = mutex_lock.get_lock();
     /// let handle = thread::spawn(move || {
     ///     let mut num = lock.lock().unwrap();
     ///     *num += 1;
