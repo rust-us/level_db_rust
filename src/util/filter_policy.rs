@@ -1,10 +1,19 @@
 use std::ops::Mul;
 use crate::traits::filter_policy_trait::{FilterPolicy};
+use crate::util::hash::{Hash, ToHash};
 use crate::util::slice::Slice;
 
 pub struct BloomFilterPolicy {
     bits_per_key: usize,
     k: usize
+}
+
+impl<'a> BloomFilterPolicy {
+
+    pub fn bloom_hash(key: Slice) -> u32 {
+        key.to_hash()
+        // Hash::hash_code(key., 0xbc9f1d34)
+    }
 }
 
 impl BloomFilterPolicy {

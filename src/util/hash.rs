@@ -12,6 +12,8 @@ use crate::util::slice::Slice;
 /// 一种可以计算 hash 的特质
 pub trait ToHash {
     fn to_hash(&self) -> u32;
+
+    fn to_hash_seed(&self, seed: u32) -> u32;
 }
 
 /// 所有基本类型 u8, i8, u16, u32 ... 的Vec都可以实现 hash 值计算
@@ -24,6 +26,12 @@ impl<T: Sized> ToHash for Vec<T> {
         let v_v = self.as_slice();
 
         v_v.to_hash()
+    }
+
+    fn to_hash_seed(&self, seed: u32) -> u32 {
+        let v_v = self.as_slice();
+
+        v_v.to_hash_seed(seed)
     }
 }
 
@@ -44,6 +52,16 @@ impl<T: Sized> ToHash for &[T] {
 
         Hash::hash_code(data, HASH_DEFAULT_SEED)
     }
+
+    fn to_hash_seed(&self, seed: u32) -> u32 {
+        let ptr_u8 = self.as_ptr() as *const _ as *const u8;
+
+        let data = unsafe {
+            stds::from_raw_parts(ptr_u8, size_of::<T>() * self.len())
+        };
+
+        Hash::hash_code(data, seed)
+    }
 }
 
 /// 实现了 &str 转 ToHash 的特质
@@ -54,6 +72,10 @@ impl<T: Sized> ToHash for &[T] {
 impl ToHash for &str {
     fn to_hash(&self) -> u32 {
         Hash::hash_code(self.as_bytes(), HASH_DEFAULT_SEED)
+    }
+
+    fn to_hash_seed(&self, seed: u32) -> u32 {
+        Hash::hash_code(self.as_bytes(), seed)
     }
 }
 
@@ -68,6 +90,10 @@ impl ToHash for Slice {
     fn to_hash(&self) -> u32 {
         Hash::hash_code(self.to_vec().as_slice(), HASH_DEFAULT_SEED)
     }
+
+    fn to_hash_seed(&self, seed: u32) -> u32 {
+        Hash::hash_code(self.to_vec().as_slice(), seed)
+    }
 }
 
 /// 实现了 String 转 ToHash 的特质
@@ -80,6 +106,10 @@ impl ToHash for Slice {
 impl ToHash for String {
     fn to_hash(&self) -> u32 {
         Hash::hash_code(self.as_bytes(), HASH_DEFAULT_SEED)
+    }
+
+    fn to_hash_seed(&self, seed: u32) -> u32 {
+        Hash::hash_code(self.as_bytes(), seed)
     }
 }
 
