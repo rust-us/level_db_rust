@@ -1,7 +1,8 @@
 # LevelDB_Rust
 
 #### 介绍
-LevelDB for rust
+LevelDB for rust.
+LevelDB是一款写性能十分优秀的可持久化的KV存储引擎，其实现原理是依据LSM-Tree（Log Structed-Merge Tree）.
 
 #### 软件架构
 
