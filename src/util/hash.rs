@@ -32,6 +32,17 @@ impl<T: Sized> ToHash for &[T] {
     }
 }
 
+/// 实现了 &str 转 ToHash 的特质
+/// Sample:
+/// ```
+/// let hash = "abc".to_hash();
+/// ```
+impl ToHash for &str {
+    fn to_hash(&self) -> u32 {
+        todo!()
+    }
+}
+
 impl ToHash for Slice {
     fn to_hash(&self) -> u32 {
         todo!()
