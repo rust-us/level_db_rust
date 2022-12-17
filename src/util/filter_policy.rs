@@ -12,7 +12,11 @@ impl FilterPolicy for BloomFilterPolicy {
         String::from("leveldb.BuiltinBloomFilter2")
     }
 
-    fn create_filter(&self, keys: Slice, n: u32) -> String {
+    fn create_filter(&self, keys: Slice, n: u32, dst: String) -> String {
+        todo!()
+    }
+
+    fn key_may_match(key: &Slice, filter: &Slice) -> bool {
         todo!()
     }
 }

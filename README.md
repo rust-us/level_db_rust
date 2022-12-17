@@ -49,6 +49,6 @@ LevelDB for rust
 | BloomFilter                   | fengyang        | 0%   |
 | CRC                           | wangboo、lxd5866 |      |
 | Env                           | lxd5866         |      |
-| Hash                          | fengyang         | 30%  |
+| Hash                          | fengyang         | 100%  |
 | MutexLock                     | kazeseiriou     |      |
 | Histgram                      | kazeseiriou     |      |
