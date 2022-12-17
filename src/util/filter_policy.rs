@@ -10,7 +10,6 @@ pub struct BloomFilterPolicy {
 impl BloomFilterPolicy {
     pub fn new(bits_per_key: usize) -> Self {
         // We intentionally round down to reduce probing cost a little bit
-        // bits_per_key * 0.69 as usize
         // 0.69 =~ ln(2)
         let factor: f64 = 0.69;
         let mut k_k: usize = factor.mul(bits_per_key as f64).round() as usize;
