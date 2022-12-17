@@ -14,13 +14,6 @@ pub trait FilterPolicy {
     /// 参数keys[0,n-1]包含依据用户提供的comparator排序的key列表--可重复，
     /// 并把根据这些key创建的filter追加到 dst中。
     ///
-    /// keys[0,n-1] contains a list of keys (potentially with duplicates)
-    /// that are ordered according to the user supplied comparator.
-    /// Append a filter that summarizes keys[0,n-1] to *dst.
-    ///
-    /// Warning: do not change the initial contents of dst.  Instead,
-    /// append the newly constructed filter to dst.
-    ///
     /// # Arguments
     ///
     /// * `keys`:
