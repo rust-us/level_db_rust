@@ -29,3 +29,5 @@ pub mod histogram;
 mod histogram_test;
 mod hash;
 mod hash_test;
+mod mutex_lock;
+mod mutex_lock_test;
