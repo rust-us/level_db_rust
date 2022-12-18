@@ -44,15 +44,17 @@ LSM tree 是许多 KV型或日志型数据库所依赖的核心实现，例如Bi
 | 功能模块                          | 完成人             | 进度   |
 |-------------------------------|-----------------|------|
 | Arena (Memory Management)     | wangboo         |      |
-| Slice                         | wangboo         |      |
-| Random                        | colagy          |      |
+| bloom                         | fengyang        | 10%  |
 | Cache                         | colagy          |      |
 | Coding (Primitive Type SerDe) | colagy          |      |
 | Comparator                    | fengyang        | 90%  |
-| Status                        | fengyang        | 100% |
-| BloomFilter                   | fengyang        | 10%  |
 | CRC                           | wangboo、lxd5866 |      |
 | Env                           | lxd5866         |      |
+| filter_policy                 | fengyang        | 10%  |
 | Hash                          | fengyang         | 100% |
-| MutexLock                     | kazeseiriou     |      |
 | Histgram                      | kazeseiriou     |      |
+| loging                        |      |      |
+| MutexLock                     | kazeseiriou     |      |
+| Random                        | colagy          |      |
+| Status                        | fengyang        | 100% |
+| Slice                         | wangboo         |      |
