@@ -1,69 +1,186 @@
-
-/// 使用 Status 这个类来得到你的函数的返回的状态
-///
+use std::fmt::{Display, Error, Formatter};
 use crate::util::r#const::COLON_WHITE_SPACE;
+use crate::util::ResultT;
 use crate::util::slice::Slice;
 use crate::util::status::LevelError::{KCorruption, KIOError, KInvalidArgument, KNotSupported, KNotFound, KOk};
+
+/// db 中的返回状态，将错误号和错误信息封装成Status类，统一进行处理。
+/// 在 leveldb的实现里， 为了节省空间Status将返回码(code), 错误信息message及长度打包存储于一个字符串数组中， 来存储错误信息。
+/// 在该项目中， 使用LevelError 和 Slice 存储错误信息
+pub struct Status {
+    err: LevelError,
+    msg: Slice
+}
+
+impl Default for Status {
+    fn default() -> Self {
+        LevelError::ok()
+    }
+}
+
+impl Status {
+    ///
+    ///
+    /// # Arguments
+    ///
+    /// * `err`:
+    /// * `slice`:
+    ///
+    /// returns: Status
+    ///
+    /// # Examples
+    ///
+    /// ```
+    ///
+    /// ```
+    pub fn wrapper(err: LevelError, mut slice: Slice) -> Status {
+        if err.is_ok() {
+            slice = Slice::default();
+        }
+
+        Self {
+            err,
+            msg: slice
+        }
+    }
+
+    pub fn wrappers(err: LevelError, mut slice1: Slice, slice2: Slice) -> Status {
+        slice1.merge(slice2, Some(String::from(COLON_WHITE_SPACE)));
+
+        Self {
+            err,
+            msg: slice1
+        }
+    }
+
+    pub fn is_ok(&self) -> bool {
+        self.err.is_ok()
+    }
+
+    pub fn is_not_found(&self) -> bool {
+        self.err.is_not_found()
+    }
+
+    pub fn is_corruption(&self) -> bool {
+        self.err.is_corruption()
+    }
+
+    pub fn is_io_error(&self) -> bool {
+        self.err.is_io_error()
+    }
+
+    pub fn is_not_supported_error(&self) -> bool {
+        self.err.is_not_supported_error()
+    }
+
+    pub fn is_invalid_argument(&self) -> bool {
+        self.err.is_invalid_argument()
+    }
+
+    pub fn get_error_string(&self) -> String {
+        self.err.to_string()
+    }
+
+    /// 请注意， err 的所有权会发生转移！！！
+    pub fn get_error(self) -> LevelError {
+        self.err
+    }
+
+    /// 得到 LevelError 中的错误信息： Slice
+    ///
+    /// # Arguments
+    ///
+    /// returns: Option<Slice>
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let msg1 = "abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc";
+    /// let msg2 = "456456456456456456456456456456456456456456456456";
+    ///
+    /// let status: Status = LevelError::io_error(String::from(msg1).into(), String::from(msg2).into());
+    /// assert!(&status.get_error().is_io_error());
+    ///
+    /// let slice: Option<Slice> = status.into_msg();
+    /// assert_eq!("abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc: 456456456456456456456456456456456456456456456456",
+    ///                                      String::from(slice.unwrap()));
+    /// ```
+    pub fn into_msg(self) -> Slice {
+        self.msg
+    }
+
+
+    /// LevelError 转 String
+    ///
+    /// # Arguments
+    ///
+    /// returns: LevelError
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let err: Status = LevelError::invalid_argument(String::from("aa"), String::from("bb"));
+    /// let data = err.to_string();
+    /// assert_eq!("Invalid argument: aa: bb",  data);
+    /// ```
+    #[inline]
+    pub fn to_string(self) -> String {
+        let err = &self.err;
+
+        let msg_type = match &err {
+            KOk => "OK",
+            KNotFound  => "NotFound: ",
+            KCorruption  => "Corruption: ",
+            KNotSupported  => "Not implemented: ",
+            KInvalidArgument  => "Invalid argument: ",
+            KIOError  => "IO error: "
+        };
+
+        if err.is_ok() {
+            return String::from(msg_type);
+        }
+
+        let msg = self.msg;
+        let error_msg = String::from(msg);
+
+        format!("{}{}", msg_type, error_msg)
+    }
+}
+
+// impl Display for Status {
+//     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+//         let mut print = String::new();
+//
+//         if self.is_ok() {
+//             print.push_str("OK");
+//             write!(f, "{}", print);
+//
+//             return Ok(());
+//         }
+//
+//         print.push_str(&self.get_error_string());
+//
+//         let slice: &Slice = &self.msg;
+//         let errMsg = String::from(slice);
+//         print.push_str(errMsg.as_str());
+//
+//         write!(f, "{}", print);
+//
+//         Ok(())
+//     }
+// }
 
 /// Status 的状态
 pub enum LevelError {
     KOk,
-    KNotFound(Option<Slice>),
-    KCorruption(Option<Slice>),
-    KNotSupported(Option<Slice>),
-    KInvalidArgument(Option<Slice>),
-    KIOError(Option<Slice>),
-
-}
-
-impl Default for LevelError {
-    fn default() -> Self {
-        KOk
-    }
+    KNotFound,
+    KCorruption,
+    KNotSupported,
+    KInvalidArgument,
+    KIOError,
 }
 
 impl LevelError {
-
-    /// 判断 状态是否为默认值
-    fn is_default(&self) -> bool {
-        self.is_ok()
-    }
-
-    pub fn get_code(&self) -> u32 {
-        match self {
-            KOk => {0},
-            KNotFound(_) => {1},
-            KCorruption(_) => {2},
-            KNotSupported(_) => {3},
-            KInvalidArgument(_) => {4},
-            KIOError(_) => {5},
-        }
-    }
-
-    /// 得到 error 中的 slice 信息
-    pub fn into_msg(self) -> Option<Slice> {
-        match self {
-            KOk => None,
-            /// 以后可能会差异化处理，因此不做 _ 的默认输出
-            KNotFound(slice) => {
-                slice
-            },
-            KCorruption(slice) => {
-                slice
-            },
-            KNotSupported(slice) => {
-                slice
-            },
-            KInvalidArgument(slice) => {
-                slice
-            },
-            KIOError(slice) => {
-                slice
-            },
-        }
-    }
-
-    /// Returns true iff the status indicates success.
     pub fn is_ok(&self) -> bool {
         match self {
             KOk => true,
@@ -71,116 +188,192 @@ impl LevelError {
         }
     }
 
-    /// Returns true iff the status indicates a NotFound error.
     pub fn is_not_found(&self) -> bool {
         match self {
-            KNotFound(_) => true,
+            KNotFound => true,
             _ => false
         }
     }
 
-    /// Returns true iff the status indicates a Corruption error.
     pub fn is_corruption(&self) -> bool {
         match self {
-            KCorruption(_) => true,
+            KCorruption => true,
             _ => false
         }
     }
 
-    /// Returns true iff the status indicates an IOError.
     pub fn is_io_error(&self) -> bool {
         match self {
-            KIOError(_) => true,
+            KIOError => true,
             _ => false
         }
     }
 
-    /// Returns true iff the status indicates a NotSupportedError.
     pub fn is_not_supported_error(&self) -> bool {
         match self {
-            KNotSupported(_) => true,
+            KNotSupported => true,
             _ => false
         }
     }
 
-    /// Returns true iff the status indicates an InvalidArgument.
     pub fn is_invalid_argument(&self) -> bool {
         match self {
-            KInvalidArgument(_) => true,
+            KInvalidArgument => true,
             _ => false
         }
     }
 
-    /// Return a string representation of this status suitable for printing.
-    /// Returns the string "OK" for success.
-    pub fn to_string(self) -> String {
-        if self.is_default() {
-            return String::from("OK")
+    pub fn ok() -> Status {
+        Status{
+            err: Default::default(),
+            msg: Default::default()
         }
+    }
 
-        let msg_type = match self {
-            KOk => "OK",
-            KNotFound(_)  => "NotFound: ",
-            KCorruption(_)  => "Corruption: ",
-            KNotSupported(_)  => "Not implemented: ",
-            KInvalidArgument(_)  => "Invalid argument: ",
-            KIOError(_)  => "IO error: "
-        };
+    pub fn not_found(mut msg: Slice, msg2: Slice) -> Status {
+        let _ = &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
 
-        let error_msg = String::from(self.into_msg().unwrap());
+        Status{
+            err: KNotFound,
+            msg: msg
+        }
+    }
 
-        format!("{}{}", String::from(msg_type), error_msg)
+    /// 生成 LevelError.KCorruption
+    ///
+    /// # Arguments
+    ///
+    /// * `msg`: Slice
+    /// * `msg2`: Slice
+    ///
+    /// returns: LevelError
+    ///
+    /// # Examples
+    ///
+    /// ```
+    ///  LevelError::corruption(String::from(msg1).into(), String::from(msg2).into())
+    /// ```
+    pub fn corruption(mut msg: Slice, msg2: Slice) -> Status {
+        let _ = &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
+
+        Status{
+            err: KCorruption,
+            msg: msg
+        }
+    }
+
+    pub fn not_supported(mut msg: Slice, msg2: Slice) -> Status {
+        let _ = &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
+
+        Status{
+            err: KNotSupported,
+            msg: msg
+        }
+    }
+
+    pub fn invalid_argument(mut msg: Slice, msg2: Slice) -> Status {
+        let _ = &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
+
+        Status{
+            err: KInvalidArgument,
+            msg: msg
+        }
+    }
+
+    /// 生成 LevelError.KIOError
+    ///
+    /// # Arguments
+    ///
+    /// * `msg`: Slice
+    /// * `msg2`: Slice
+    ///
+    /// returns: LevelError
+    ///
+    /// # Examples
+    ///
+    /// ```
+    ///  let err: LevelError = LevelError::io_error(String::from("aa"), String::from("bb"));
+    ///  assert!(&err.is_io_error());
+    /// ```
+    pub fn io_error(mut msg: Slice, msg2: Slice) -> Status {
+        let _ = &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
+
+        Status{
+            err: KIOError,
+            msg: msg
+        }
     }
 }
 
-/// 这一组函数用来组合指定的状态信息
-impl<'a> LevelError {
-
-    /// 返回 ok 的 Status
-    pub fn ok() -> LevelError {
+impl Default for LevelError {
+    fn default() -> LevelError {
         KOk
     }
-
-    /// 返回 not_found 的 Status
-    pub fn not_found(mut msg: Slice, msg2: Slice) -> LevelError {
-        &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
-        KNotFound(Some(msg))
-    }
-
-    /// 返回 Corruption 的 Status
-    pub fn corruption(mut msg: Slice, msg2: Slice) -> LevelError {
-        &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
-        KCorruption(Some(msg))
-    }
-
-    /// 返回 NotSupported 的 Status
-    pub fn not_supported(mut msg: Slice, msg2: Slice) -> LevelError {
-        &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
-        KNotSupported(Some(msg))
-    }
-
-    /// 返回 InvalidArgument 的 Status
-    pub fn invalid_argument(mut msg: Slice, msg2: Slice) -> LevelError {
-        &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
-        KInvalidArgument(Some(msg))
-    }
-
-    /// 返回 IOError 的 Status
-    pub fn io_error(mut msg: Slice, msg2: Slice) -> LevelError {
-        &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
-        KIOError(Some(msg))
-    }
-
 }
 
+impl TryFrom<i32> for LevelError {
+    type Error = String;
 
-/// 非 pub 方法的测试用例
-#[test]
-fn test() {
-    let err: LevelError = LevelError::ok();
-    assert!(err.is_default());
-
-    let err: LevelError = LevelError::io_error(String::from("a").into(),
-                                               String::from("b").into());
-    assert!(!err.is_default());
+    /// i32 错误码转 LevelError
+    ///
+    /// # Arguments
+    ///
+    /// * `value`:  错误码的值
+    ///
+    /// returns: Result<LevelError, <LevelError as TryFrom<i32>>::Error>
+    ///
+    /// # Examples
+    ///
+    /// ```
+    ///        let rs: LevelError = LevelError::try_from(3)?;
+    ///         assert!(&rs.is_not_supported_error());
+    /// ```
+    fn try_from(value: i32) -> Result<Self, Self::Error> {
+        match value {
+            0 => Ok(KOk),
+            1 => Ok(KNotFound),
+            2 => Ok(KCorruption),
+            3 => Ok(KNotSupported),
+            4 => Ok(KInvalidArgument),
+            5 => Ok(KIOError),
+            // all other numbers
+            _ => Err(String::from(format!("Unknown code: {}", value)))
+        }
+    }
 }
+
+impl Display for LevelError {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let mut print = String::new();
+
+        let msg_type = match &self {
+            KOk => "OK",
+            KNotFound  => "NotFound: ",
+            KCorruption  => "Corruption: ",
+            KNotSupported  => "Not implemented: ",
+            KInvalidArgument  => "Invalid argument: ",
+            KIOError  => "IO error: "
+        };
+        print.push_str(msg_type);
+
+        write!(f, "{}", print)
+    }
+}
+
+// impl Deref for LevelError {
+//     type Target = i32;
+//
+//     /// StatusTrait 解引用到 i32
+//     fn deref(&self) -> &Self::Target {
+//         let le = match self {
+//             KOk => 0,
+//             KNotFound(_) => 1,
+//             KCorruption(_) => 2,
+//             KNotSupported(_) => 3,
+//             KInvalidArgument(_) => 4,
+//             KIOError(_) => 5,
+//         };
+//
+//         &*le
+//     }
+// }

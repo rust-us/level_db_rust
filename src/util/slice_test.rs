@@ -1,6 +1,5 @@
 mod test {
     use std::cmp::Ordering;
-    use std::mem::ManuallyDrop;
     use crate::util::slice::Slice;
 
     #[test]
@@ -12,10 +11,8 @@ mod test {
         let a1 = Slice::from(String::from("123"));
         assert_eq!(String::from("123"), String::from(a1));
         // from buf
-        // let mut data = ManuallyDrop::new([48_u8, 49, 50]);
-        // let slice = data.as_mut_slice();
-        // let a2 = Slice::from_buf(slice);
-        // assert_eq!(String::from("012"), String::from(a2));
+        let a2 = Slice::from_buf([48_u8, 49, 50].as_mut_slice());
+        assert_eq!(String::from("012"), String::from(a2));
     }
 
     #[test]
