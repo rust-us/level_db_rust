@@ -3,16 +3,30 @@ use crate::traits::filter_policy_trait::{FilterPolicy};
 use crate::util::hash::{Hash, ToHash};
 use crate::util::slice::Slice;
 
+pub trait FromPolicy {
+    fn from_bits_per_key(&self) -> usize;
+    fn from_k(&self) -> usize;
+}
+
 pub struct BloomFilterPolicy {
     bits_per_key: usize,
     k: usize
 }
 
 impl<'a> BloomFilterPolicy {
-
     pub fn bloom_hash(key: Slice) -> u32 {
-        key.to_hash()
-        // Hash::hash_code(key., 0xbc9f1d34)
+        key.to_hash_with_seed(0xbc9f1d34)
+    }
+}
+
+/// get struct  BloomFilterPolicy 属性
+impl FromPolicy for BloomFilterPolicy {
+    fn from_bits_per_key(&self) -> usize {
+        self.bits_per_key
+    }
+
+    fn from_k(&self) -> usize {
+        self.k
     }
 }
 
