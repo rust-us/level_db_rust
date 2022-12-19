@@ -1,5 +1,6 @@
 
 mod test {
+    use std::borrow::Cow;
     use crate::util::r#const::COLON_WHITE_SPACE;
     use crate::util::slice::Slice;
     use crate::util::status::{LevelError, Status};
@@ -10,9 +11,9 @@ mod test {
 
         let status = Status::wrapper(LevelError::KIOError, String::from(msg1).into());
         assert!(&status.is_io_error());
-        let slice: Option<Slice> = status.into_msg();
+        let slice: Slice = status.into_msg();
         assert_eq!("abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc",
-                   String::from(slice.unwrap()));
+                   String::from(slice));
 
         let ss = Status::wrapper(LevelError::KOk, String::from(msg1).into());
         assert!(&ss.is_ok());
@@ -25,27 +26,27 @@ mod test {
         let msg2 = "456456456456456456456456456456456456456456456456";
 
         let status = Status::wrappers(LevelError::KIOError, String::from(msg1).into(), String::from(msg2).into());
-        let slice: Option<Slice> = status.into_msg();
+        let slice: Slice = status.into_msg();
         assert_eq!("abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc: 456456456456456456456456456456456456456456456456",
-                   String::from(slice.unwrap()));
+                   String::from(slice));
 
         let err: Status = LevelError::invalid_argument(String::from(msg1).into(),
                                                    String::from(msg2).into());
-        assert!(&err.get_error().is_invalid_argument());
+        assert!(&err.is_invalid_argument());
         // assert_eq!(err.into_code(), 4);
 
         let err: Status = LevelError::corruption(String::from(msg1).into(),
                                                    String::from(msg2).into());
-        assert!(&err.get_error().is_corruption());
+        assert!(&err.is_corruption());
         // assert_eq!(err.into_code(), 2);
 
         let err: Status = LevelError::not_found(String::from(msg1).into(),
                                                    String::from(msg2).into());
-        assert!(&err.get_error().is_not_found());
+        assert!(&err.is_not_found());
 
         let err: Status = LevelError::not_supported(String::from(msg1).into(),
                                                    String::from(msg2).into());
-        assert!(&err.get_error().is_not_supported_error());
+        assert!(&err.is_not_supported_error());
 
         let err: LevelError = LevelError::KOk;
         assert!(&err.is_ok());
@@ -55,7 +56,22 @@ mod test {
     }
 
     #[test]
-    fn test_toString() {
+    fn test_is_default() {
+        let err: Status = LevelError::ok();
+        assert!(err.is_ok());
+
+        let err: Status = LevelError::io_error(String::from("a").into(),
+                                               String::from("b").into());
+        assert!(!err.is_ok());
+
+        let status: Status = LevelError::not_found(String::from("a").into(),
+                                                   String::from("b").into());
+        assert!(status.is_not_found());
+        assert!(status.get_error().is_not_found());
+    }
+
+    #[test]
+    fn test_status_to_string() {
         // ok
         let status: Status = LevelError::ok();
         assert_eq!("OK", status.to_string());
@@ -84,21 +100,26 @@ mod test {
     }
 
     #[test]
-    fn test_is_default() {
-        let err: Status = LevelError::ok();
-        assert!(err.get_error().is_ok());
+    fn test_level_error_toString() {
+        // ok
+        let status: Status = LevelError::ok();
+        assert_eq!("OK", status.to_string());
 
-        let err: Status = LevelError::io_error(String::from("a").into(),
-                                                   String::from("b").into());
-        assert!(!err.get_error().is_ok());
+        // err invalid_argument
+        let msg1 = "bcabcabcabcabcabcbc";
+        let msg2 = "56";
+        let error: Status = LevelError::invalid_argument(String::from(msg1).into(),
+                                                      String::from(msg2).into());
 
-        // let err: LevelError = LevelError::ok();
-        // let a = err.into();
-        // print!("{}", a);
+        let le_err: LevelError = error.get_error();
+        println!("{}", &le_err);
+
+        // Display
+        assert_eq!(String::from("Invalid argument: "), le_err.to_string());
     }
 
     #[test]
-    fn test_try_from() -> Result<(), String> {
+    fn test_level_error_try_from() -> Result<(), String> {
         let rs = LevelError::try_from(1)?;
         assert!(&rs.is_not_found());
         let rs: Result<LevelError, String> = 1.try_into();

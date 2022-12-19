@@ -4,3 +4,7 @@
 pub struct BloomFilter {
 
 }
+
+impl BloomFilter {
+    
+}

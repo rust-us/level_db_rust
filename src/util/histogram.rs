@@ -164,7 +164,7 @@ pub struct Histogram {
     max: f64,
     num: f64,
     sum: f64,
-    sumSquares: f64,
+    sum_squares: f64,
     buckets: [f64; K_NUM_BUCKETS]
 }
 
@@ -175,7 +175,7 @@ impl Default for Histogram {
             max: 0.0,
             num: 0.0,
             sum: 0.0,
-            sumSquares: 0.0,
+            sum_squares: 0.0,
             buckets: [0.0; K_NUM_BUCKETS]
         }
     }
@@ -231,7 +231,7 @@ impl Histogram {
         self.max = 0.0;
         self.num = 0.0;
         self.sum = 0.0;
-        self.sumSquares = 0.0;
+        self.sum_squares = 0.0;
         for i in 0..K_NUM_BUCKETS {
             self.buckets[i] = 0.0;
         }
@@ -265,7 +265,7 @@ impl Histogram {
         }
         self.num += 1.0;
         self.sum += value;
-        self.sumSquares += value * value;
+        self.sum_squares += value * value;
     }
     /// 合并另一个直方图的数据到当前直方图
     ///
@@ -291,17 +291,17 @@ impl Histogram {
         }
         self.num += other.num;
         self.sum += other.sum;
-        self.sumSquares += other.sumSquares;
+        self.sum_squares += other.sum_squares;
         for i in 0..K_NUM_BUCKETS {
             self.buckets[i] += other.buckets[i];
         }
     }
 
-    ///
+    /// 计算处于p%位置的值既第p百分位数
     ///
     /// # Arguments
     ///
-    /// * `p`:
+    /// * `p`:百分位
     ///
     /// returns: f64
     ///
@@ -311,17 +311,17 @@ impl Histogram {
     ///
     /// ```
     fn percentile(&self, p :f64) -> f64 {
-        let threhold = self.num * ( p / 100.0);
+        let threshold = self.num * ( p / 100.0);
         let mut sum :f64 = 0.0;
         for i in 0..K_NUM_BUCKETS {
             sum += self.buckets[i];
-            if sum >= threhold {
-                let leftPoint :f64 = if i == 0 {0.0} else {K_BUCKET_LIMIT[i - 1]};
-                let rightPoint :f64 = K_BUCKET_LIMIT[i];
-                let leftSum :f64 = sum - self.buckets[i];
-                let rightSum :f64 = sum;
-                let pos :f64 = (threhold - leftSum) / (rightSum - leftSum);
-                let mut r :f64 = leftPoint + (rightPoint - leftPoint) * pos;
+            if sum >= threshold {
+                let left_point :f64 = if i == 0 {0.0} else {K_BUCKET_LIMIT[i - 1]};
+                let right_point :f64 = K_BUCKET_LIMIT[i];
+                let left_sum :f64 = sum - self.buckets[i];
+                let right_sum :f64 = sum;
+                let pos :f64 = (threshold - left_sum) / (right_sum - left_sum);
+                let mut r :f64 = left_point + (right_point - left_point) * pos;
                 if r < self.min {
                     r = self.min;
                 }
@@ -334,11 +334,35 @@ impl Histogram {
         return self.max;
     }
 
+    /// 计算中位数
+    ///
+    /// # Arguments
+    ///
+    ///
+    /// returns: f64
+    ///
+    /// # Examples
+    ///
+    /// ```
+    ///
+    /// ```
+    #[inline]
     fn median(&self) -> f64 {
        return self.percentile(50.0);
     }
 
-    /// 求平均值
+    /// 计算平均值
+    ///
+    /// # Arguments
+    ///
+    ///
+    /// returns: f64
+    ///
+    /// # Examples
+    ///
+    /// ```
+    ///
+    /// ```
     fn average(&self) -> f64 {
         if self.sum == 0.0 {
             return 0.0;
@@ -346,11 +370,67 @@ impl Histogram {
         return self.sum / self.num;
     }
 
+    /// 计算标准偏差
+    ///
+    /// # Arguments
+    ///
+    ///
+    /// returns: f64
+    ///
+    /// # Examples
+    ///
+    /// ```
+    ///
+    /// ```
     fn standard_deviation(&self) -> f64 {
         if self.sum == 0.0 {
             return 0.0;
         }
-        let variance = (self.sumSquares * self.num - self.sum * self.sum) / (self.num * self.num);
+        let variance = (self.sum_squares * self.num - self.sum * self.sum) / (self.num * self.num);
         return variance.sqrt();
     }
+}
+
+#[test]
+fn test_add() {
+    let mut histogram = Histogram::default();
+    histogram.add(2.0);
+    histogram.add(20.0);
+    assert_eq!(2.0, histogram.num);
+    assert_eq!(22.0, histogram.sum);
+    assert_eq!(2.0, histogram.min);
+    assert_eq!(20.0, histogram.max);
+    assert_eq!(404.0, histogram.sum_squares);
+    assert_eq!(1.0, histogram.buckets[2]);
+    assert_eq!(1.0, histogram.buckets[15]);
+    assert_eq!(11.0, histogram.average());
+    assert_eq!(2.6, histogram.percentile(30.0));
+    assert_eq!(3.0, histogram.median());
+    assert_eq!(11.0, histogram.average());
+    assert_eq!(9.0, histogram.standard_deviation());
+    print!("{}", histogram.to_string());
+}
+
+#[test]
+fn test_merge() {
+    let mut histogram = Histogram::default();
+    histogram.add(2.0);
+    let mut other = Histogram::default();
+    other.add(20.0);
+    histogram.merge(&other);
+    assert_eq!(2.0, histogram.num);
+    assert_eq!(22.0, histogram.sum);
+    assert_eq!(2.0, histogram.min);
+    assert_eq!(20.0, histogram.max);
+    assert_eq!(404.0, histogram.sum_squares);
+    assert_eq!(1.0, histogram.buckets[2]);
+    assert_eq!(1.0, histogram.buckets[15]);
+    histogram.clear();
+    assert_eq!(0.0, histogram.num);
+    assert_eq!(0.0, histogram.sum);
+    assert_eq!(1e200, histogram.min);
+    assert_eq!(0.0, histogram.max);
+    assert_eq!(0.0, histogram.sum_squares);
+    assert_eq!(0.0, histogram.buckets[2]);
+    assert_eq!(0.0, histogram.buckets[15]);
 }

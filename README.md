@@ -1,23 +1,27 @@
 # LevelDB_Rust
 
 #### 介绍
-LevelDB for rust
+LevelDB for rust.
+LevelDB是一款写性能十分优秀的可持久化的KV存储引擎，其实现原理是依据LSM-Tree（Log Structed-Merge Tree）.
 
 #### 软件架构
-软件架构说明
+
+![LevelDB--整体架构](doc/images/LevelDB--整体架构.png)
+
+LevelDB是一款写性能十分优秀的可持久化的KV存储引擎，其实现原理是依据LSM-Tree（Log Structed-Merge Tree）.
+
+LSM tree (log-structured merge-tree) 是一种对写操作非常友好的存储方案。
+
+LSM tree 是许多 KV型或日志型数据库所依赖的核心实现，例如BigTable、HBase、Cassandra、LevelDB、SQLite、RocksDB 等
 
 
 #### 安装教程
 
 1.  xxxx
-2.  xxxx
-3.  xxxx
 
 #### 使用说明
 
 1.  xxxx
-2.  xxxx
-3.  xxxx
 
 #### 参与贡献
 
@@ -37,18 +41,20 @@ LevelDB for rust
 1. 1.0.0 版本, 完成 util 相关的内容
 
 
-| 功能模块                          | 完成人         |
-|-------------------------------|-------------|
-| Arena (Memory Management)     | wangboo     |
-| Slice                         | wangboo     |
-| Random                        | colagy      |
-| Cache                         | colagy      |
-| Coding (Primitive Type SerDe) | colagy      |
-| Comparator                    | fengyang    |
-| Status                        | fengyang    |
-| BloomFilter                   | fengyang    |
-| CRC                           | lxd5866     |
-| Env                           | lxd5866     |
-| Hash                          | lxd5866     |
-| MutexLock                     | kazeseiriou |
-| Histgram                      | kazeseiriou |
+| 功能模块                          | 完成人             | 进度   |
+|-------------------------------|-----------------|------|
+| Arena (Memory Management)     | wangboo         |      |
+| bloom                         | fengyang        | 10%  |
+| Cache                         | colagy          |      |
+| Coding (Primitive Type SerDe) | colagy          |      |
+| Comparator                    | fengyang        | 90%  |
+| CRC                           | wangboo、lxd5866 |      |
+| Env                           | lxd5866         |      |
+| filter_policy                 | fengyang        | 10%  |
+| Hash                          | fengyang         | 100% |
+| Histgram                      | kazeseiriou     |      |
+| loging                        |      |      |
+| MutexLock                     | kazeseiriou     |      |
+| Random                        | colagy          |      |
+| Status                        | fengyang        | 100% |
+| Slice                         | wangboo         |      |
