@@ -1,8 +1,3 @@
-macro_rules! _println {
-    ($msg: expr) => {
-        println!("{:?}",$msg)
-    };
-}
 mod test {
     use crate::traits::coding_trait::{Coding32, Coding64, CodingTrait};
     use crate::util::coding::{Coding};
@@ -43,11 +38,6 @@ mod test {
         assert_eq!(offset, 4);
         println!("dst:{:?}", dst);
         assert_eq!([0, 0, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0] as [u8; 12], dst);
-    }
-
-    #[test]
-    fn test_decode_fixed32() {
-        _println!(123)
     }
 
     #[test]
@@ -160,5 +150,25 @@ mod test {
         // let mut string = String::from("len:");
         // let mut slice = Slice::from_buf(data.to_le_bytes().as_mut_slice());
         // Coding::put_length_prefixed_slice(&mut string, &mut slice);
+    }
+
+    #[test]
+    fn test_decode_fixed32() {
+        let mut value = 65535_u32;
+        let mut buf: [u8; 4] = [0, 0, 0, 0];
+        Coding::encode_fixed32(&mut value, &mut buf, 0);
+        let decode = Coding::decode_fixed32(&mut buf);
+        println!("value:{:?}", value);
+        assert_eq!(decode, value);
+    }
+
+    #[test]
+    fn test_decode_fixed64() {
+        let mut value = 65535_u64;
+        let mut buf: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
+        Coding::encode_fixed64(&mut value, &mut buf, 0);
+        let decode = Coding::decode_fixed64(&mut buf);
+        println!("value:{:?}", value);
+        assert_eq!(decode, value);
     }
 }
