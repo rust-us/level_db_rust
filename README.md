@@ -51,10 +51,10 @@ LSM tree 是许多 KV型或日志型数据库所依赖的核心实现，例如Bi
 | CRC                           | wangboo、lxd5866 |      |
 | Env                           | lxd5866         |      |
 | filter_policy                 | fengyang        | 10%  |
-| Hash                          | fengyang         | 100% |
-| Histgram                      | kazeseiriou     |      |
+| Hash                          | fengyang        | 100% |
+| Histgram                      | kazeseiriou     | 100% |
 | loging                        |      |      |
-| MutexLock                     | kazeseiriou     |      |
+| MutexLock                     | kazeseiriou     | 100% |
 | Random                        | colagy          |      |
 | Status                        | fengyang        | 100% |
 | Slice                         | wangboo         |      |
