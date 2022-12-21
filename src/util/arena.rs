@@ -58,6 +58,7 @@ impl Arena {
         return self.allocate_fallback(bytes, align);
     }
 
+    #[inline]
     pub fn memory_usage(&self) -> usize {
         self.memory_usage
     }
