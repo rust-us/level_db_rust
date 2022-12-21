@@ -240,6 +240,8 @@ const K_STRIDE_EXTENSION_TABLE3: [u32; 256] = [
 /// 可以被计算 crc 值的特质
 /// 默认实现了 &[T], Vec[T], Slice, &str, String
 pub trait AsCrc {
+
+    #[inline]
     fn as_crc(&self) -> u32 {
         self.as_crc_extend(0)
     }

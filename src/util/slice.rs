@@ -14,6 +14,7 @@ extern {
 
 impl Default for Slice {
     /// 构造一个空的 Slice
+    #[inline]
     fn default() -> Self {
         Self {
             data: Vec::new()
@@ -24,6 +25,7 @@ impl Default for Slice {
 impl Slice {
 
     /// 从 &mut [u8] 转到 Slice, 这里存在内存拷贝开销
+    #[inline]
     pub fn from_buf(buf: &[u8]) -> Self {
         Self {
             data: buf.to_owned()
@@ -95,6 +97,7 @@ impl<'a> Slice {
 
 impl From<Slice> for String {
     /// 将 Slice 内数据的所有权移交给 String
+    #[inline]
     fn from(s: Slice) -> Self {
         unsafe {
             String::from_utf8_unchecked(s.data)
@@ -103,12 +106,14 @@ impl From<Slice> for String {
 }
 
 impl From<Slice> for Vec<u8> {
+    #[inline]
     fn from(s: Slice) -> Self {
         s.data
     }
 }
 
 impl <R: AsRef<str>> From<R> for Slice {
+    #[inline]
     fn from(r: R) -> Self {
         Self {
             data: Vec::from(r.as_ref())
@@ -118,6 +123,7 @@ impl <R: AsRef<str>> From<R> for Slice {
 
 impl PartialEq for Slice {
     /// 判断两个 Slice 是否相同
+    #[inline]
     fn eq(&self, other: &Self) -> bool {
         return self.size() == other.size() && unsafe {
             memcmp(
@@ -158,6 +164,7 @@ impl core::ops::Index<usize> for Slice {
     type Output = u8;
 
     /// 获取某个下标的数据
+    #[inline]
     fn index(&self, index: usize) -> &Self::Output {
         assert!(index < self.size());
         &(**self)[index]
@@ -168,6 +175,7 @@ impl Deref for Slice {
     type Target = [u8];
 
     /// Slice 解引用到 &[u8]
+    #[inline]
     fn deref(&self) -> &Self::Target {
             &*self.data
     }
