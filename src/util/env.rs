@@ -174,13 +174,13 @@ pub trait SequentialFile {
     // If an error was encountered, returns a non-OK status.
     //
     // REQUIRES: External synchronization
-    fn read(n: usize, result: &Vec<char>, scratch: &String) -> Stats;
+    fn read(self ,n: usize, result: &Vec<u8>, scratch: &String) -> Stats;
 
-    fn skip(n: u64) -> Status;
+    fn skip(self, n: u64) -> Status;
 }
 
 pub trait RandomAccessFile {
-    fn read(offset: u64, n: usize, result: &Vec<char>, scratch: &String) -> Status;
+    fn read(self,offset: u64, n: usize, result: &Vec<char>, scratch: &String) -> Status;
 }
 
 pub trait WritableFile {
