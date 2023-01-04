@@ -1,4 +1,4 @@
-use crate::util::crc::{AsCrc, CRC};
+use crate::util::crc::{AsCrc, CRC, ToMask};
 use crate::util::slice::Slice;
 
 #[test]
@@ -55,4 +55,15 @@ fn test_mask() {
     assert_ne!(crc, CRC::mask(CRC::mask(crc)));
     assert_eq!(crc, CRC::unmask(CRC::mask(crc)));
     assert_eq!(crc, CRC::unmask(CRC::unmask(CRC::mask(CRC::mask(crc)))));
+}
+
+#[test]
+fn test_mask2() {
+    let a0 = [1];
+    let a1 = [0, 97, 98, 99, 100];
+    let a2 = [1, 97, 98, 99, 100];
+    let crc0 = a1[1..].as_crc_extend(a0.as_crc()).to_mask();
+    let crc1 = a2.as_crc().to_mask();
+    println!("crc0: {}, crc1: {}", crc0, crc1);
+    assert_eq!(crc0, crc1);
 }

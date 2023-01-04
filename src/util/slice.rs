@@ -3,6 +3,7 @@ use std::borrow::Cow;
 use std::cmp::Ordering;
 use std::ops::Deref;
 
+#[derive(Debug)]
 pub struct Slice {
     data: Vec<u8>,
 }
@@ -31,6 +32,14 @@ impl Slice {
             data: buf.to_owned()
         }
     }
+
+    #[inline]
+    pub fn from_vec(data: Vec<u8>) -> Self {
+        Self {
+            data
+        }
+    }
+
     /// 获取 slice 长度
     #[inline]
     pub fn size(&self) -> usize {
@@ -41,6 +50,11 @@ impl Slice {
     #[inline]
     pub fn empty(&self) -> bool {
         self.data.is_empty()
+    }
+
+    #[inline]
+    pub fn as_sub_ref(&self, start: usize, length: usize) -> &[u8] {
+        &(**self)[start..(start+length)]
     }
 
     /// 移除头部 n 个元素

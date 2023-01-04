@@ -260,6 +260,13 @@ impl<T: Sized> AsCrc for &[T] {
     }
 }
 
+impl AsCrc for [u8] {
+    #[inline]
+    fn as_crc_extend(&self, crc: u32) -> u32 {
+        CRC::extend(crc, self)
+    }
+}
+
 impl AsCrc for &str {
     #[inline]
     fn as_crc_extend(&self, crc: u32) -> u32 {
@@ -285,6 +292,22 @@ impl AsCrc for String {
     #[inline]
     fn as_crc_extend(&self, crc: u32) -> u32 {
         CRC::extend(crc, self.as_bytes())
+    }
+}
+
+pub trait ToMask {
+    fn to_mask(self) -> u32;
+    fn unmask(self) -> u32;
+}
+
+impl ToMask for u32 {
+    #[inline]
+    fn to_mask(self) -> u32 {
+        CRC::mask(self)
+    }
+    #[inline]
+    fn unmask(self) -> u32 {
+        CRC::unmask(self)
     }
 }
 
@@ -355,7 +378,8 @@ impl CRC {
         let mut l = init_crc ^ K_CRC32_XOR;
 
         // 4 byte align offset
-        let x = ptr_align_by4_offset(data.as_ptr());
+        let mut x = ptr_align_by4_offset(data.as_ptr());
+        x = if n < x { n } else { x };
         // println!("x: {}, l: {:x}, n: {}", x, l, n);
         while s < x {
             step1!(data, s, l);
@@ -430,7 +454,7 @@ impl CRC {
     #[inline]
     pub fn mask(crc: u32) -> u32 {
         // Rotate right by 15 bits and add a constant.
-        ((crc >> 15) | (crc << 17)) + K_MASK_DELTA
+        ((crc >> 15) | (crc << 17)).wrapping_add(K_MASK_DELTA)
     }
 
     /// 将CRC掩码转为CRC码
