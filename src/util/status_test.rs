@@ -1,6 +1,5 @@
 
 mod test {
-    use std::borrow::Cow;
     use crate::util::r#const::COLON_WHITE_SPACE;
     use crate::util::slice::Slice;
     use crate::util::status::{LevelError, Status};

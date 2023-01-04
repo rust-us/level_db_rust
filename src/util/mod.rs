@@ -1,6 +1,8 @@
-use crate::util::status::LevelError;
 use std::result;
+
 pub use arena::Arena;
+
+use crate::util::status::Status;
 
 /// 常量定义
 pub mod r#const;
@@ -16,7 +18,7 @@ pub mod status;
 mod status_test;
 pub mod comparator;
 mod comparator_test;
-mod crc;
+pub mod crc;
 mod crc_test;
 pub mod bloom_filter;
 mod bloom_filter_test;
@@ -24,7 +26,7 @@ pub mod filter_policy;
 mod filter_policy_test;
 
 /// 定义别名
-pub type ResultT<T> = result::Result<T, LevelError>;
+pub type Result<T> = result::Result<T, Status>;
 
 pub mod histogram;
 mod histogram_test;
