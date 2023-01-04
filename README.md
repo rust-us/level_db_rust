@@ -40,21 +40,39 @@ LSM tree 是许多 KV型或日志型数据库所依赖的核心实现，例如Bi
 ## RoadMap
 1. 1.0.0 版本, 完成 util 相关的内容
 
-
 | 功能模块                          | 完成人             | 进度   |
 |-------------------------------|-----------------|------|
-| Arena (Memory Management)     | wangboo         |      |
+| Arena (Memory Management)     | wangboo         | 100% |
 | bloom                         | fengyang        | 10%  |
 | Cache                         | colagy          |      |
 | Coding (Primitive Type SerDe) | colagy          |      |
 | Comparator                    | fengyang        | 90%  |
-| CRC                           | wangboo、lxd5866 |      |
+| CRC                           | wangboo、lxd5866 | 100% |
 | Env                           | lxd5866         |      |
 | filter_policy                 | fengyang        | 10%  |
-| Hash                          | fengyang         | 100% |
-| Histgram                      | kazeseiriou     |      |
-| loging                        |      |      |
-| MutexLock                     | kazeseiriou     |      |
+| Hash                          | fengyang        | 100% |
+| Histgram                      | kazeseiriou     | 100% |
+| loging                        |                 |      |
+| MutexLock                     | kazeseiriou     | 100% |
 | Random                        | colagy          |      |
 | Status                        | fengyang        | 100% |
-| Slice                         | wangboo         |      |
+| Slice                         | wangboo         | 100% |
+
+2. 1.1.0 版本, 完成基础零部件
+   
+| 功能模块             | 完成人 | 进度  |
+|------------------|-----|-----|
+| skiplist         | 未认领 |     |
+| MemTableIterator | 未认领 |     |
+| MemTable         | 未认领 |     |
+| LogReader        | 未认领 |     |
+| LogWriter        | 未认领 |     |
+| TableCache       | 未认领 |     |
+| FileMetaData     | 未认领 |     |
+| VersionEdit      | 未认领 |     |
+| VersionSet       | 未认领 |     |
+| ReadOptions      | 未认领 |     |
+| WriteOptions     | 未认领 |     |
+| WriteBatch       | 未认领 |     |
+
+3. 1.2.0 版本, 完成核心组件
