@@ -4,7 +4,7 @@ use std::io::{ErrorKind, Read, Seek, SeekFrom};
 use std::sync::{Arc, Mutex};
 use std::sync::atomic::{AtomicI32, Ordering};
 use std::thread::sleep;
-use crate::util::env::{RandomAccessFile, SequentialFile};
+use crate::util::env::{RandomAccessFile, SequentialFile, WritableFile};
 use crate::util::slice::Slice;
 use crate::util::status::{LevelError, Status};
 use crate::util::status::LevelError::KInvalidArgument;
@@ -44,6 +44,13 @@ pub struct Limiter {
 }
 
 impl Limiter {
+    pub fn new() -> Self {
+        let acquires_allowed = &AtomicI32::new(1);
+        Self { acquires_allowed }
+    }
+}
+
+impl Limiter {
     // If another resource is available, acquire it and return true.
     // Else return false.
     pub fn acquire(&self) -> bool {
@@ -63,6 +70,12 @@ impl Limiter {
 pub struct PosixSequentialFile<'a> {
     fd: &'a mut File,
     filename: &'a str,
+}
+
+impl PosixSequentialFile {
+    pub fn new<'a>(fd: &'a mut File, filename: &'a str) -> Self {
+        Self { fd, filename }
+    }
 }
 
 impl SequentialFile for PosixSequentialFile {
@@ -97,11 +110,17 @@ impl SequentialFile for PosixSequentialFile {
 }
 
 
-struct PosixRandomAccessFile<'a> {
+pub struct PosixRandomAccessFile<'a> {
     has_permanent_fd: bool,
     fd: &'a mut File,
     fd_limiter: &'a Limiter,
     filename: &'a str,
+}
+
+impl PosixRandomAccessFile {
+    pub fn new<'a>(has_permanent_fd: bool, fd: &'a mut File, fd_limiter: &'a Limiter, filename: &'a str) -> Self {
+        Self { has_permanent_fd, fd, fd_limiter, filename }
+    }
 }
 
 impl RandomAccessFile for PosixRandomAccessFile {
@@ -131,13 +150,18 @@ impl RandomAccessFile for PosixRandomAccessFile {
 // Instances of this class are thread-safe, as required by the RandomAccessFile
 // API. Instances are immutable and Read() only calls thread-safe library
 // functions.
-//TODO
-struct PosixMmapReadableFile<'a> {
+//TODO check
+pub struct PosixMmapReadableFile<'a> {
     mmap_base: &'a mut Vec<char>,
     length: usize,
     mmap_limiter: &'a Limiter,
     filename: &'a str,
+}
 
+impl PosixMmapReadableFile {
+    pub fn new<'a>(mmap_base: &'a mut Vec<char>, length: usize, mmap_limiter: &'a Limiter, filename: &'a str) -> Self {
+        Self { mmap_base, length, mmap_limiter, filename }
+    }
 }
 
 impl RandomAccessFile for PosixMmapReadableFile {
@@ -150,7 +174,7 @@ impl RandomAccessFile for PosixMmapReadableFile {
     }
 }
 
-struct PosixWritableFile<'a> {
+pub struct PosixWritableFile<'a> {
     buf: &'a mut Vec<char>,
     pos: usize,
     fd: &'a mut File,
@@ -159,6 +183,46 @@ struct PosixWritableFile<'a> {
     dirname: &'a str,
 }
 
+
+impl<'a> PosixWritableFile <'a>{
+    pub fn new<'a>(fd: &'a mut File, filename: &'a str) -> Self {
+        let pos: usize = 0;
+    }
+
+    fn is_manifest(filename: &str) -> bool {
+        let str = "MANIFEST".as_bytes();
+        return PosixWritableFile::basename(filename).starts_with(&Slice::from_buf(str));
+    }
+
+    fn basename(filename: &str) -> Slice {
+    todo!()
+    }
+
+
+}
+
+
+
+
+impl WritableFile for PosixWritableFile {
+    fn append(data: &Vec<char>) -> Status {
+        let write_size = data.len();
+        // Fit as much as possible into buffer.
+        //size_t copy_size = std::min(write_size, kWritableFileBufferSize - pos_);
+    }
+
+    fn close() -> Status {
+        todo!()
+    }
+
+    fn flush() -> Status {
+        todo!()
+    }
+
+    fn sync() -> Status {
+        todo!()
+    }
+}
 
 
 
