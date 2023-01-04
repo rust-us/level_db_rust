@@ -65,8 +65,8 @@ LSM tree 是许多 KV型或日志型数据库所依赖的核心实现，例如Bi
 | skiplist         | 未认领     |     |
 | MemTableIterator | 未认领     |     |
 | MemTable         | 未认领     |     |
-| LogReader        | wangboo |     |
-| LogWriter        | wangboo |     |
+| LogReader        | wangboo | 90% |
+| LogWriter        | wangboo | 90% |
 | TableCache       | 未认领     |     |
 | FileMetaData     | 未认领     |     |
 | VersionEdit      | 未认领     |     |
