@@ -11,8 +11,10 @@ use crate::util::slice::Slice;
 
 /// 一种可以计算 hash 的特质
 pub trait ToHash {
+    #[inline]
     fn to_hash(&self) -> u32;
 
+    #[inline]
     fn to_hash_with_seed(&self, seed: u32) -> u32;
 }
 
@@ -22,12 +24,14 @@ pub trait ToHash {
 /// let hash = vec!['a','b','c'].to_hash();
 /// ```
 impl<T: Sized> ToHash for Vec<T> {
+    #[inline]
     fn to_hash(&self) -> u32 {
         let v_v = self.as_slice();
 
         v_v.to_hash()
     }
 
+    #[inline]
     fn to_hash_with_seed(&self, seed: u32) -> u32 {
         let v_v = self.as_slice();
 
@@ -47,6 +51,7 @@ impl<T: Sized> ToHash for &[T] {
         self.to_hash_with_seed(HASH_DEFAULT_SEED)
     }
 
+    #[inline]
     fn to_hash_with_seed(&self, seed: u32) -> u32 {
         let ptr_u8 = self.as_ptr() as *const _ as *const u8;
 
@@ -64,10 +69,12 @@ impl<T: Sized> ToHash for &[T] {
 /// let hash = "abc".to_hash();
 /// ```
 impl ToHash for &str {
+    #[inline]
     fn to_hash(&self) -> u32 {
         self.to_hash_with_seed(HASH_DEFAULT_SEED)
     }
 
+    #[inline]
     fn to_hash_with_seed(&self, seed: u32) -> u32 {
         Hash::hash_code(self.as_bytes(), seed)
     }
@@ -81,10 +88,12 @@ impl ToHash for &str {
 ///     let slice_hash_val = slice.to_hash();
 /// ```
 impl ToHash for Slice {
+    #[inline]
     fn to_hash(&self) -> u32 {
         self.to_hash_with_seed(HASH_DEFAULT_SEED)
     }
 
+    #[inline]
     fn to_hash_with_seed(&self, seed: u32) -> u32 {
         Hash::hash_code(self.to_vec().as_slice(), seed)
     }
@@ -98,10 +107,12 @@ impl ToHash for Slice {
 ///     let string_hash_val = val_s.to_hash();
 /// ```
 impl ToHash for String {
+    #[inline]
     fn to_hash(&self) -> u32 {
         self.to_hash_with_seed(HASH_DEFAULT_SEED)
     }
 
+    #[inline]
     fn to_hash_with_seed(&self, seed: u32) -> u32 {
         Hash::hash_code(self.as_bytes(), seed)
     }
@@ -111,6 +122,7 @@ impl ToHash for String {
 pub struct Hash {}
 
 impl Hash {
+    #[inline]
     pub fn hash_code(data: &[u8], seed: u32) -> u32 {
         let murmur_hash: u32 = 0xc6a4a793;
         let r: u32 = 24;

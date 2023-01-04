@@ -13,6 +13,7 @@ pub struct Status {
 }
 
 impl Default for Status {
+    #[inline]
     fn default() -> Self {
         LevelError::ok()
     }
@@ -306,6 +307,7 @@ impl LevelError {
 }
 
 impl Default for LevelError {
+    #[inline]
     fn default() -> LevelError {
         KOk
     }
@@ -328,6 +330,7 @@ impl TryFrom<i32> for LevelError {
     ///        let rs: LevelError = LevelError::try_from(3)?;
     ///         assert!(&rs.is_not_supported_error());
     /// ```
+    #[inline]
     fn try_from(value: i32) -> Result<Self, Self::Error> {
         match value {
             0 => Ok(KOk),
@@ -343,6 +346,7 @@ impl TryFrom<i32> for LevelError {
 }
 
 impl Display for LevelError {
+    #[inline]
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut print = String::new();
 
