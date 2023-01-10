@@ -183,45 +183,27 @@ pub enum LevelError {
 
 impl LevelError {
     pub fn is_ok(&self) -> bool {
-        match self {
-            KOk => true,
-            _ => false
-        }
+        matches!(*self, KOk)
     }
 
     pub fn is_not_found(&self) -> bool {
-        match self {
-            KNotFound => true,
-            _ => false
-        }
+        matches!(*self, KNotFound)
     }
 
     pub fn is_corruption(&self) -> bool {
-        match self {
-            KCorruption => true,
-            _ => false
-        }
+        matches!(*self, KCorruption)
     }
 
     pub fn is_io_error(&self) -> bool {
-        match self {
-            KIOError => true,
-            _ => false
-        }
+        matches!(*self, KIOError)
     }
 
     pub fn is_not_supported_error(&self) -> bool {
-        match self {
-            KNotSupported => true,
-            _ => false
-        }
+        matches!(*self, KNotSupported)
     }
 
     pub fn is_invalid_argument(&self) -> bool {
-        match self {
-            KInvalidArgument => true,
-            _ => false
-        }
+        matches!(*self, KInvalidArgument)
     }
 
     pub fn ok() -> Status {
