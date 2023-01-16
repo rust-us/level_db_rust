@@ -40,22 +40,60 @@ LSM tree 是许多 KV型或日志型数据库所依赖的核心实现，例如Bi
 
 ## RoadMap
 
+
 1. 1.0.0 版本, 完成 util 相关的内容
 
 | 功能模块                          | 完成人             | 进度   |
 |-------------------------------|-----------------|------|
-| Arena (Memory Management)     | wangboo         |      |
+| Arena (Memory Management)     | wangboo         | 100% |
 | bloom                         | fengyang        | 10%  |
 | Cache                         | colagy          |      |
 | Coding (Primitive Type SerDe) | colagy          | 90%  |
 | Comparator                    | fengyang        | 90%  |
-| CRC                           | wangboo、lxd5866 |      |
+| CRC                           | wangboo、lxd5866 | 100% |
 | Env                           | lxd5866         |      |
 | filter_policy                 | fengyang        | 10%  |
-| Hash                          | fengyang         | 100% |
-| Histgram                      | kazeseiriou     |      |
-| loging                        |      |      |
-| MutexLock                     | kazeseiriou     |      |
+| Hash                          | fengyang        | 100% |
+| Histgram                      | kazeseiriou     | 100% |
+| loging                        |                 |      |
+| MutexLock                     | kazeseiriou     | 100% |
 | Random                        | colagy          |      |
 | Status                        | fengyang        | 100% |
-| Slice                         | wangboo         |      |
+| Slice                         | wangboo         | 100% |
+
+
+2. 1.1.0 版本, 完成基础零部件
+   
+| 功能模块                                                                          | 完成人      | 进度 |
+|-------------------------------------------------------------------------------|----------|---|
+| util.Options(ReadOptions、WriteOptions)                                        | 未认领      |   |
+| util.ENV(WritableFile、SequentialFile、RandomAccessFile、FileLock)               | 未认领      |   |
+| util.Logger                                                                   | 未认领      |   |
+| table.Block、BlockBuilder、FilterBlockBuilder                                   | 未认领      |   |
+| FilterBlock、FilterBlockReader                                                 | 未认领      |   |
+| table.format(Footer、BlockHandle)                                              | 未认领      |   |
+| db.dbformat(InternalKeyComparator、InternalFilterPolicy、LookupKey、InternalKey) | 未认领      |   |
+| db.SkipList                                                                   | 未认领      |   |
+| table.Iterator(DBIter、MergingIterator、TwoLevelIterator...)                    | 未认领      |   |
+| IteratorWrapper                                                               | 未认领      |   |
+| db.MemTable(MemTable、MemTableIterator)                                        | 未认领      |   |
+| table.Table                                                                   | 未认领      |   |
+| db.leveldb_util                                                               | 未认领      |  |
+| db.log_format                                                                 | 未认领      |  |
+| db.LogReader                                                                  | wangboo  | 90% |
+| db.LogWriter                                                                  | wangboo  | 90% |
+| db.TableCache                                                                 | colagy   |   |
+| db.VersionEdit(Tag、VersionEdit、FileMetaData)                                  | fengyang |   |
+| db.VersionSet(Version、LevelFileNumIterator、SaverState)                        | fengyang |   |
+| WriteBatch                                                                    | 未认领      |   |
+
+
+3. 1.2.0 版本, 完成核心组件
+
+| 功能模块               | 完成人     | 进度  |
+|--------------------|---------|-----|
+| DB(DBImpl、ModelDB) | 未认领     |     |
+| Repairer           | 未认领     |     |
+| Snapshot           | 未认领     |     |
+| DumpFile         | 未认领     |     |
+|                    | 未认领     |     |
