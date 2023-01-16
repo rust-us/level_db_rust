@@ -1,3 +1,5 @@
+#![feature(box_syntax)]
+
 mod db;
 mod table;
 mod util;
