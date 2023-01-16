@@ -88,18 +88,17 @@ LSM tree 是许多 KV型或日志型数据库所依赖的核心实现，例如Bi
 
 3. 1.2.0 版本, 完成核心组件
 
-| module              | 完成人            | 进度  |
-|---------------------|----------------|-----|
-| DB(DBImpl, ModelDB) | not dispatch   |     |
-| Repairer            | not dispatch   |     |
-| Snapshot            | not dispatch   |     |
-| DumpFile            | not dispatch   |     |
-|                     | not dispatch   |     |
+| module              | contributor | process |
+|---------------------|-------------|---------|
+| DB(DBImpl, ModelDB) | none        |         |
+| Repairer            | none        |         |
+| Snapshot            | none        |         |
+| DumpFile            | none        |         |
+|                     | none        |         |
 
 4. todo
    gitee ->  github  (同步)  主仓库gitee, github用于申请JetBrains账号
    官网交给辉哥, 展示一些要做的内容和产品信息
-   接口先确定对齐, 先不要写实现
-
-
-
+   接口先确定对齐, 先不要写实现, 时间: 1月17号晚, 1月18号下午
+   注释 使用rust标准, 使用中文注释
+   
