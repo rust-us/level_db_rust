@@ -21,7 +21,7 @@ impl ComparatorTrait for BytewiseComparatorImpl {
         a.partial_cmp(b)
     }
 
-    fn get_name() -> String {
+    fn get_name(&self) -> String {
         String::from("leveldb.BytewiseComparator")
     }
 
@@ -98,6 +98,12 @@ pub struct InternalKeyComparator {
     // fn Compare(InternalKey, InternalKey)
 }
 
+impl Default for InternalKeyComparator {
+    fn default() -> Self {
+        Self {}
+    }
+}
+
 /// InternalKeyComparator 比较器: 用来比较内部键（Internal Key）。
 /// 内部键值是为了方便处理，将原普通键、序列号和值类型组成的新键。
 impl ComparatorTrait for InternalKeyComparator {
@@ -107,7 +113,7 @@ impl ComparatorTrait for InternalKeyComparator {
         todo!()
     }
 
-    fn get_name() -> String {
+    fn get_name(&self) -> String {
         String::from("leveldb.InternalKeyComparator")
     }
 
