@@ -58,14 +58,13 @@ impl FilterPolicy for BloomFilterPolicy {
         String::from("leveldb.BuiltinBloomFilter2")
     }
 
-    fn create_filter(&self, keys: Vec<Slice>, n: usize) -> Slice {
-        // 根据指定的参数创建过滤器，并返回结果。
-        // 参数keys[0,n-1]包含依据用户提供的comparator排序的key列表--可重复，
-        // 并把根据这些key创建的filter追加到 返回结果中。
+    fn create_filter(&self, keys: Vec<Slice>) -> Slice {
+        let n: usize = keys.len();
+
         let mut bits: usize = n * self.bits_per_key;
 
-        // For small n, we can see a very high false positive rate.  Fix it
-        // by enforcing a minimum bloom filter length.
+        // For small n, we can see a very high false positive rate.
+        // Fix it by enforcing a minimum bloom filter length.
         if bits < 64 {
             bits = 64;
         }
@@ -74,7 +73,7 @@ impl FilterPolicy for BloomFilterPolicy {
         bits = bytes * 8;
 
         let mut dstChars: Vec<u8> = Vec::with_capacity(bytes);
-        for i in 0..bytes {
+        for bi in 0..bytes {
             dstChars.push(0);
         }
 
@@ -102,6 +101,9 @@ impl FilterPolicy for BloomFilterPolicy {
     }
 
     fn key_may_match(&self, key: &Slice, bloom_filter: &Slice) -> bool {
+
+        let bloom_hash : u32 = BloomFilterPolicy::bloom_hash(bloom_filter);
+
         todo!()
     }
 }

@@ -12,23 +12,25 @@ pub trait FilterPolicy {
     ///
     fn name(&self) -> String;
 
-    /// 根据指定的参数创建过滤器，并返回结果， 结果为dst的原始内容 + append结果。
-    /// 参数keys[0,n-1]包含依据用户提供的comparator排序的key列表--可重复，
-    /// 并把根据这些key创建的filter追加返回。
+    /// 根据 keys 创建过滤器，并返回 bloom_filter Slice
     ///
     /// # Arguments
     ///
-    /// * `keys`:
-    /// * `n`:
+    /// * `keys`:  创建过滤器的数据清单
     ///
     /// returns: bloom_filter Slice
     ///
     /// # Examples
     ///
     /// ```
+    ///    let mut keys : Vec<Slice>  = Vec::new();
+    ///     keys.push(Slice::try_from(String::from("hello")).unwrap());
+    ///     keys.push(Slice::try_from(String::from("world")).unwrap());
     ///
+    ///     let policy = BloomFilterPolicy::new(800);
+    ///     let bloom_filter: Slice = policy.create_filter(keys);
     /// ```
-    fn create_filter(&self, keys: Vec<Slice>, n: usize) -> Slice;
+    fn create_filter(&self, keys: Vec<Slice>) -> Slice;
 
     ///
     ///

@@ -49,13 +49,13 @@ LSM tree 是许多 KV型或日志型数据库所依赖的核心实现，例如Bi
 | 功能模块                          | 完成人             | 进度   |
 |-------------------------------|-----------------|------|
 | Arena (Memory Management)     | wangboo         | 100% |
-| bloom                         | fengyang        | 10%  |
+| bloom                         | fengyang        | 90%  |
 | Cache                         | colagy          | 10%  |
 | Coding (Primitive Type SerDe) | colagy          | 100% |
 | Comparator                    | fengyang        | 100% |
 | CRC                           | wangboo、lxd5866 | 100% |
 | Env                           | lxd5866         |      |
-| filter_policy                 | fengyang        | 10%  |
+| filter_policy                 | fengyang        | 90%  |
 | Hash                          | fengyang        | 100% |
 | Histgram                      | kazeseiriou     | 100% |
 | loging                        |                 |      |

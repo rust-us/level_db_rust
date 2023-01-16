@@ -35,7 +35,7 @@ fn test_create_filter() {
     keys.push(Slice::try_from(String::from("hello")).unwrap());
     keys.push(Slice::try_from(String::from("world")).unwrap());
 
-    let bloom_filter = policy.create_filter(keys, 2);
+    let bloom_filter: Slice = policy.create_filter(keys);
 
     let mut key_may_match = policy.key_may_match(
         &Slice::try_from(String::from("hello")).unwrap(),
