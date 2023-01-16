@@ -46,23 +46,23 @@ LSM tree 是许多 KV型或日志型数据库所依赖的核心实现，例如Bi
 ### 1.0.0
 1.0.0 版本, 完成 util 相关的内容
 
-| 功能模块                                   | 完成人             | 进度   |
-|----------------------------------------|-----------------|------|
-| Arena (Memory Management)              | wangboo         | 100% |
-| bloom                                  | fengyang        | 10%  |
-| Cache                                  | colagy          | 10%  |
-| Coding (Primitive Type SerDe)          | colagy          | 100% |
-| Comparator                             | fengyang        | 90%  |
-| CRC                                    | wangboo、lxd5866 | 100% |
-| Env                                    | lxd5866         |      |
-| filter_policy                          | fengyang        | 10%  |
-| Hash                                   | fengyang        | 100% |
-| Histgram                               | kazeseiriou     | 100% |
-| loging                                 |                 |      |
-| MutexLock                              | kazeseiriou     | 100% |
-| Random                                 | colagy          |      |
-| Status                                 | fengyang        | 100% |
-| Slice                                  | wangboo         | 100% |
+| 功能模块                          | 完成人             | 进度   |
+|-------------------------------|-----------------|------|
+| Arena (Memory Management)     | wangboo         | 100% |
+| bloom                         | fengyang        | 90%  |
+| Cache                         | colagy          | 10%  |
+| Coding (Primitive Type SerDe) | colagy          | 100% |
+| Comparator                    | fengyang        | 100% |
+| CRC                           | wangboo、lxd5866 | 100% |
+| Env                           | lxd5866         |      |
+| filter_policy                 | fengyang        | 90%  |
+| Hash                          | fengyang        | 100% |
+| Histgram                      | kazeseiriou     | 100% |
+| loging                        |                 |      |
+| MutexLock                     | kazeseiriou     | 100% |
+| Random                        | colagy          |      |
+| Status                        | fengyang        | 100% |
+| Slice                         | wangboo         | 100% |
 
 ### 1.1.0
 1.1.0 版本, 完成基础零部件

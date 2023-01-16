@@ -6,6 +6,7 @@ mod test {
     use crate::util::comparator::{BytewiseComparatorImpl, InternalKeyComparator};
     use crate::util::slice::Slice;
 
+    // ##################### BytewiseComparatorImpl test
     #[test]
     fn test_bytewise_comparator_impl_get_name() {
         let name = BytewiseComparatorImpl::default().get_name();

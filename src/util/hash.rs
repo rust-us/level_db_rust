@@ -147,6 +147,7 @@ impl Hash {
             h = h.wrapping_add(w);
             // h *= m
             h = h.wrapping_mul(murmur_hash);
+            // Rust的位运算符包括：按位取反(!)、按位与(&)、按位或(|)、按位异或(^)、左移(<<)、右移(>>)
             // ^ 按位异或 bitxor , >> 右移位 shr, << 左移位 shl
             // h ^= (h >> 16) == h ^= h.shr(16);
             h = h.bitxor(h.wrapping_shr(16));
