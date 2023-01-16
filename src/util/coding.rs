@@ -1,4 +1,3 @@
-use std::ops::Deref;
 use crate::traits::coding_trait::CodingTrait;
 use crate::traits::coding_trait::Coding32;
 use crate::traits::coding_trait::Coding64;
