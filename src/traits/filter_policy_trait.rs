@@ -10,23 +10,23 @@ pub trait FilterPolicy {
     /// passed to methods of this type.
     fn name() -> String;
 
-    /// 根据指定的参数创建过滤器，并返回结果， 结果为dst的原始内容 + append结果。
-    /// 参数keys[0,n-1]包含依据用户提供的comparator排序的key列表--可重复，
-    /// 并把根据这些key创建的filter追加返回。
-    ///
-    /// # Arguments
-    ///
-    /// * `keys`:
-    /// * `n`:
-    ///
-    /// returns: String
-    ///
-    /// # Examples
-    ///
-    /// ```
-    ///
-    /// ```
-    fn create_filter(&self, keys: Slice, n: u32) -> String;
+    // /// 根据指定的参数创建过滤器，并返回结果， 结果为dst的原始内容 + append结果。
+    // /// 参数keys[0,n-1]包含依据用户提供的comparator排序的key列表--可重复，
+    // /// 并把根据这些key创建的filter追加返回。
+    // ///
+    // /// # Arguments
+    // ///
+    // /// * `keys`:
+    // /// * `n`:
+    // ///
+    // /// returns: String
+    // ///
+    // /// # Examples
+    // ///
+    // /// ```
+    // ///
+    // /// ```
+    // fn create_filter(&self, keys: Slice, n: u32) -> String;
 
     fn key_may_match(key: &Slice, filter: &Slice) -> bool;
 }
