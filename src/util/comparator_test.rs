@@ -9,7 +9,7 @@ mod test {
     // ##################### BytewiseComparatorImpl test
     #[test]
     fn test_bytewise_comparator_impl_get_name() {
-        let name = BytewiseComparatorImpl::get_name();
+        let name = BytewiseComparatorImpl::default().get_name();
         println!("get_name: {}", &name);
         assert_eq!("leveldb.BytewiseComparator", name);
     }
@@ -125,7 +125,7 @@ mod test {
 
     #[test]
     fn test_internal_key_comparator_get_name() {
-        let name = InternalKeyComparator::get_name();
+        let name = InternalKeyComparator::default().get_name();
         assert_eq!("leveldb.InternalKeyComparator", name);
     }
 
