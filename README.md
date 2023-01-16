@@ -46,8 +46,8 @@ LSM tree 是许多 KV型或日志型数据库所依赖的核心实现，例如Bi
 |-------------------------------|-----------------|------|
 | Arena (Memory Management)     | wangboo         |      |
 | bloom                         | fengyang        | 10%  |
-| Cache                         | colagy          |      |
-| Coding (Primitive Type SerDe) | colagy          | 90%  |
+| Cache                         | colagy          | 10%  |
+| Coding (Primitive Type SerDe) | colagy          | 100%  |
 | Comparator                    | fengyang        | 90%  |
 | CRC                           | wangboo、lxd5866 |      |
 | Env                           | lxd5866         |      |
