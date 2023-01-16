@@ -29,7 +29,7 @@ pub trait ComparatorTrait {
     fn compare(&self, a: &Slice, b: &Slice) -> Option<Ordering>;
 
     /// 返回comparator的名字
-    fn get_name() -> String;
+    fn get_name(&self) -> String;
 
     /// 函数：找到start、limit之间最短的字符串，如“helloworld”和”hellozoomer”之间最短的key可以是”hellox”
     ///
