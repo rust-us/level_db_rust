@@ -35,9 +35,24 @@ fn test_create_filter() {
     keys.push(Slice::try_from(String::from("hello")).unwrap());
     keys.push(Slice::try_from(String::from("world")).unwrap());
 
-    let filter_ = policy.create_filter(keys, 2);
-    println!("{}", "aa")
+    let bloom_filter = policy.create_filter(keys, 2);
 
+    let mut key_may_match = policy.key_may_match(
+        &Slice::try_from(String::from("hello")).unwrap(),
+        &bloom_filter);
+    assert!(key_may_match);
+
+    // key_may_match = policy.key_may_match(&Slice::try_from(String::from("world")).unwrap(),
+    //                                      &bloom_filter);
+    // assert!(key_may_match);
+
+    // let mut un_key_may_match = policy.key_may_match(&Slice::try_from(String::from("x")).unwrap(),
+    //                                      &bloom_filter);
+    // assert!(!un_key_may_match);
+    //
+    // un_key_may_match = policy.key_may_match(&Slice::try_from(String::from("foo")).unwrap(),
+    //                                         &bloom_filter);
+    // assert!(!un_key_may_match);
 }
 
 // a(&policy1);

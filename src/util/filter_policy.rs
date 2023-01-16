@@ -58,7 +58,7 @@ impl FilterPolicy for BloomFilterPolicy {
         String::from("leveldb.BuiltinBloomFilter2")
     }
 
-    fn create_filter(&self, keys: Vec<Slice>, n: usize) -> String {
+    fn create_filter(&self, keys: Vec<Slice>, n: usize) -> Slice {
         // 根据指定的参数创建过滤器，并返回结果。
         // 参数keys[0,n-1]包含依据用户提供的comparator排序的key列表--可重复，
         // 并把根据这些key创建的filter追加到 返回结果中。
@@ -74,6 +74,10 @@ impl FilterPolicy for BloomFilterPolicy {
         bits = bytes * 8;
 
         let mut dstChars: Vec<u8> = Vec::with_capacity(bytes);
+        for i in 0..bytes {
+            dstChars.push(0);
+        }
+
         for i in 0..n {
             let mut h : u32 = BloomFilterPolicy::bloom_hash(keys.get(i).unwrap());
             let delta : u32 = (h >> 17) | (h << 15);
@@ -93,13 +97,11 @@ impl FilterPolicy for BloomFilterPolicy {
             }
         }
 
-        // Vec<u8> 转 String
-        let ss = Slice::from_buf(&dstChars).borrow_data();
-
-        ss.to_string()
+        // Vec<u8> 转 Slice
+        Slice::from_buf(&dstChars)
     }
 
-    fn key_may_match(&self, key: &Slice, filter: &Slice) -> bool {
+    fn key_may_match(&self, key: &Slice, bloom_filter: &Slice) -> bool {
         todo!()
     }
 }
