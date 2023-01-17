@@ -18,6 +18,7 @@ pub struct ParsedInternalKey {
     value_type: ValueType
 }
 
+#[derive(Debug)]
 pub struct InternalKey {
     rep_: Slice
 }
@@ -140,6 +141,14 @@ impl Default for InternalKey {
         Self {
             rep_: Slice::default()
         }
+    }
+}
+
+impl PartialEq for InternalKey {
+    /// 判断两个 InternalKey 是否相同
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.rep_.eq(&other.rep_)
     }
 }
 
