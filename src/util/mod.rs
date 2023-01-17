@@ -1,7 +1,9 @@
+use std::rc::Rc;
 use std::result;
 
 pub use arena::Arena;
 
+use crate::util::comparator::{BytewiseComparatorImpl, InternalKeyComparator};
 use crate::util::status::Status;
 
 /// 常量定义
@@ -25,12 +27,12 @@ mod bloom_filter_test;
 pub mod filter_policy;
 mod filter_policy_test;
 
-/// 定义别名
-pub type Result<T> = result::Result<T, Status>;
-
 pub mod histogram;
 mod histogram_test;
 mod hash;
 mod hash_test;
 mod mutex_lock;
 mod mutex_lock_test;
+
+/// 定义别名
+pub type Result<T> = result::Result<T, Status>;
