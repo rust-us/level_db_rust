@@ -102,36 +102,36 @@ impl Default for ParsedInternalKey {
 }
 
 impl ParsedInternalKey {
-    fn new(u: Slice, /* seq: SequenceNumber, */ t: ValueType) -> ParsedInternalKey {
-        ParsedInternalKey {
+    fn new(u: Slice, seq: u64, t: ValueType) -> Self {
+        Self {
             user_key: u,
-            sequence: 0,
+            sequence: seq,
             value_type: t,
         }
     }
 
-    fn debug_string() -> Slice {
+    fn debug_string(&self) -> Slice {
         Slice::default()
     }
 
     /// Return the length of the encoding of "key".
-    fn internal_key_encoding_length(key: ParsedInternalKey) -> usize {
+    fn internal_key_encoding_length(&self, key: ParsedInternalKey) -> usize {
         key.user_key.size() + 8
     }
 
-    fn append_internal_key(key : ParsedInternalKey) -> Slice {
+    fn append_internal_key(&self, key : ParsedInternalKey) -> Slice {
         todo!()
     }
 
     /// Attempt to parse an internal key from "internal_key".  On success,
     /// stores the parsed data in "*result", and returns true.
     /// On error, returns false, leaves "*result" in an undefined state.
-    fn parse_internal_key(internal_key : Slice, target: ParsedInternalKey) -> bool {
+    fn parse_internal_key(&self, internal_key : Slice, target: ParsedInternalKey) -> bool {
         todo!()
     }
 
     /// Returns the user key portion of an internal key.
-    fn extract_user_key(internal_key : Slice) -> Slice {
+    fn extract_user_key(&self, internal_key : Slice) -> Slice {
         todo!()
     }
 }
