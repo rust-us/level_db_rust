@@ -1,26 +1,25 @@
 use std::rc::Rc;
 use crate::traits::comparator_trait::ComparatorTrait;
 use crate::traits::DataIterator;
+use crate::util::comparator::InternalKeyComparator;
 use crate::util::slice::Slice;
 
 use crate::util::Result;
 
-enum ValueType {
+pub enum ValueType {
     Insert,
     Deletion,
 }
 
 /// 内存表
-struct MemTable {
-
+pub struct MemTable<Cmp: ComparatorTrait> {
+    cmp: Rc<Cmp>,
 }
 
 /// 临时, 查找键
 struct LookupKey {}
 
-type MemTableRef = Rc<MemTable>;
-
-impl MemTable {
+impl <Cmp: ComparatorTrait> MemTable<Cmp> {
 
     /// 创建内存表
     ///
@@ -33,10 +32,12 @@ impl MemTable {
     /// # Examples
     ///
     /// ```
-    /// let mt = MemTable::create(comp);
+    /// let mt = MemTable::create(cmp);
     /// ```
-    pub fn create(_comparator: Rc<Box<dyn ComparatorTrait>>) -> Self {
-        todo!()
+    pub fn create(cmp: Rc<Cmp>) -> Self {
+        Self {
+            cmp,
+        }
     }
 
     /// 返回该表使用的内存近似值
@@ -66,7 +67,7 @@ impl MemTable {
     }
 
     /// 通过 key 查找结果
-    pub fn get(&self, key: &LookupKey) -> Result<Option<Slice>> {
+    pub fn get(&self, _key: &LookupKey) -> Result<Option<Slice>> {
         todo!()
     }
 

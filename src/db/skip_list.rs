@@ -1,21 +1,28 @@
 use std::rc::Rc;
+
 use crate::traits::comparator_trait::ComparatorTrait;
 use crate::util::Arena;
-use crate::util::slice::Slice;
+use crate::util::comparator::BytewiseComparatorImpl;
 use crate::util::Result;
+use crate::util::slice::Slice;
 
-pub struct SkipList<T> {
-    node: Node<T>
-}
-
+// todo
 struct Node<T> {
     value: T,
 }
 
-impl <T> SkipList<T> {
+pub struct SkipList<T, It: ComparatorTrait> {
+    node: Option<Node<T>>,
+    comp: Rc<It>,
+}
 
-    pub fn create(_comparator: Rc<Box<dyn ComparatorTrait>>, _arena: Rc<Arena>) -> Self {
-        todo!()
+impl<T, It: ComparatorTrait> SkipList<T, It> {
+
+    pub fn create(comparator: Rc<It>, _arena: Rc<Arena>) -> Self {
+        Self {
+            node: None,
+            comp: comparator,
+        }
     }
 
     pub fn insert(&mut self, _seq_no: usize, _key: &Slice) -> Result<()> {
@@ -29,5 +36,4 @@ impl <T> SkipList<T> {
     pub fn get_max_height(&self) -> usize {
         todo!()
     }
-
 }
