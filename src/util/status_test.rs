@@ -32,12 +32,10 @@ mod test {
         let err: Status = LevelError::invalid_argument(String::from(msg1).into(),
                                                    String::from(msg2).into());
         assert!(&err.is_invalid_argument());
-        // assert_eq!(err.into_code(), 4);
 
         let err: Status = LevelError::corruption(String::from(msg1).into(),
                                                    String::from(msg2).into());
         assert!(&err.is_corruption());
-        // assert_eq!(err.into_code(), 2);
 
         let err: Status = LevelError::not_found(String::from(msg1).into(),
                                                    String::from(msg2).into());
@@ -121,32 +119,38 @@ mod test {
     fn test_level_error_try_from() -> Result<(), String> {
         let rs = LevelError::try_from(1)?;
         assert!(&rs.is_not_found());
+        assert_eq!(rs.get_value(), 1);
         let rs: Result<LevelError, String> = 1.try_into();
         assert!(rs.ok().unwrap().is_not_found());
 
         let rs = LevelError::try_from(0)?;
         assert!(&rs.is_ok());
+        assert_eq!(rs.get_value(), 0);
         let rs: Result<LevelError, String> = 0.try_into();
         assert!(rs.ok().unwrap().is_ok());
 
         let rs = LevelError::try_from(2)?;
         assert!(&rs.is_corruption());
+        assert_eq!(rs.get_value(), 2);
         let rs: LevelError = 2.try_into()?;
         assert!(rs.is_corruption());
 
         let rs: LevelError = LevelError::try_from(3)?;
         assert!(&rs.is_not_supported_error());
+        assert_eq!(rs.get_value(), 3);
         let rs: LevelError = 3.try_into()?;
         assert!(rs.is_not_supported_error());
 
         let rs = LevelError::try_from(4)?;
         assert!(&rs.is_invalid_argument());
+        assert_eq!(rs.get_value(), 4);
 
         let rs = LevelError::try_from(5)?;
         assert!(&rs.is_io_error());
+        assert_eq!(rs.get_value(), 5);
 
-        let rs = LevelError::try_from(6);
-        assert_eq!("Unknown code: 6", rs.err().unwrap());
+        let rs = LevelError::try_from(66);
+        assert_eq!("Unknown code: 66", rs.err().unwrap());
 
         Ok(())
     }

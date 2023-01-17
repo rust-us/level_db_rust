@@ -9,6 +9,8 @@ mod log_wr_test;
 pub mod skip_list;
 pub mod mem_table;
 pub mod db;
+pub mod db_format;
+mod db_format_test;
 
 /// 默认调表
 pub type DefaultSkipList = SkipList<Slice, BytewiseComparatorImpl>;
