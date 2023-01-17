@@ -3,7 +3,7 @@ use std::result;
 
 pub use arena::Arena;
 
-use crate::util::comparator::{BytewiseComparatorImpl, InternalKeyComparator};
+use crate::util::comparator::{BytewiseComparatorImpl};
 use crate::util::status::Status;
 
 /// 常量定义
