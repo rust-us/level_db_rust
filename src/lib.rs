@@ -1,4 +1,5 @@
 #![feature(box_syntax)]
+#![feature(let_else)]
 
 mod db;
 mod table;
