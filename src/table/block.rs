@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use crate::traits::comparator_trait::ComparatorTrait;
+use crate::traits::comparator_trait::Comparator;
 use crate::traits::DataIterator;
 
 use crate::util::Result;
@@ -31,7 +31,7 @@ impl Block {
     /// ```
     ///
     /// ```
-    pub fn new_iterator(&self, _comparator: Rc<impl ComparatorTrait>) -> Result<Box<dyn DataIterator>> {
+    pub fn new_iterator(&self, _comparator: Rc<impl Comparator>) -> Result<Box<dyn DataIterator>> {
         todo!()
     }
 }
