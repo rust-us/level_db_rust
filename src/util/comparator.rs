@@ -1,6 +1,6 @@
 
 use std::cmp::{min, Ordering};
-use crate::traits::comparator_trait::{ComparatorTrait};
+use crate::traits::comparator_trait::{Comparator};
 use crate::util::slice::Slice;
 
 pub struct BytewiseComparatorImpl {}
@@ -15,7 +15,7 @@ impl Default for BytewiseComparatorImpl {
     }
 }
 
-impl ComparatorTrait for BytewiseComparatorImpl {
+impl Comparator for BytewiseComparatorImpl {
 
     fn compare(&self, a: &Slice, b: &Slice) -> Option<Ordering> {
         a.partial_cmp(b)
@@ -91,29 +91,43 @@ impl ComparatorTrait for BytewiseComparatorImpl {
 
 /// InternalKeyComparator
 pub struct InternalKeyComparator {
-    // user_comparator_: ComparatorTrait
+    user_comparator_: dyn Comparator
 }
 
-// /// InternalKeyComparator 比较器: 用来比较内部键（Internal Key）。
-// /// 内部键值是为了方便处理，将原普通键、序列号和值类型组成的新键。
-// impl ComparatorTrait for InternalKeyComparator {
-//     fn new(c: ComparatorTrait) -> InternalKeyComparator {
-//         todo!()
-//     }
-//
-//     fn compare(&self, _a: &Slice, _b: &Slice) -> Option<Ordering> {
-//         todo!()
-//     }
-//
-//     fn get_name(&self) -> String {
-//         String::from("leveldb.InternalKeyComparator")
-//     }
-//
-//     fn find_shortest_separator(&self, _start: &String, _limit: &Slice) -> String {
-//         todo!()
-//     }
-//
-//     fn find_short_successor(&self, _key: &String) -> String {
-//         todo!()
-//     }
-// }
+impl InternalKeyComparator {
+    fn new(c: Box<dyn Comparator>) -> Box<InternalKeyComparator> {
+        todo!()
+    }
+
+    fn user_comparator() -> Box<dyn Comparator> {
+        todo!()
+    }
+
+    // fn compare(a: InternalKey, b: InternalKey) -> u32 {
+    //     todo!()
+    // }
+}
+
+/// InternalKeyComparator 比较器: 用来比较内部键（Internal Key）。
+/// 内部键值是为了方便处理，将原普通键、序列号和值类型组成的新键。
+impl Comparator for InternalKeyComparator {
+    // fn new(c: Box<ComparatorTrait>) -> InternalKeyComparator {
+    //     todo!()
+    // }
+
+    fn compare(&self, _a: &Slice, _b: &Slice) -> Option<Ordering> {
+        todo!()
+    }
+
+    fn get_name(&self) -> String {
+        String::from("leveldb.InternalKeyComparator")
+    }
+
+    fn find_shortest_separator(&self, _start: &String, _limit: &Slice) -> String {
+        todo!()
+    }
+
+    fn find_short_successor(&self, _key: &String) -> String {
+        todo!()
+    }
+}
