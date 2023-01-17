@@ -1,33 +1,24 @@
 use std::ops::{BitOr, Mul, Shl};
 use crate::traits::filter_policy_trait::{FilterPolicy};
 use crate::util::hash::{Hash, ToHash};
+use crate::util::r#const::HASH_DEFAULT_SEED;
 use crate::util::slice::Slice;
 
 pub trait FromPolicy {
     fn from_bits_per_key(&self) -> usize;
+
     fn from_k(&self) -> usize;
+}
+
+/// 其他成员的语义扩展
+pub trait AsBloomHash {
+    #[inline]
+    fn bloom_hash(&self) -> u32;
 }
 
 pub struct BloomFilterPolicy {
     bits_per_key: usize,
     k: usize
-}
-
-impl<'a> BloomFilterPolicy {
-    pub fn bloom_hash(key: &Slice) -> u32 {
-        key.to_hash_with_seed(0xbc9f1d34)
-    }
-}
-
-/// get struct  BloomFilterPolicy 属性
-impl FromPolicy for BloomFilterPolicy {
-    fn from_bits_per_key(&self) -> usize {
-        self.bits_per_key
-    }
-
-    fn from_k(&self) -> usize {
-        self.k
-    }
 }
 
 impl BloomFilterPolicy {
@@ -48,6 +39,23 @@ impl BloomFilterPolicy {
             bits_per_key,
             k : k_k
         }
+    }
+}
+
+impl<'a> BloomFilterPolicy {
+    pub fn bloom_hash(key: &Slice) -> u32 {
+        key.to_hash_with_seed(HASH_DEFAULT_SEED)
+    }
+}
+
+/// get struct  BloomFilterPolicy 属性
+impl FromPolicy for BloomFilterPolicy {
+    fn from_bits_per_key(&self) -> usize {
+        self.bits_per_key
+    }
+
+    fn from_k(&self) -> usize {
+        self.k
     }
 }
 
@@ -76,7 +84,9 @@ impl FilterPolicy for BloomFilterPolicy {
         dst_chars[bytes] = self.k as u8;
 
         for i in 0..n {
-            let mut h : u32 = BloomFilterPolicy::bloom_hash(keys.get(i).unwrap());
+            let slice = keys.get(i).unwrap();
+
+            let mut h : u32 = slice.bloom_hash();
             let delta : u32 = (h >> 17) | (h << 15);
 
             for j in 0..self.k {
@@ -113,7 +123,7 @@ impl FilterPolicy for BloomFilterPolicy {
             return true;
         }
 
-        let mut h : u32 = BloomFilterPolicy::bloom_hash(key);
+        let mut h : u32 = key.bloom_hash();
         // Rotate right 17 bits
         let delta = (h >> 17) | (h << 15);
 
@@ -127,5 +137,19 @@ impl FilterPolicy for BloomFilterPolicy {
         }
 
         return true;
+    }
+}
+
+/// 实现了 Slice 转 bloom_hash 的特质
+/// Sample:
+/// ```
+///     let val = "aabbccd";
+///     let slice: Slice = Slice::from_buf(val.as_bytes());
+///     let hash_val = slice.bloom_hash();
+/// ```
+impl AsBloomHash for Slice {
+    #[inline]
+    fn bloom_hash(&self) -> u32 {
+        BloomFilterPolicy::bloom_hash(self)
     }
 }

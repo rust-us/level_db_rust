@@ -114,7 +114,7 @@ impl Block for BlockHandle {
         // Slice::default()
     }
 
-    fn decode_from(&self, input: Slice) -> Result<String> {
+    fn decode_from(&self, input: Slice) -> Result<bool> {
         todo!()
     }
 }
