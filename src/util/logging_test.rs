@@ -21,7 +21,7 @@ mod test{
 
     #[test]
     fn tes_consume_decimal_number() {
-        let mut sin = Slice::from("19103912");
+        let mut sin = Slice::from("18446744073709551615");
         //let mut sin = Slice::from("18446744073709551616");
         //let mut sin = Slice::from("18446744073709551615");
 
