@@ -49,6 +49,10 @@ pub struct ParsedInternalKey {
     value_type: ValueType
 }
 
+pub struct InternalKey {
+    rep_: Slice
+}
+
 impl ValueType {
     pub fn get_value(&self) -> i32 {
         let le = match self {
@@ -130,4 +134,8 @@ impl ParsedInternalKey {
     fn extract_user_key(internal_key : Slice) -> Slice {
         todo!()
     }
+}
+
+impl InternalKey {
+    // line139
 }
