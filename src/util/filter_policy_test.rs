@@ -42,20 +42,23 @@ fn test_create_filter() {
         &bloom_filter);
     assert!(key_may_match);
 
-    // key_may_match = policy.key_may_match(&Slice::try_from(String::from("world")).unwrap(),
-    //                                      &bloom_filter);
-    // assert!(key_may_match);
+    key_may_match = policy.key_may_match(&Slice::try_from(String::from("world")).unwrap(),
+                                         &bloom_filter);
+    assert!(key_may_match);
 
-    // let mut un_key_may_match = policy.key_may_match(&Slice::try_from(String::from("x")).unwrap(),
-    //                                      &bloom_filter);
-    // assert!(!un_key_may_match);
-    //
-    // un_key_may_match = policy.key_may_match(&Slice::try_from(String::from("foo")).unwrap(),
-    //                                         &bloom_filter);
-    // assert!(!un_key_may_match);
+    let mut key_not_match = policy.key_may_match(&Slice::try_from(String::from("x")).unwrap(),
+                                         &bloom_filter);
+    assert!(!key_not_match);
+
+    key_not_match = policy.key_may_match(&Slice::try_from(String::from("helloworld")).unwrap(),
+                                         &bloom_filter);
+    assert!(!key_not_match);
+
+    key_not_match = policy.key_may_match(&Slice::try_from(String::from("hello world")).unwrap(),
+                                         &bloom_filter);
+    assert!(!key_not_match);
+
+    key_not_match = policy.key_may_match(&Slice::try_from(String::from("foo")).unwrap(),
+                                            &bloom_filter);
+    assert!(!key_not_match);
 }
-
-// a(&policy1);
-// fn a(a: &dyn FilterPolicy) {
-//    //.
-// }
