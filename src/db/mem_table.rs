@@ -1,5 +1,5 @@
 use std::rc::Rc;
-use crate::traits::comparator_trait::ComparatorTrait;
+use crate::traits::comparator_trait::Comparator;
 use crate::traits::DataIterator;
 use crate::util::comparator::InternalKeyComparator;
 use crate::util::slice::Slice;
@@ -12,14 +12,14 @@ pub enum ValueType {
 }
 
 /// 内存表
-pub struct MemTable<Cmp: ComparatorTrait> {
+pub struct MemTable<Cmp: Comparator> {
     cmp: Rc<Cmp>,
 }
 
 /// 临时, 查找键
 struct LookupKey {}
 
-impl <Cmp: ComparatorTrait> MemTable<Cmp> {
+impl <Cmp: Comparator> MemTable<Cmp> {
 
     /// 创建内存表
     ///
