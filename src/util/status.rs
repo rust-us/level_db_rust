@@ -1,18 +1,21 @@
-use std::fmt::{Display, Error, Formatter};
+use std::fmt::{Display, Formatter};
+use std::io;
+use std::ops::Deref;
 use crate::util::r#const::COLON_WHITE_SPACE;
-use crate::util::ResultT;
 use crate::util::slice::Slice;
-use crate::util::status::LevelError::{KCorruption, KIOError, KInvalidArgument, KNotSupported, KNotFound, KOk};
+use crate::util::status::LevelError::{KCorruption, KIOError, KInvalidArgument, KNotSupported, KNotFound, KOk, KBadRecord};
 
 /// db 中的返回状态，将错误号和错误信息封装成Status类，统一进行处理。
 /// 在 leveldb的实现里， 为了节省空间Status将返回码(code), 错误信息message及长度打包存储于一个字符串数组中， 来存储错误信息。
 /// 在该项目中， 使用LevelError 和 Slice 存储错误信息
+#[derive(Debug)]
 pub struct Status {
     err: LevelError,
     msg: Slice
 }
 
 impl Default for Status {
+    #[inline]
     fn default() -> Self {
         LevelError::ok()
     }
@@ -125,18 +128,17 @@ impl Status {
     /// ```
     #[inline]
     pub fn to_string(self) -> String {
-        let err = &self.err;
-
-        let msg_type = match &err {
+        let msg_type = match self.err {
             KOk => "OK",
             KNotFound  => "NotFound: ",
             KCorruption  => "Corruption: ",
             KNotSupported  => "Not implemented: ",
             KInvalidArgument  => "Invalid argument: ",
-            KIOError  => "IO error: "
+            KIOError  => "IO error: ",
+            KBadRecord=> "wal bad record",
         };
 
-        if err.is_ok() {
+        if self.err.is_ok() {
             return String::from(msg_type);
         }
 
@@ -171,6 +173,7 @@ impl Status {
 // }
 
 /// Status 的状态
+#[derive(Debug)]
 pub enum LevelError {
     KOk,
     KNotFound,
@@ -178,49 +181,32 @@ pub enum LevelError {
     KNotSupported,
     KInvalidArgument,
     KIOError,
+    KBadRecord,
 }
 
 impl LevelError {
     pub fn is_ok(&self) -> bool {
-        match self {
-            KOk => true,
-            _ => false
-        }
+        matches!(*self, KOk)
     }
 
     pub fn is_not_found(&self) -> bool {
-        match self {
-            KNotFound => true,
-            _ => false
-        }
+        matches!(*self, KNotFound)
     }
 
     pub fn is_corruption(&self) -> bool {
-        match self {
-            KCorruption => true,
-            _ => false
-        }
+        matches!(*self, KCorruption)
     }
 
     pub fn is_io_error(&self) -> bool {
-        match self {
-            KIOError => true,
-            _ => false
-        }
+        matches!(*self, KIOError)
     }
 
     pub fn is_not_supported_error(&self) -> bool {
-        match self {
-            KNotSupported => true,
-            _ => false
-        }
+        matches!(*self, KNotSupported)
     }
 
     pub fn is_invalid_argument(&self) -> bool {
-        match self {
-            KInvalidArgument => true,
-            _ => false
-        }
+        matches!(*self, KInvalidArgument)
     }
 
     pub fn ok() -> Status {
@@ -235,7 +221,7 @@ impl LevelError {
 
         Status{
             err: KNotFound,
-            msg: msg
+            msg
         }
     }
 
@@ -258,7 +244,7 @@ impl LevelError {
 
         Status{
             err: KCorruption,
-            msg: msg
+            msg
         }
     }
 
@@ -267,7 +253,7 @@ impl LevelError {
 
         Status{
             err: KNotSupported,
-            msg: msg
+            msg
         }
     }
 
@@ -276,7 +262,7 @@ impl LevelError {
 
         Status{
             err: KInvalidArgument,
-            msg: msg
+            msg
         }
     }
 
@@ -300,12 +286,27 @@ impl LevelError {
 
         Status{
             err: KIOError,
-            msg: msg
+            msg
         }
+    }
+
+    pub fn get_value(&self) -> i32 {
+        let le = match self {
+            KOk => 0,
+            KNotFound => 1,
+            KCorruption => 2,
+            KNotSupported => 3,
+            KInvalidArgument => 4,
+            KIOError => 5,
+            KBadRecord => 6
+        };
+
+        le
     }
 }
 
 impl Default for LevelError {
+    #[inline]
     fn default() -> LevelError {
         KOk
     }
@@ -328,6 +329,7 @@ impl TryFrom<i32> for LevelError {
     ///        let rs: LevelError = LevelError::try_from(3)?;
     ///         assert!(&rs.is_not_supported_error());
     /// ```
+    #[inline]
     fn try_from(value: i32) -> Result<Self, Self::Error> {
         match value {
             0 => Ok(KOk),
@@ -336,13 +338,21 @@ impl TryFrom<i32> for LevelError {
             3 => Ok(KNotSupported),
             4 => Ok(KInvalidArgument),
             5 => Ok(KIOError),
+            6 => Ok(KBadRecord),
             // all other numbers
             _ => Err(String::from(format!("Unknown code: {}", value)))
         }
     }
 }
 
+impl From<io::Error> for Status {
+    fn from(e: io::Error) -> Self {
+        LevelError::io_error(e.to_string().into(), "".into())
+    }
+}
+
 impl Display for LevelError {
+    #[inline]
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut print = String::new();
 
@@ -352,28 +362,11 @@ impl Display for LevelError {
             KCorruption  => "Corruption: ",
             KNotSupported  => "Not implemented: ",
             KInvalidArgument  => "Invalid argument: ",
-            KIOError  => "IO error: "
+            KIOError  => "IO error: ",
+            KBadRecord => "wal bad record: ",
         };
         print.push_str(msg_type);
 
         write!(f, "{}", print)
     }
 }
-
-// impl Deref for LevelError {
-//     type Target = i32;
-//
-//     /// StatusTrait 解引用到 i32
-//     fn deref(&self) -> &Self::Target {
-//         let le = match self {
-//             KOk => 0,
-//             KNotFound(_) => 1,
-//             KCorruption(_) => 2,
-//             KNotSupported(_) => 3,
-//             KInvalidArgument(_) => 4,
-//             KIOError(_) => 5,
-//         };
-//
-//         &*le
-//     }
-// }

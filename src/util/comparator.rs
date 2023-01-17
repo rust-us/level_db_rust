@@ -1,6 +1,6 @@
 
 use std::cmp::{min, Ordering};
-use crate::traits::comparator_trait::{ComparatorTrait};
+use crate::traits::comparator_trait::{Comparator};
 use crate::util::slice::Slice;
 
 pub struct BytewiseComparatorImpl {}
@@ -15,13 +15,13 @@ impl Default for BytewiseComparatorImpl {
     }
 }
 
-impl ComparatorTrait for BytewiseComparatorImpl {
+impl Comparator for BytewiseComparatorImpl {
 
     fn compare(&self, a: &Slice, b: &Slice) -> Option<Ordering> {
         a.partial_cmp(b)
     }
 
-    fn get_name() -> String {
+    fn get_name(&self) -> String {
         String::from("leveldb.BytewiseComparator")
     }
 
@@ -91,23 +91,35 @@ impl ComparatorTrait for BytewiseComparatorImpl {
 
 /// InternalKeyComparator
 pub struct InternalKeyComparator {
-    // fn user_comparator(&self) -> Box<Comparator> {
+    user_comparator_: dyn Comparator
+}
+
+impl InternalKeyComparator {
+    fn new(c: Box<dyn Comparator>) -> Box<InternalKeyComparator> {
+        todo!()
+    }
+
+    fn user_comparator() -> Box<dyn Comparator> {
+        todo!()
+    }
+
+    // fn compare(a: InternalKey, b: InternalKey) -> u32 {
     //     todo!()
     // }
-
-    // fn Compare(InternalKey, InternalKey)
 }
 
 /// InternalKeyComparator 比较器: 用来比较内部键（Internal Key）。
 /// 内部键值是为了方便处理，将原普通键、序列号和值类型组成的新键。
-impl ComparatorTrait for InternalKeyComparator {
-    // todo  InternalKeyComparator 的构造方法
+impl Comparator for InternalKeyComparator {
+    // fn new(c: Box<ComparatorTrait>) -> InternalKeyComparator {
+    //     todo!()
+    // }
 
     fn compare(&self, _a: &Slice, _b: &Slice) -> Option<Ordering> {
         todo!()
     }
 
-    fn get_name() -> String {
+    fn get_name(&self) -> String {
         String::from("leveldb.InternalKeyComparator")
     }
 

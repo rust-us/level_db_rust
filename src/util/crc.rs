@@ -240,6 +240,8 @@ const K_STRIDE_EXTENSION_TABLE3: [u32; 256] = [
 /// 可以被计算 crc 值的特质
 /// 默认实现了 &[T], Vec[T], Slice, &str, String
 pub trait AsCrc {
+
+    #[inline]
     fn as_crc(&self) -> u32 {
         self.as_crc_extend(0)
     }
@@ -255,6 +257,13 @@ impl<T: Sized> AsCrc for &[T] {
             slice::from_raw_parts(ptr, size_of::<T>() * self.len())
         };
         CRC::extend(crc, buf)
+    }
+}
+
+impl AsCrc for [u8] {
+    #[inline]
+    fn as_crc_extend(&self, crc: u32) -> u32 {
+        CRC::extend(crc, self)
     }
 }
 
@@ -283,6 +292,22 @@ impl AsCrc for String {
     #[inline]
     fn as_crc_extend(&self, crc: u32) -> u32 {
         CRC::extend(crc, self.as_bytes())
+    }
+}
+
+pub trait ToMask {
+    fn to_mask(self) -> u32;
+    fn unmask(self) -> u32;
+}
+
+impl ToMask for u32 {
+    #[inline]
+    fn to_mask(self) -> u32 {
+        CRC::mask(self)
+    }
+    #[inline]
+    fn unmask(self) -> u32 {
+        CRC::unmask(self)
     }
 }
 
@@ -353,7 +378,8 @@ impl CRC {
         let mut l = init_crc ^ K_CRC32_XOR;
 
         // 4 byte align offset
-        let x = ptr_align_by4_offset(data.as_ptr());
+        let mut x = ptr_align_by4_offset(data.as_ptr());
+        x = if n < x { n } else { x };
         // println!("x: {}, l: {:x}, n: {}", x, l, n);
         while s < x {
             step1!(data, s, l);
@@ -428,7 +454,7 @@ impl CRC {
     #[inline]
     pub fn mask(crc: u32) -> u32 {
         // Rotate right by 15 bits and add a constant.
-        ((crc >> 15) | (crc << 17)) + K_MASK_DELTA
+        ((crc >> 15) | (crc << 17)).wrapping_add(K_MASK_DELTA)
     }
 
     /// 将CRC掩码转为CRC码

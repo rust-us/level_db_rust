@@ -3,31 +3,48 @@ use crate::util::slice::Slice;
 /// 用于key过滤，可以快速的排除不存在的key
 pub trait FilterPolicy {
 
+    ///
     /// filter的名字
     /// Return the name of this policy.  Note that if the filter encoding
     /// changes in an incompatible way, the name returned by this method
     /// must be changed.  Otherwise, old incompatible filters may be
     /// passed to methods of this type.
-    fn name() -> String;
+    ///
+    fn name(&self) -> String;
 
-    /// 根据指定的参数创建过滤器，并返回结果， 结果为dst的原始内容 + append结果。
-    /// 参数keys[0,n-1]包含依据用户提供的comparator排序的key列表--可重复，
-    /// 并把根据这些key创建的filter追加到 dst中。
+    /// 根据 keys 创建过滤器，并返回 bloom_filter Slice
     ///
     /// # Arguments
     ///
-    /// * `keys`:
-    /// * `n`:
-    /// * `dst`:
+    /// * `keys`:  创建过滤器的数据清单
     ///
-    /// returns: String
+    /// returns: bloom_filter Slice
+    ///
+    /// # Examples
+    ///
+    /// ```
+    ///    let mut keys : Vec<Slice>  = Vec::new();
+    ///     keys.push(Slice::try_from(String::from("hello")).unwrap());
+    ///     keys.push(Slice::try_from(String::from("world")).unwrap());
+    ///
+    ///     let policy = BloomFilterPolicy::new(800);
+    ///     let bloom_filter: Slice = policy.create_filter(keys);
+    /// ```
+    fn create_filter(&self, keys: Vec<Slice>) -> Slice;
+
+    ///
+    ///
+    /// # Arguments
+    ///
+    /// * `key`:
+    /// * `bloom_filter`:
+    ///
+    /// returns: bool
     ///
     /// # Examples
     ///
     /// ```
     ///
     /// ```
-    fn create_filter(&self, keys: Slice, n: u32, dst: String) -> String;
-
-    fn key_may_match(key: &Slice, filter: &Slice) -> bool;
+    fn key_may_match(&self, key: &Slice, bloom_filter: &Slice) -> bool;
 }

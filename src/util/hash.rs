@@ -11,9 +11,11 @@ use crate::util::slice::Slice;
 
 /// 一种可以计算 hash 的特质
 pub trait ToHash {
+    #[inline]
     fn to_hash(&self) -> u32;
 
-    fn to_hash_seed(&self, seed: u32) -> u32;
+    #[inline]
+    fn to_hash_with_seed(&self, seed: u32) -> u32;
 }
 
 /// 所有基本类型 u8, i8, u16, u32 ... 的Vec都可以实现 hash 值计算
@@ -22,16 +24,18 @@ pub trait ToHash {
 /// let hash = vec!['a','b','c'].to_hash();
 /// ```
 impl<T: Sized> ToHash for Vec<T> {
+    #[inline]
     fn to_hash(&self) -> u32 {
         let v_v = self.as_slice();
 
         v_v.to_hash()
     }
 
-    fn to_hash_seed(&self, seed: u32) -> u32 {
+    #[inline]
+    fn to_hash_with_seed(&self, seed: u32) -> u32 {
         let v_v = self.as_slice();
 
-        v_v.to_hash_seed(seed)
+        v_v.to_hash_with_seed(seed)
     }
 }
 
@@ -44,16 +48,11 @@ impl<T: Sized> ToHash for Vec<T> {
 impl<T: Sized> ToHash for &[T] {
     #[inline]
     fn to_hash(&self) -> u32 {
-        let ptr_u8 = self.as_ptr() as *const _ as *const u8;
-
-        let data = unsafe {
-            stds::from_raw_parts(ptr_u8, size_of::<T>() * self.len())
-        };
-
-        Hash::hash_code(data, HASH_DEFAULT_SEED)
+        self.to_hash_with_seed(HASH_DEFAULT_SEED)
     }
 
-    fn to_hash_seed(&self, seed: u32) -> u32 {
+    #[inline]
+    fn to_hash_with_seed(&self, seed: u32) -> u32 {
         let ptr_u8 = self.as_ptr() as *const _ as *const u8;
 
         let data = unsafe {
@@ -70,11 +69,13 @@ impl<T: Sized> ToHash for &[T] {
 /// let hash = "abc".to_hash();
 /// ```
 impl ToHash for &str {
+    #[inline]
     fn to_hash(&self) -> u32 {
-        Hash::hash_code(self.as_bytes(), HASH_DEFAULT_SEED)
+        self.to_hash_with_seed(HASH_DEFAULT_SEED)
     }
 
-    fn to_hash_seed(&self, seed: u32) -> u32 {
+    #[inline]
+    fn to_hash_with_seed(&self, seed: u32) -> u32 {
         Hash::hash_code(self.as_bytes(), seed)
     }
 }
@@ -87,11 +88,13 @@ impl ToHash for &str {
 ///     let slice_hash_val = slice.to_hash();
 /// ```
 impl ToHash for Slice {
+    #[inline]
     fn to_hash(&self) -> u32 {
-        Hash::hash_code(self.to_vec().as_slice(), HASH_DEFAULT_SEED)
+        self.to_hash_with_seed(HASH_DEFAULT_SEED)
     }
 
-    fn to_hash_seed(&self, seed: u32) -> u32 {
+    #[inline]
+    fn to_hash_with_seed(&self, seed: u32) -> u32 {
         Hash::hash_code(self.to_vec().as_slice(), seed)
     }
 }
@@ -104,11 +107,13 @@ impl ToHash for Slice {
 ///     let string_hash_val = val_s.to_hash();
 /// ```
 impl ToHash for String {
+    #[inline]
     fn to_hash(&self) -> u32 {
-        Hash::hash_code(self.as_bytes(), HASH_DEFAULT_SEED)
+        self.to_hash_with_seed(HASH_DEFAULT_SEED)
     }
 
-    fn to_hash_seed(&self, seed: u32) -> u32 {
+    #[inline]
+    fn to_hash_with_seed(&self, seed: u32) -> u32 {
         Hash::hash_code(self.as_bytes(), seed)
     }
 }
@@ -117,6 +122,7 @@ impl ToHash for String {
 pub struct Hash {}
 
 impl Hash {
+    #[inline]
     pub fn hash_code(data: &[u8], seed: u32) -> u32 {
         let murmur_hash: u32 = 0xc6a4a793;
         let r: u32 = 24;
@@ -141,6 +147,7 @@ impl Hash {
             h = h.wrapping_add(w);
             // h *= m
             h = h.wrapping_mul(murmur_hash);
+            // Rust的位运算符包括：按位取反(!)、按位与(&)、按位或(|)、按位异或(^)、左移(<<)、右移(>>)
             // ^ 按位异或 bitxor , >> 右移位 shr, << 左移位 shl
             // h ^= (h >> 16) == h ^= h.shr(16);
             h = h.bitxor(h.wrapping_shr(16));

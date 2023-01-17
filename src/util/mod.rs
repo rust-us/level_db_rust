@@ -1,6 +1,10 @@
-use crate::util::status::LevelError;
+use std::rc::Rc;
 use std::result;
+
 pub use arena::Arena;
+
+use crate::util::comparator::{BytewiseComparatorImpl, InternalKeyComparator};
+use crate::util::status::Status;
 
 /// 常量定义
 pub mod r#const;
@@ -16,21 +20,22 @@ pub mod status;
 mod status_test;
 pub mod comparator;
 mod comparator_test;
-mod crc;
+pub mod crc;
 mod crc_test;
 pub mod bloom_filter;
 mod bloom_filter_test;
 pub mod filter_policy;
 mod filter_policy_test;
 
-/// 定义别名
-pub type ResultT<T> = result::Result<T, LevelError>;
-
 pub mod histogram;
 mod histogram_test;
-mod hash;
+pub mod hash;
 mod hash_test;
-mod mutex_lock;
+pub mod mutex_lock;
 mod mutex_lock_test;
+pub mod options;
+
+/// 定义别名
+pub type Result<T> = result::Result<T, Status>;
 mod logging;
 mod logging_test;
