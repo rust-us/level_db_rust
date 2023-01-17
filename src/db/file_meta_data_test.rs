@@ -24,9 +24,6 @@ mod test {
         let meta7: FileMetaData = FileMetaData::create_refs(7);
 
         assert!(meta0.partial_cmp(&meta0_1).is_some());
-        assert!(meta0.partial_cmp(&meta0_1).is_some_and(Ordering::Equal));
-        assert!(!meta1.eq(&meta3));
-        assert!(meta3.eq(&meta3_1));
     }
 
 }

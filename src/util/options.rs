@@ -1,5 +1,6 @@
 use crate::db::db::Snapshot;
 use crate::traits::comparator_trait::Comparator;
+use crate::traits::filter_policy_trait::FilterPolicy;
 use crate::util::comparator::BytewiseComparatorImpl;
 
 pub enum CompressionType {
@@ -11,8 +12,8 @@ pub enum CompressionType {
 pub struct  Env {}
 
 pub struct Cache {}
-
-pub struct FilterPolicy {}
+//
+// pub struct FilterPolicy {}
 
 pub struct Options {
 
@@ -95,7 +96,7 @@ pub struct Options {
     /// If non-null, use the specified filter policy to reduce disk reads.
     /// Many applications will benefit from passing the result of
     /// NewBloomFilterPolicy() here.
-    pub filter_policy: Option<FilterPolicy>,
+    pub filter_policy: Option<dyn FilterPolicy>,
 }
  /// Options that control read operations
 pub struct ReadOptions {

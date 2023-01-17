@@ -82,8 +82,8 @@ impl PartialEq for FileMetaData {
 
 impl PartialOrd for FileMetaData {
     /// 判断两个 FileMetaData 的大小关系
-     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
+    fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
         // todo
         Option::Some(Ordering::Equal)
-     }
+    }
 }
