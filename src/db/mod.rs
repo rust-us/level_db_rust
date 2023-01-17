@@ -5,6 +5,7 @@ use crate::util::slice::Slice;
 
 pub mod log_writer;
 pub mod log_reader;
+pub mod table_cache;
 mod log_wr_test;
 pub mod skip_list;
 pub mod mem_table;
