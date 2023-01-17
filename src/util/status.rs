@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter};
 use std::io;
+use std::ops::Deref;
 use crate::util::r#const::COLON_WHITE_SPACE;
 use crate::util::slice::Slice;
 use crate::util::status::LevelError::{KCorruption, KIOError, KInvalidArgument, KNotSupported, KNotFound, KOk, KBadRecord};
@@ -288,6 +289,20 @@ impl LevelError {
             msg
         }
     }
+
+    pub fn get_value(&self) -> i32 {
+        let le = match self {
+            KOk => 0,
+            KNotFound => 1,
+            KCorruption => 2,
+            KNotSupported => 3,
+            KInvalidArgument => 4,
+            KIOError => 5,
+            KBadRecord => 6
+        };
+
+        le
+    }
 }
 
 impl Default for LevelError {
@@ -355,21 +370,3 @@ impl Display for LevelError {
         write!(f, "{}", print)
     }
 }
-
-// impl Deref for LevelError {
-//     type Target = i32;
-//
-//     /// StatusTrait 解引用到 i32
-//     fn deref(&self) -> &Self::Target {
-//         let le = match self {
-//             KOk => 0,
-//             KNotFound(_) => 1,
-//             KCorruption(_) => 2,
-//             KNotSupported(_) => 3,
-//             KInvalidArgument(_) => 4,
-//             KIOError(_) => 5,
-//         };
-//
-//         &*le
-//     }
-// }

@@ -1,7 +1,8 @@
 use std::ptr::null;
 use crate::traits::filter_policy_trait::FilterPolicy;
 use crate::util::bloom_filter;
-use crate::util::filter_policy::{BloomFilterPolicy, FromPolicy};
+use crate::util::filter_policy::{AsBloomHash, BloomFilterPolicy, FromPolicy};
+use crate::util::hash::ToHash;
 use crate::util::slice::Slice;
 
 // ####################  BloomFilterPolicy test
@@ -11,6 +12,8 @@ fn test_bloom_hash() {
     let slice: Slice = Slice::from_buf(val.as_bytes());
 
     let hash_val = BloomFilterPolicy::bloom_hash(&slice);
+    let hash_val_1 = slice.bloom_hash();
+    assert_eq!(hash_val, hash_val_1);
     assert_eq!(hash_val, 2085241752);
 }
 
@@ -23,7 +26,6 @@ fn test_new() {
     let bloom_filter = BloomFilterPolicy::new(800);
     assert_eq!(bloom_filter.from_bits_per_key(), 800);
     assert_eq!(bloom_filter.from_k(), 30);
-
 }
 
 // ####################  FilterPolicy test
