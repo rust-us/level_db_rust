@@ -15,23 +15,23 @@ pub trait Snapshot {}
 
 impl DB {
 
-    fn open(_opt: Options, _name: String) -> Result<Self> {
+    async fn open(_opt: Options, _name: String) -> Result<Self> {
         todo!()
     }
 
-    fn put(&mut self, _opt: WriteOptions, _key: Slice, _value: Slice) -> Result<()> {
+    async fn put(&mut self, _opt: WriteOptions, _key: Slice, _value: Slice) -> Result<()> {
         todo!()
     }
 
-    fn delete(&mut self, _key: Slice) -> Result<bool> {
+    async fn delete(&mut self, _key: Slice) -> Result<bool> {
         todo!()
     }
 
-    fn write(&mut self, _opt: WriteBatchOptions, _updates: WriteBatch) -> Result<()> {
+    async fn write(&mut self, _opt: WriteBatchOptions, _updates: WriteBatch) -> Result<()> {
         todo!()
     }
 
-    fn get(&mut self, _opt: ReadOptions, _key: Slice) -> Result<Option<Slice>> {
+    async fn get(&mut self, _opt: ReadOptions, _key: Slice) -> Result<Option<Slice>> {
         todo!()
     }
 
