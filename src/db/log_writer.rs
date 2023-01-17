@@ -79,7 +79,7 @@ impl LogWriter {
         header[6] = record_type;
         let mut crc = CRC::extend(self.type_crc[record_type as usize], data);
         crc = CRC::mask(crc);
-        Coding::encode_fixed32(&mut crc, header.as_mut(), 0);
+        Coding::encode_fixed32(crc, header.as_mut(), 0);
         self.file_writer.write(header.as_ref())?;
         self.block_offset += K_HEADER_SIZE;
         if !data.is_empty() {

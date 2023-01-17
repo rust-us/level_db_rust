@@ -168,7 +168,7 @@ impl BlockTrait for BlockHandle {
         self.size_ = size;
     }
 
-    fn encode_to(&self) -> Slice {
+    fn encode_to(&self) -> Result<Slice> {
         todo!()
 
         // // Sanity check that all fields have been set
@@ -181,7 +181,7 @@ impl BlockTrait for BlockHandle {
         // Slice::default()
     }
 
-    fn decode_from(&self, input: Slice) -> Result<bool> {
+    fn decode_from(&mut self, input: Slice) -> Result<()> {
         todo!()
     }
 }
@@ -201,7 +201,7 @@ impl FootTrait for Footer {
         todo!()
     }
 
-    fn set_metaindex_handle(&self, h: BlockHandle) {
+    fn set_metaindex_handle(&mut self, h: BlockHandle) {
         todo!()
     }
 
@@ -209,15 +209,15 @@ impl FootTrait for Footer {
         todo!()
     }
 
-    fn set_index_handle(&self, h: BlockHandle) {
+    fn set_index_handle(&mut self, h: BlockHandle) {
         todo!()
     }
 
-    fn encode_to(&self) -> Slice {
+    fn encode_to(&self) -> Result<Slice> {
         todo!()
     }
 
-    fn decode_from(&self, input: Slice) -> Result<bool> {
+    fn decode_from(&mut self, input: Slice) -> Result<()> {
         todo!()
     }
 }

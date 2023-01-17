@@ -17,7 +17,7 @@ pub struct MemTable<Cmp: Comparator> {
 }
 
 /// 临时, 查找键
-struct LookupKey {}
+pub struct LookupKey {}
 
 impl <Cmp: Comparator> MemTable<Cmp> {
 
