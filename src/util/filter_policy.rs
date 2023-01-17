@@ -140,6 +140,31 @@ impl FilterPolicy for BloomFilterPolicy {
     }
 }
 
+pub struct InternalFilterPolicy {
+    user_policy_: dyn FilterPolicy
+}
+
+impl InternalFilterPolicy {
+    fn new(policy: Box<dyn FilterPolicy>) -> Box<InternalFilterPolicy> {
+        // InternalFilterPolicy{ user_policy_: policy }
+        todo!()
+    }
+}
+
+impl FilterPolicy for InternalFilterPolicy {
+    fn name(&self) -> String {
+        todo!()
+    }
+
+    fn create_filter(&self, keys: Vec<Slice>) -> Slice {
+        todo!()
+    }
+
+    fn key_may_match(&self, key: &Slice, bloom_filter: &Slice) -> bool {
+        todo!()
+    }
+}
+
 /// 实现了 Slice 转 bloom_hash 的特质
 /// Sample:
 /// ```

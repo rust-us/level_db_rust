@@ -1,3 +1,4 @@
+use crate::db::db_format::InternalKey;
 
 pub struct FileMetaData {
     refs: u32,
@@ -6,6 +7,6 @@ pub struct FileMetaData {
     number: u64,
     // File size in bytes
     file_size: u64,
-    // smallest: InternalKey,
+    smallest: InternalKey,
 
 }
