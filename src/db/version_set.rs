@@ -81,11 +81,11 @@ struct LevelState {
 }
 
 impl Compaction {
-    fn create(options: Options, level: u32) -> Self {
-        Self {
-
-        }
-    }
+    // fn create(options: Options, level: u32) -> Self {
+    //     Self {
+    //
+    //     }
+    // }
 }
 
 impl BySmallestKey {
