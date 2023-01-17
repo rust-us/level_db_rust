@@ -109,7 +109,25 @@ impl ParsedInternalKey {
     fn debug_string() -> Slice {
         Slice::default()
     }
-}
 
-// line 86
-//.
+    /// Return the length of the encoding of "key".
+    fn internal_key_encoding_length(key: ParsedInternalKey) -> usize {
+        key.user_key.size() + 8
+    }
+
+    fn append_internal_key(key : ParsedInternalKey) -> Slice {
+        todo!()
+    }
+
+    /// Attempt to parse an internal key from "internal_key".  On success,
+    /// stores the parsed data in "*result", and returns true.
+    /// On error, returns false, leaves "*result" in an undefined state.
+    fn parse_internal_key(internal_key : Slice, target: ParsedInternalKey) -> bool {
+        todo!()
+    }
+
+    /// Returns the user key portion of an internal key.
+    fn extract_user_key(internal_key : Slice) -> Slice {
+        todo!()
+    }
+}
