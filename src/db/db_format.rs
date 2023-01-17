@@ -41,11 +41,9 @@ pub enum ValueType {
     K_TYPE_VALUE,
 }
 
-// typedef uint64_t SequenceNumber;
-
 pub struct ParsedInternalKey {
     user_key: Slice,
-    // sequence: SequenceNumber,
+    sequence: u64,
     value_type: ValueType
 }
 
@@ -97,6 +95,7 @@ impl Default for ParsedInternalKey {
     fn default() -> Self {
         ParsedInternalKey {
             user_key: Default::default(),
+            sequence: 0,
             value_type: K_TYPE_DELETION,
         }
     }
@@ -106,6 +105,7 @@ impl ParsedInternalKey {
     fn new(u: Slice, /* seq: SequenceNumber, */ t: ValueType) -> ParsedInternalKey {
         ParsedInternalKey {
             user_key: u,
+            sequence: 0,
             value_type: t,
         }
     }

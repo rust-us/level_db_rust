@@ -18,7 +18,7 @@ impl FilterBlockBuilder {
     /// ```
     /// filter_block_builder.start_block(1024_u64);
     /// ```
-    pub fn start_block(&self, _block_offset: u64) {
+    pub fn start_block(&mut self, _block_offset: u64) {
         todo!()
     }
 
@@ -35,7 +35,7 @@ impl FilterBlockBuilder {
     /// ```
     ///
     /// ```
-    pub fn add_key(&self, _key: &Slice) {
+    pub fn add_key(&mut self, _key: &Slice) {
         todo!()
     }
     /// 构造filterBlock
@@ -45,7 +45,7 @@ impl FilterBlockBuilder {
     /// ```
     /// filter_block_builder.finish();
     /// ```
-    pub fn finish(&self) -> Result<Slice> {
+    pub fn finish(&mut self) -> Result<Slice> {
         todo!()
     }
 }
@@ -53,7 +53,7 @@ impl FilterBlockBuilder {
 pub struct FilterBlockReader {}
 
 impl FilterBlockReader {
-    pub fn key_may_match(&self, _block_offset: u64, _key: &Slice) {
+    pub fn key_may_match(&self, _block_offset: u64, _key: &Slice) -> bool {
         todo!()
     }
 }

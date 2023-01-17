@@ -19,7 +19,7 @@ impl BlockBuilder {
     /// ```
     ///
     /// ```
-    pub fn add(&self, _key: &Slice, _value: &Slice) {
+    pub fn add(&mut self, _key: &Slice, _value: &Slice) {
         todo!()
     }
     /// 重置builder
@@ -29,7 +29,7 @@ impl BlockBuilder {
     /// ```
     /// block_builder.reset();
     /// ```
-    pub fn reset(&self) {
+    pub fn reset(&mut self) {
         todo!()
     }
     /// 构造block
@@ -40,7 +40,7 @@ impl BlockBuilder {
     /// ```
     /// let block = block_builder.finish();
     /// ```
-    pub fn finish(&self) -> Result<Slice> {
+    pub fn finish(&mut self) -> Result<Slice> {
         todo!()
     }
     /// 判断builder是否为空

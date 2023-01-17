@@ -45,7 +45,7 @@ impl TableCache {
     /// ```
     ///
     /// ```
-    fn evict(&self, _file_number: u64) {
+    fn evict(&mut self, _file_number: u64) {
         todo!()
     }
 
