@@ -145,7 +145,7 @@ pub struct InternalFilterPolicy {
 }
 
 impl InternalFilterPolicy {
-    fn new(policy: Box<FilterPolicy>) -> Box<InternalFilterPolicy> {
+    fn new(policy: Box<dyn FilterPolicy>) -> Box<InternalFilterPolicy> {
         // InternalFilterPolicy{ user_policy_: policy }
         todo!()
     }
