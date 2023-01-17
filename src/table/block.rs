@@ -18,11 +18,11 @@ impl Block {
     pub fn size(&self) {
         todo!()
     }
-    ///
+    /// 生成迭代器
     ///
     /// # Arguments
     ///
-    /// * `_comparator`:
+    /// * `_comparator`: 比较器
     ///
     /// returns: Result<Box<dyn DataIterator, Global>, Status>
     ///

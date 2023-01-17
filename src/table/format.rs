@@ -2,6 +2,7 @@ use crate::traits::coding_trait::CodingTrait;
 use crate::util::coding;
 use crate::util::slice::Slice;
 use crate::util::Result;
+use crate::util::status::Status;
 
 /// Maximum encoding length of a BlockHandle
 pub const k_max_encoded_length: u32 = 10 + 10;
@@ -44,7 +45,7 @@ pub struct BlockContents {
     heap_allocated:bool,
 }
 
-trait Block {
+trait BlockTrait {
     ///
     /// The offset of the block in the file.
     ///
@@ -81,10 +82,10 @@ trait Block {
     /// ```
     ///
     /// ```
-    fn encode_to(&self) -> Slice;
+    fn encode_to(&self) -> Result<Slice>;
 
     ///
-    /// 将 Slice 对象解码后与BlockHandle比较，是否可以成功
+    /// 将 Slice 对象解码后与BlockHandle set field
     ///
     /// # Arguments
     /// * `input`:
@@ -96,18 +97,18 @@ trait Block {
     /// ```
     ///
     /// ```
-    fn decode_from(&self, input: Slice) -> Result<bool>;
+    fn decode_from(&mut self, input: Slice) -> Result<()>;
 }
 
-trait Foot {
+trait FootTrait {
     // The block handle for the metaindex block of the table
-    fn metaindex_handle() -> BlockHandle;
+    fn metaindex_handle(&self) -> BlockHandle;
 
-    fn set_metaindex_handle(h: BlockHandle);
+    fn set_metaindex_handle(&mut self, h: BlockHandle);
 
-    fn index_handle() -> BlockHandle;
+    fn index_handle(&self) -> BlockHandle;
 
-    fn set_index_handle(h: BlockHandle);
+    fn set_index_handle(&mut self, h: BlockHandle);
 
     ///
     /// 将 Foot 对象编码成 Slice
@@ -121,7 +122,7 @@ trait Foot {
     /// ```
     ///
     /// ```
-    fn encode_to(&self) -> Slice;
+    fn encode_to(&self) -> Result<Slice>;
 
     ///
     /// 将 Slice 对象解码后与 BlockHandle 比较，是否可以成功
@@ -136,13 +137,13 @@ trait Foot {
     /// ```
     ///
     /// ```
-    fn decode_from(&self, input: Slice) -> Result<bool>;
+    fn decode_from(&mut self, input: Slice) -> Result<()>;
 }
 
 trait BlockContent {
     /// Read the block identified by "handle" from "file".  On failure
     /// return non-OK.  On success fill *result and return OK.
-    fn read_block(
+    fn read_block(&self,
         // todo RandomAccessFile, ReadOptions 未提供
         // file: RandomAccessFile, options: ReadOptions,
         handle: BlockHandle
@@ -150,7 +151,7 @@ trait BlockContent {
 
 }
 
-impl Block for BlockHandle {
+impl BlockTrait for BlockHandle {
     fn offset(&self) -> u64 {
         self.offset_
     }
@@ -195,20 +196,20 @@ impl Default for BlockHandle {
     }
 }
 
-impl Foot for Footer {
-    fn metaindex_handle() -> BlockHandle {
+impl FootTrait for Footer {
+    fn metaindex_handle(&self) -> BlockHandle {
         todo!()
     }
 
-    fn set_metaindex_handle(h: BlockHandle) {
+    fn set_metaindex_handle(&self, h: BlockHandle) {
         todo!()
     }
 
-    fn index_handle() -> BlockHandle {
+    fn index_handle(&self) -> BlockHandle {
         todo!()
     }
 
-    fn set_index_handle(h: BlockHandle) {
+    fn set_index_handle(&self, h: BlockHandle) {
         todo!()
     }
 
@@ -222,7 +223,7 @@ impl Foot for Footer {
 }
 
 impl BlockContent for BlockContents {
-    fn read_block(handle: BlockHandle) -> Result<BlockContents> {
+    fn read_block(&self, handle: BlockHandle) -> Result<BlockContents> {
         todo!()
     }
 }
