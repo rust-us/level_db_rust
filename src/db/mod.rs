@@ -8,6 +8,7 @@ pub mod log_reader;
 mod log_wr_test;
 pub mod skip_list;
 pub mod mem_table;
+pub mod db;
 
 /// 默认调表
 pub type DefaultSkipList = SkipList<Slice, BytewiseComparatorImpl>;
