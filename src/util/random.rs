@@ -26,7 +26,8 @@ impl Random {
             }
         }
     }
-    /// 获取一个随机数
+
+    /// 获取一个随机数(u32)
     ///
     /// # Examples
     ///
@@ -37,11 +38,23 @@ impl Random {
         // mod
         let m = 2147483647_u32;
         let a = 16807_u32;
-        let product = self.seed * a;
+        let product = self.seed.wrapping_mul(a);
         self.seed = (product >> 31) + (product & m);
         if self.seed > m { self.seed -= m }
         self.seed
     }
+
+    /// 获取一个随机数(bool)
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// let num = random.next();
+    /// ```
+    pub fn next_bool(&mut self) -> bool {
+        self.one_in(2)
+    }
+
     /// 生成随机数并对n取模
     ///
     /// # Arguments
@@ -75,6 +88,7 @@ impl Random {
     pub fn one_in(&mut self, n: u32) -> bool {
         (self.next() % n) == 0
     }
+
     /// 对随机数进行倾斜
     ///
     /// # Arguments
@@ -89,7 +103,7 @@ impl Random {
     /// let skewed_num = random.skewed(10);
     /// ```
     pub fn skewed(&mut self, max_log: u32) -> u32 {
-        let bits = 1 << self.uniform(max_log + 1);
+        let bits = 1_u32.wrapping_shl(self.uniform(max_log + 1));
         self.uniform(bits)
     }
 }
