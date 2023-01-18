@@ -1,6 +1,7 @@
 use std::cmp::Ordering;
 use std::ops::Deref;
 use crate::db::db_format::ValueType::{K_TYPE_DELETION, K_TYPE_VALUE};
+use crate::db::file_meta_data::FileMetaData;
 use crate::traits::comparator_trait::Comparator;
 use crate::util::slice::Slice;
 
@@ -209,15 +210,15 @@ impl InternalKey {
 }
 
 impl InternalKeyComparator {
-    fn new(c: Box<dyn Comparator>) -> Box<Self> {
+    pub fn create(c: Box<dyn Comparator>) -> Box<Self> {
         todo!()
     }
 
-    fn user_comparator(&self) -> Box<dyn Comparator> {
+    pub fn user_comparator(&self) -> Box<dyn Comparator> {
         todo!()
     }
 
-    fn compare(&self, a: InternalKey, b: InternalKey) -> u32 {
+    pub fn compare_internal_key(&self, key1: &InternalKey, key2: &InternalKey) -> u32 {
         // line 122, 167
         todo!()
     }

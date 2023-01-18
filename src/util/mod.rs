@@ -38,6 +38,8 @@ mod mutex_lock_test;
 pub mod random;
 mod random_test;
 pub mod options;
+pub mod linked_list;
+mod linked_list_test;
 
 /// 定义别名
 pub type Result<T> = result::Result<T, Status>;
