@@ -106,7 +106,7 @@ impl VersionEdit {
     ///
     /// ```
     fn add_file(&mut self, level: u32, file: u64, file_size: u64, smallest: InternalKey, largest: InternalKey) {
-        let file_meta_data = FileMetaData::create_number_file_size_internal_key(file, file_size, smallest, largest);
+        let file_meta_data = FileMetaData::new_with_number_file_size_internal_key(file, file_size, smallest, largest);
 
         self.new_files_.push((level, file_meta_data));
     }

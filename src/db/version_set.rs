@@ -95,7 +95,7 @@ pub struct Compaction {
 
 // .h   line 68 - 71
 struct GetStats {
-    seek_file: FileMetaData,
+    seek_file: Rc<FileMetaData>,
     seek_file_level: i32
 }
 
@@ -112,7 +112,7 @@ struct LevelFileNumIterator {
 
 // line 604
 pub struct Builder {
-    vset_: VersionSet,
+    vset_: Rc<VersionSet>,
 
     // VersionSet* ;
     // Version* base_;
@@ -133,20 +133,16 @@ struct LevelState {
 }
 
 impl Version {
-    fn create(vset: VersionSet) -> Self {
+    fn new(vset: Rc<VersionSet>) -> Self {
         todo!()
     }
 
     fn set_next(&mut self, data: &Rc<Version>) -> bool {
-        self.next_ = (*data).clone().into();
-
-        true
+        todo!()
     }
 
     fn set_prev(&mut self, data: &Rc<Version>) -> bool {
-        self.prev_ = (*data).clone().into();
-
-        true
+        todo!()
     }
 
     fn get_refs(&self) -> i32 {
@@ -173,7 +169,7 @@ impl Version {
     /// ```
     ///
     /// ```
-    fn add_iterators(&self, options: ReadOptions, /* iters: Vec<Iterator> */) {
+    fn add_iterators(&self, options: ReadOptions, /* mut iters: Vec<Iterator> */) {
         todo!()
     }
 
@@ -214,7 +210,7 @@ impl Version {
     /// ```
     ///
     /// ```
-    fn update_stats(&self, stats: GetStats) -> bool{
+    fn update_stats(&mut self, stats: GetStats) -> bool{
         todo!()
     }
 
@@ -313,7 +309,7 @@ impl Drop for Version {
 //     //.
 // }
 
-impl<'a> VersionSet {
+impl VersionSet {
     /// 返回文件源数据中最小的索引。 如果文件不存在，则返回文件数量
     ///
     /// Return the smallest index i such that files[i]->largest >= key.
@@ -333,7 +329,7 @@ impl<'a> VersionSet {
     /// ```
     ///
     /// ```
-    fn find_file(icmp: Box<InternalKeyComparator>, files:Vec<FileMetaData>, key:Slice) -> u32 {
+    fn find_file(icmp: &InternalKeyComparator, files:&Vec<FileMetaData>, key:&Slice) -> u32 {
         todo!()
     }
 
@@ -363,8 +359,8 @@ impl<'a> VersionSet {
     /// ```
     ///
     /// ```
-    fn some_file_overlaps_range(icmp: Box<InternalKeyComparator>, disjoint_sorted_files:bool,
-                                files:Vec<FileMetaData>, smallest_user_key:Slice,largest_user_key:Slice) -> bool {
+    fn some_file_overlaps_range(icmp: &InternalKeyComparator, disjoint_sorted_files:bool,
+                                files:&Vec<FileMetaData>, smallest_user_key:&Slice,largest_user_key:&Slice) -> bool {
         todo!()
     }
 }
@@ -414,6 +410,6 @@ impl BySmallestKey {
         }
 
         // Break ties by file number
-        return f1.get_number() < f2.get_number();
+        f1.get_number() < f2.get_number()
     }
 }
