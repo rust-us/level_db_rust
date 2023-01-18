@@ -1,6 +1,7 @@
 use std::cmp::Ordering;
 use std::ops::Deref;
 use crate::db::db_format::ValueType::{K_TYPE_DELETION, K_TYPE_VALUE};
+use crate::db::file_meta_data::FileMetaData;
 use crate::traits::comparator_trait::Comparator;
 use crate::util::slice::Slice;
 
@@ -18,6 +19,7 @@ pub struct ParsedInternalKey {
     value_type: ValueType
 }
 
+#[derive(Debug)]
 pub struct InternalKey {
     rep_: Slice
 }
@@ -143,6 +145,14 @@ impl Default for InternalKey {
     }
 }
 
+impl PartialEq for InternalKey {
+    /// 判断两个 InternalKey 是否相同
+    #[inline]
+    fn eq(&self, other: &Self) -> bool {
+        self.rep_.eq(&other.rep_)
+    }
+}
+
 impl InternalKey {
     fn new(user_key: Slice, sequence: u64, value_type: ValueType) -> Self {
         // line 145
@@ -200,15 +210,15 @@ impl InternalKey {
 }
 
 impl InternalKeyComparator {
-    fn new(c: Box<dyn Comparator>) -> Box<Self> {
+    pub fn create(c: Box<dyn Comparator>) -> Box<Self> {
         todo!()
     }
 
-    fn user_comparator(&self) -> Box<dyn Comparator> {
+    pub fn user_comparator(&self) -> Box<dyn Comparator> {
         todo!()
     }
 
-    fn compare(&self, a: InternalKey, b: InternalKey) -> u32 {
+    pub fn compare_internal_key(&self, key1: &InternalKey, key2: &InternalKey) -> u32 {
         // line 122, 167
         todo!()
     }

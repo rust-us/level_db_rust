@@ -97,7 +97,7 @@ pub struct Options {
     /// NewBloomFilterPolicy() here.
     pub filter_policy: Option<FilterPolicy>,
 }
- /// Options that control read operations
+/// Options that control read operations
 pub struct ReadOptions {
     /// If true, all data read from underlying storage will be
     /// verified against corresponding checksums.

@@ -15,6 +15,10 @@ pub mod db_format;
 mod db_format_test;
 pub mod file_meta_data;
 mod file_meta_data_test;
+pub mod version_set;
+mod version_set_test;
+pub mod version_edit;
+mod version_edit_test;
 
 /// 默认调表
 pub type DefaultSkipList = SkipList<Slice, BytewiseComparatorImpl>;
