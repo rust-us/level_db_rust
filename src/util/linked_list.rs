@@ -8,7 +8,7 @@ struct Node<T> {
     // 节点值. 如果存在这个 Node，则该Node中 val 必定是有值的; 如果 val 的值为空，则这个 Node 就应该为 None
     val: T,
     // 前驱
-    prev: Option<NonNull<Node<T>>>
+    prev: Option<NonNull<Node<T>>>,
     // 后继. Option<T> 表示该节点为空，即不存在 prev 前置节点（整个链表为空时）、或不存在next 后置节点（链表的尾节点）
     next: Option<NonNull<Node<T>>>,
 }
