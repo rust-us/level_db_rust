@@ -87,6 +87,7 @@ LSM tree 是许多 KV型或日志型数据库所依赖的核心实现，例如Bi
 | db.LogReader                                                                     | wangboo     | 90% |
 | db.LogWriter                                                                     | wangboo     | 90% |
 | db.TableCache                                                                    | colagy      |     |
+| LinkedList                                                                       | fengyang    |     |
 | db.VersionEdit(Tag, VersionEdit, FileMetaData)                                   | fengyang    |     |
 | db.VersionSet(Version, LevelFileNumIterator, SaverState)                         | fengyang    |     |
 | WriteBatch                                                                       | peach       |     |

@@ -16,6 +16,21 @@ pub trait AsBloomHash {
     fn bloom_hash(&self) -> u32;
 }
 
+/// 实现了 Slice 转 bloom_hash 的特质
+/// Sample:
+/// ```
+///     let val = "aabbccd";
+///     let slice: Slice = Slice::from_buf(val.as_bytes());
+///     let hash_val = slice.bloom_hash();
+/// ```
+impl AsBloomHash for Slice {
+    #[inline]
+    fn bloom_hash(&self) -> u32 {
+        BloomFilterPolicy::bloom_hash(self)
+    }
+}
+
+// #########################  BloomFilterPolicy
 pub struct BloomFilterPolicy {
     bits_per_key: usize,
     k: usize
@@ -140,6 +155,7 @@ impl FilterPolicy for BloomFilterPolicy {
     }
 }
 
+// #########################  InternalFilterPolicy
 pub struct InternalFilterPolicy {
     user_policy_: dyn FilterPolicy
 }
@@ -162,19 +178,5 @@ impl FilterPolicy for InternalFilterPolicy {
 
     fn key_may_match(&self, key: &Slice, bloom_filter: &Slice) -> bool {
         todo!()
-    }
-}
-
-/// 实现了 Slice 转 bloom_hash 的特质
-/// Sample:
-/// ```
-///     let val = "aabbccd";
-///     let slice: Slice = Slice::from_buf(val.as_bytes());
-///     let hash_val = slice.bloom_hash();
-/// ```
-impl AsBloomHash for Slice {
-    #[inline]
-    fn bloom_hash(&self) -> u32 {
-        BloomFilterPolicy::bloom_hash(self)
     }
 }
