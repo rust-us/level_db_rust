@@ -36,6 +36,7 @@ impl Status {
     /// ```
     /// Status::wrapper_str(LevelError::KInvalidArgument, "IndexOutOfRange");
     /// ```
+    #[inline]
     pub fn wrapper_str(err: LevelError, mut str: &str) -> Status {
         Status::wrapper(err, str.into())
     }
@@ -56,6 +57,7 @@ impl Status {
     ///
     /// Status::wrapper(LevelError::KInvalidArgument, "IndexOutOfRange".into());
     /// ```
+    #[inline]
     pub fn wrapper(err: LevelError, mut slice: Slice) -> Status {
         if err.is_ok() {
             slice = Slice::default();
