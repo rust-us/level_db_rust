@@ -284,8 +284,7 @@ impl<T> LinkedListBuilder<T> for LinkedList<T> {
         let len = self.length;
 
         if position > len {
-            return Err(Status::wrapper(LevelError::KInvalidArgument,
-                                       Slice::from(String::from("IndexOutOfRange"))));
+            return Err(Status::wrapper_str(LevelError::KInvalidArgument, "IndexOutOfRange"));
         }
 
         if position == 0 {
@@ -338,8 +337,7 @@ impl<T> LinkedListBuilder<T> for LinkedList<T> {
         let len = self.length;
 
         if position >= len {
-            return Err(Status::wrapper(LevelError::KInvalidArgument,
-                                       Slice::from(String::from("IndexOutOfRange"))));
+            return Err(Status::wrapper_str(LevelError::KInvalidArgument, "IndexOutOfRange"));
         }
 
         // Iterate towards the node at the given index, either from the start or the end,
@@ -388,8 +386,7 @@ impl<T> LinkedList<T> {
         let len = self.length;
 
         if position >= len {
-            return Err(Status::wrapper(LevelError::KInvalidArgument,
-                                       Slice::from(String::from("IndexOutOfRange"))));
+            return Err(Status::wrapper_str(LevelError::KInvalidArgument, "IndexOutOfRange"));
         }
 
         // Iterate towards the node at the given index, either from the start or the end,
