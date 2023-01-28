@@ -16,7 +16,7 @@ pub trait CodingTrait {
     ///    let mut string = String::from("encode:");
     ///    put_fixed32(&mut string, 65535);
     /// ```
-    fn put_fixed32(dst: &mut [u8], offset: usize, value: &mut u32) -> usize;
+    fn put_fixed32(dst: &mut [u8], offset: usize, value: u32) -> usize;
     ///64位定长编码写入字符串
     ///
     /// # Arguments
@@ -32,7 +32,7 @@ pub trait CodingTrait {
     ///    let mut string = String::from("encode:");
     ///    put_fixed64(&mut string, 65535);
     /// ```
-    fn put_fixed64(dst: &mut [u8], offset: usize, value: &mut u64) -> usize;
+    fn put_fixed64(dst: &mut [u8], offset: usize, value: u64) -> usize;
     /// 32位变长编码写入字符串
     ///
     /// # Arguments
@@ -48,7 +48,7 @@ pub trait CodingTrait {
     ///    let mut string = String::from("encode:");
     ///    put_varint32(&mut string, 65535);
     /// ```
-    fn put_varint32(dst: &mut [u8], offset: usize, value: &mut u32) -> usize;
+    fn put_varint32(dst: &mut [u8], offset: usize, value: u32) -> usize;
     /// 64位变长编码写入字符串
     ///
     /// # Arguments
@@ -64,7 +64,7 @@ pub trait CodingTrait {
     ///    let mut string = String::from("encode:");
     ///    put_varint64(&mut string, 65535);
     /// ```
-    fn put_varint64(dst: &mut [u8], offset: usize, value: &mut u64) -> usize;
+    fn put_varint64(dst: &mut [u8], offset: usize, value: u64) -> usize;
     /// 将slice的长度写入目标字符串
     ///
     /// # Arguments
@@ -79,7 +79,7 @@ pub trait CodingTrait {
     /// ```
     ///
     /// ```
-    fn put_length_prefixed_slice(dst: &mut [u8], offset: usize, value: &mut Slice) -> usize;
+    fn put_length_prefixed_slice(dst: &mut [u8], offset: usize, value: Slice) -> usize;
     /// 从slice的开头解码一个32位的变长整数, 并将slice的索引置于解码后的位置
     ///
     /// # Arguments
@@ -139,7 +139,7 @@ pub trait CodingTrait {
     ///     let value: u32 = 65534;
     ///     let offset =encode_varint32(value, &mut buf, 0);
     /// ```
-    fn encode_varint32(value: &mut u32, buf: &mut [u8], offset: usize) -> usize;
+    fn encode_varint32(value: u32, buf: &mut [u8], offset: usize) -> usize;
     /// 变长正整数编码
     ///
     /// # Arguments
@@ -157,7 +157,7 @@ pub trait CodingTrait {
     ///     let value: u32 = 65534;
     ///     let offset =encode_varint64(value, &mut buf, 0);
     /// ```
-    fn encode_varint64(value: &mut u64, buf: &mut [u8], offset: usize) -> usize;
+    fn encode_varint64(value: u64, buf: &mut [u8], offset: usize) -> usize;
     /// 获取变长编码后的长度
     ///
     /// # Arguments
@@ -172,7 +172,7 @@ pub trait CodingTrait {
     ///
     /// ```
     /// 从slice的开头解码一个32位的变长整数, 并将slice的索引置于解码后的位置
-    fn varint_length(value: &mut u64) -> i32;
+    fn varint_length(value: u64) -> i32;
     /// 32位定长正整数编码
     ///
     /// # Arguments
@@ -190,7 +190,7 @@ pub trait CodingTrait {
     ///     let value: u32 = 65534;
     ///     let offset = Self::encode_fixed32(value, &mut buf, 0);
     /// ```
-    fn encode_fixed32(value: &mut u32, buf: &mut [u8], offset: usize) -> usize;
+    fn encode_fixed32(value: u32, buf: &mut [u8], offset: usize) -> usize;
     /// 64位定长正整数编码
     ///
     /// # Arguments
@@ -208,7 +208,7 @@ pub trait CodingTrait {
     ///     let value: u64 = 65534;
     ///     let offset = encode_fixed64(value, &mut buf, 0);
     /// ```
-    fn encode_fixed64(value: &mut u64, buf: &mut [u8], offset: usize) -> usize;
+    fn encode_fixed64(value: u64, buf: &mut [u8], offset: usize) -> usize;
     /// 32位定长解码
     ///
     /// # Arguments

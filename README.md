@@ -46,50 +46,51 @@ LSM tree 是许多 KV型或日志型数据库所依赖的核心实现，例如Bi
 ### 1.0.0
 1.0.0 版本, 完成 util 相关的内容
 
-| 功能模块                                   | 完成人             | 进度   |
-|----------------------------------------|-----------------|------|
-| Arena (Memory Management)              | wangboo         | 100% |
-| bloom                                  | fengyang        | 10%  |
-| Cache                                  | colagy          | 10%  |
-| Coding (Primitive Type SerDe)          | colagy          | 100% |
-| Comparator                             | fengyang        | 90%  |
-| CRC                                    | wangboo、lxd5866 | 100% |
-| Env                                    | lxd5866         |      |
-| filter_policy                          | fengyang        | 10%  |
-| Hash                                   | fengyang        | 100% |
-| Histgram                               | kazeseiriou     | 100% |
-| loging                                 |                 |      |
-| MutexLock                              | kazeseiriou     | 100% |
-| Random                                 | colagy          |      |
-| Status                                 | fengyang        | 100% |
-| Slice                                  | wangboo         | 100% |
+| 功能模块                          | 完成人             | 进度   |
+|-------------------------------|-----------------|------|
+| Arena (Memory Management)     | wangboo         | 100% |
+| bloom                         | fengyang        | 100% |
+| Cache                         | colagy          | 10%  |
+| Coding (Primitive Type SerDe) | colagy          | 100% |
+| Comparator                    | fengyang        | 100% |
+| CRC                           | wangboo、lxd5866 | 100% |
+| Env                           | lxd5866         |      |
+| filter_policy                 | fengyang        | 100% |
+| Hash                          | fengyang        | 100% |
+| Histgram                      | kazeseiriou     | 100% |
+| loging                        |                 |      |
+| MutexLock                     | kazeseiriou     | 100% |
+| Random                        | colagy          |      |
+| Status                        | fengyang        | 100% |
+| Slice                         | wangboo         | 100% |
 
 ### 1.1.0
 1.1.0 版本, 完成基础零部件
 
-| 功能模块                                                                             | 完成人         | 进度  |
-|----------------------------------------------------------------------------------|-------------|-----|
-| util.Options(ReadOptions, WriteOptions)                                          | kazeseiriou |     |
-| util.ENV(WritableFile, SequentialFile, RandomAccessFile, FileLock)               | lxd5866     |     |
-| util.Logger                                                                      | peach       |     |
-| table.Block, BlockBuilder, FilterBlockBuilder                                    | colagy      |     |
-| FilterBlock, FilterBlockReader                                                   | colagy      |     |
-| table.format(Footer, BlockHandle)                                                | fengyang    |     |
-| db.dbformat(InternalKeyComparator, InternalFilterPolicy, LookupKey, InternalKey) | fengyang    |     |
-| db.SkipList                                                                      | wangboo     |     |
-| table.Iterator(DBIter, MergingIterator, TwoLevelIterator...)                     | kazeseiriou |     |
-| IteratorWrapper                                                                  | kazeseiriou |     |
-| db.MemTable(MemTable, MemTableIterator)                                          | wangboo     |     | 
-| SSTable                                                                          | fengyang    |     |
-| table.Table                                                                      | peach       |     |
-| db.leveldb_util                                                                  | hui         |     |
-| db.log_format                                                                    | hui         |     |
-| db.LogReader                                                                     | wangboo     | 90% |
-| db.LogWriter                                                                     | wangboo     | 90% |
-| db.TableCache                                                                    | colagy      |     |
-| db.VersionEdit(Tag, VersionEdit, FileMetaData)                                   | fengyang    |     |
-| db.VersionSet(Version, LevelFileNumIterator, SaverState)                         | fengyang    |     |
-| WriteBatch                                                                       | peach       |     |
+| 功能模块                                                                             | 完成人          | 进度  |
+|----------------------------------------------------------------------------------|--------------|-----|
+| util.Options(ReadOptions, WriteOptions)                                          | kazeseiriou  |     |
+| util.ENV(WritableFile, SequentialFile, RandomAccessFile, FileLock)               | lxd5866      |     |
+| util.Logger                                                                      | peach        |     |
+| table.Block, BlockBuilder, FilterBlockBuilder                                    | colagy       |     |
+| FilterBlock, FilterBlockReader                                                   | colagy       |     |
+| table.format(Footer, BlockHandle)                                                | fengyang、半支烟 |     |
+| db.dbformat(InternalKeyComparator, InternalFilterPolicy, LookupKey, InternalKey) | fengyang、半支烟 |     |
+| db.SkipList                                                                      | wangboo      |     |
+| table.Iterator(DBIter, MergingIterator, TwoLevelIterator...)                     | kazeseiriou  |     |
+| IteratorWrapper                                                                  | kazeseiriou  |     |
+| db.MemTable(MemTable, MemTableIterator)                                          | wangboo      |     | 
+| SSTable                                                                          | fengyang     |     |
+| table.Table                                                                      | peach        |     |
+| db.leveldb_util                                                                  | wangboo      |     |
+| db.log_format                                                                    | wangboo      |     |
+| db.LogReader                                                                     | wangboo      | 90% |
+| db.LogWriter                                                                     | wangboo      | 90% |
+| db.TableCache                                                                    | colagy       |     |
+| LinkedList                                                                       | fengyang     |     |
+| db.VersionEdit(Tag, VersionEdit, FileMetaData)                                   | fengyang     |     |
+| db.VersionSet(Version, LevelFileNumIterator, SaverState)                         | fengyang     |     |
+| WriteBatch                                                                       | peach        |     |
 
 #### 1.1.0 计划
 * 完成gitee ->  github  (同步)  主仓库gitee

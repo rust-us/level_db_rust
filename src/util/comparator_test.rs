@@ -2,13 +2,14 @@
 mod test {
     use std::cmp::Ordering;
     use std::io::Write;
-    use crate::traits::comparator_trait::ComparatorTrait;
-    use crate::util::comparator::{BytewiseComparatorImpl, InternalKeyComparator};
+    use crate::traits::comparator_trait::Comparator;
+    use crate::util::comparator::{BytewiseComparatorImpl};
     use crate::util::slice::Slice;
 
+    // ##################### BytewiseComparatorImpl test
     #[test]
     fn test_bytewise_comparator_impl_get_name() {
-        let name = BytewiseComparatorImpl::get_name();
+        let name = BytewiseComparatorImpl::default().get_name();
         println!("get_name: {}", &name);
         assert_eq!("leveldb.BytewiseComparator", name);
     }
@@ -19,7 +20,7 @@ mod test {
         let option_val = comp.compare(&Slice::from("a"), &Slice::from("ab"));
         assert_eq!(option_val.unwrap(), Ordering::Less);
 
-        // todo  Slice 存在 bug 未修复
+        // // todo  Slice 存在 bug 未修复
         // let comp = BytewiseComparatorImpl::default();
         // let option_val = comp.compare(&Slice::from("b"), &Slice::from("abcd"));
         // assert_eq!(option_val.unwrap(), Ordering::Greater);
@@ -120,12 +121,6 @@ mod test {
         expect_u8_max_vec.write("i".as_bytes()).expect("panic message");
         assert_eq!(find_short_successor_val,
                    String::from(Slice::from_buf(expect_u8_max_vec.as_slice())));
-    }
-
-    #[test]
-    fn test_internal_key_comparator_get_name() {
-        let name = InternalKeyComparator::get_name();
-        assert_eq!("leveldb.InternalKeyComparator", name);
     }
 
 }
