@@ -40,28 +40,83 @@ pub trait LinkedListBuilder<T>: Default {
     ///
     /// # Arguments
     ///
-    /// * `val`:
+    /// * `val`: 插入的元素
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::collections::LinkedList;
+    ///
+    /// let mut list: LinkedList<i32> = LinkedList::new();
+    /// list.add(8);
+    /// list.add(9);
+    /// ```
+    fn add(&mut self, val: T);
+
+    /// 在链表头部压入元素，等同于  add_first
+    /// 在将一个元素压入双向链表时，需要注意：我们需要获取元素完整的所有权
+    ///
+    /// # Arguments
+    ///
+    /// * `val`: 插入数据
     ///
     /// returns: ()
     ///
     /// # Examples
     ///
     /// ```
+    /// use std::collections::LinkedList;
     ///
+    /// let mut list: LinkedList<i32> = LinkedList::new();
+    /// list.push(8);
+    /// list.push(9);
     /// ```
-    fn add(&mut self, val: T);
-
-    /// 在链表头部压入元素，等同于  add_first
-    /// 在将一个元素压入双向链表时，需要注意：我们需要获取元素完整的所有权
     fn push(&mut self, val: T);
 
     /// 元素添加到头部，返回是否成功，成功为 true，失败为 false。
+    ///
+    /// # Arguments
+    ///
+    /// * `val`: 插入数据
+    ///
+    /// returns: Result<bool, Status>
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::collections::LinkedList;
+    ///
+    /// let mut list: LinkedList<i32> = LinkedList::new();
+    /// list.add_first(8).unwrap();
+    /// list.add_first(9).unwrap();
+    /// ```
     fn add_first(&mut self, val: T) -> Result<bool>;
 
     /// 在列表结尾添加元素，返回是否成功，成功为 true，失败为 false。
     fn add_last(&mut self, val: T) -> Result<bool>;
 
     /// 向指定位置插入元素。
+    ///
+    /// # Arguments
+    ///
+    /// * `position`: 插入位置。 从0开始，小于等于 len
+    /// * `data`:  插入的数据
+    ///
+    /// returns: Result<bool, Status>
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use std::collections::LinkedList;
+    ///
+    /// let mut list_link: LinkedList<i32> = LinkedList::new();
+    /// for i in 0..10 {
+    ///     list_link.add_last(i).unwrap();
+    /// }
+    /// // list_link.add_by_position(0, 100).expect("panic message");
+    /// // list_link.add_by_position(7, 100).expect("panic message");
+    /// list_link.add_by_position(10, 100).expect("panic message");
+    /// ```
     fn add_by_position(&mut self, position: usize, data: T) -> Result<bool>;
 
     /// 删除并返回第一个元素。
@@ -80,8 +135,22 @@ pub trait LinkedListBuilder<T>: Default {
     /// 获取列表结尾的元素
     fn get_last(&self) -> Result<Option<&T>>;
 
-    /// 得到第 position 元素
+    /// 得到第 position 元素, 不可变引用类型
+    ///
+    /// # Arguments
+    ///
+    /// * `position`:  插入位置。 从0开始，小于 len
+    ///
+    /// returns: Result<Option<&T>, Status>
+    ///
+    /// # Examples
+    ///
+    /// ```
+    ///
+    /// ```
     fn get(&self, position: usize) -> Result<Option<&T>>;
+
+    /// 得到第 position 元素, 返回可变引用类型
     fn get_mut(&self, position: usize) -> Result<Option<&mut T>>;
 
     // jdk LinkedList 中的方法：
@@ -102,12 +171,13 @@ pub trait LinkedListBuilder<T>: Default {
     // public E pollFirst()    检索并删除此列表的第一个元素，如果此列表为空，则返回 null 。
     // public E	pollLast()  检索并删除此列表的最后一个元素，如果此列表为空，则返回 null 。
 
-    // public E	pop()  弹出此列表所代表的堆栈中的元素。
+    // public E	pop()  弹出此列表所代表的堆栈中的元素。(将元素从链表中删除，并且返回)
     // public E	popFirst()
     // public E	popLast()
 
     // public E element()	返回第一个元素。
-    // public E peek()	返回第一个元素。
+    // public E peek()	返回第一个元素。不可变引用类型
+    // public E peek_mut()	返回第一个元素。可变引用类型
     // public E peekFirst()	返回头部元素。
     // public E peekLast()	返回尾部元素。
 
