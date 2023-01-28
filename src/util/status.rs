@@ -22,20 +22,42 @@ impl Default for Status {
 }
 
 impl Status {
-    ///
+    /// 封装 LevelError 和 错误描述，得到 Status
     ///
     /// # Arguments
     ///
-    /// * `err`:
-    /// * `slice`:
+    /// * `err`:  LevelError 错误码
+    /// * `str`:  错误描述
     ///
     /// returns: Status
     ///
     /// # Examples
     ///
     /// ```
+    /// Status::wrapper_str(LevelError::KInvalidArgument, "IndexOutOfRange");
+    /// ```
+    #[inline]
+    pub fn wrapper_str(err: LevelError, mut str: &str) -> Status {
+        Status::wrapper(err, str.into())
+    }
+
+    /// 封装 LevelError 和 错误描述，得到 Status
+    ///
+    /// # Arguments
+    ///
+    /// * `err`:  LevelError 错误码
+    /// * `slice`:  错误描述
+    ///
+    /// returns: Status
+    ///
+    /// # Examples
     ///
     /// ```
+    /// Status::wrapper(LevelError::KCorruption, "bad record, crc check failed".into());
+    ///
+    /// Status::wrapper(LevelError::KInvalidArgument, "IndexOutOfRange".into());
+    /// ```
+    #[inline]
     pub fn wrapper(err: LevelError, mut slice: Slice) -> Status {
         if err.is_ok() {
             slice = Slice::default();
