@@ -1,5 +1,4 @@
 use std::fmt::{Display, Formatter};
-use std::marker::PhantomData;
 use std::ptr::NonNull;
 use crate::util::Result;
 use crate::util::slice::Slice;
@@ -216,6 +215,7 @@ impl<T> Default for LinkedList<T> {
 }
 
 impl<T> LinkedListBuilder<T> for LinkedList<T> {
+    #[inline]
     fn new() -> Self {
         Self {
             length: 0,
@@ -224,18 +224,22 @@ impl<T> LinkedListBuilder<T> for LinkedList<T> {
         }
     }
 
+    #[inline]
     fn length(&self) -> usize {
         self.length
     }
 
+    #[inline]
     fn add(&mut self, val: T) {
         self.add_last(val).unwrap();
     }
 
+    #[inline]
     fn push(&mut self, val: T) {
         self.add_first(val).unwrap();
     }
 
+    #[inline]
     fn add_first(&mut self, val: T) -> Result<bool> {
         // 使用入参中的 val 创建一个链表节点Node，为了方便后续直接从 Box 获取到 raw ptr 裸指针， 使用 Box 包装
         let mut node = Box::new(Node::new(val));
@@ -262,6 +266,7 @@ impl<T> LinkedListBuilder<T> for LinkedList<T> {
         Ok(true)
     }
 
+    #[inline]
     fn add_last(&mut self, val: T) -> Result<bool> {
         let mut node = Box::new(Node::new(val));
 
@@ -284,8 +289,7 @@ impl<T> LinkedListBuilder<T> for LinkedList<T> {
         let len = self.length;
 
         if position > len {
-            return Err(Status::wrapper(LevelError::KInvalidArgument,
-                                       Slice::from(String::from("IndexOutOfRange"))));
+            return Err(Status::wrapper_str(LevelError::KInvalidArgument, "IndexOutOfRange"));
         }
 
         if position == 0 {
@@ -338,8 +342,7 @@ impl<T> LinkedListBuilder<T> for LinkedList<T> {
         let len = self.length;
 
         if position >= len {
-            return Err(Status::wrapper(LevelError::KInvalidArgument,
-                                       Slice::from(String::from("IndexOutOfRange"))));
+            return Err(Status::wrapper_str(LevelError::KInvalidArgument, "IndexOutOfRange"));
         }
 
         // Iterate towards the node at the given index, either from the start or the end,
@@ -388,8 +391,7 @@ impl<T> LinkedList<T> {
         let len = self.length;
 
         if position >= len {
-            return Err(Status::wrapper(LevelError::KInvalidArgument,
-                                       Slice::from(String::from("IndexOutOfRange"))));
+            return Err(Status::wrapper_str(LevelError::KInvalidArgument, "IndexOutOfRange"));
         }
 
         // Iterate towards the node at the given index, either from the start or the end,
