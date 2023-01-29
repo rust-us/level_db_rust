@@ -1,5 +1,4 @@
 use std::fmt::{Display, Formatter};
-use std::marker::PhantomData;
 use std::ptr::NonNull;
 use crate::util::Result;
 use crate::util::slice::Slice;
