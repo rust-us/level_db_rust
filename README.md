@@ -74,22 +74,22 @@ LSM tree 是许多 KV型或日志型数据库所依赖的核心实现，例如Bi
 | util.Logger                                                                      | peach        |     |
 | table.Block, BlockBuilder, FilterBlockBuilder                                    | colagy       |     |
 | FilterBlock, FilterBlockReader                                                   | colagy       |     |
-| table.format(Footer, BlockHandle)                                                | fengyang、半支烟 |     |
-| db.dbformat(InternalKeyComparator, InternalFilterPolicy, LookupKey, InternalKey) | fengyang、半支烟 |     |
+| table.format(Footer, BlockHandle)                                                | fengyang、半支烟 | 20% |
+| db.dbformat(InternalKeyComparator, InternalFilterPolicy, LookupKey, InternalKey) | fengyang、半支烟 | 20% |
 | db.SkipList                                                                      | wangboo      |     |
 | table.Iterator(DBIter, MergingIterator, TwoLevelIterator...)                     | kazeseiriou  |     |
 | IteratorWrapper                                                                  | kazeseiriou  |     |
 | db.MemTable(MemTable, MemTableIterator)                                          | wangboo      |     | 
-| SSTable                                                                          | fengyang     |     |
+| SSTable                                                                          | fengyang     | 0%  |
 | table.Table                                                                      | peach        |     |
 | db.leveldb_util                                                                  | wangboo      |     |
 | db.log_format                                                                    | wangboo      |     |
 | db.LogReader                                                                     | wangboo      | 90% |
 | db.LogWriter                                                                     | wangboo      | 90% |
 | db.TableCache                                                                    | colagy       |     |
-| LinkedList                                                                       | fengyang     |     |
-| db.VersionEdit(Tag, VersionEdit, FileMetaData)                                   | fengyang     |     |
-| db.VersionSet(Version, LevelFileNumIterator, SaverState)                         | fengyang     |     |
+| LinkedList                                                                       | fengyang     | 60% |
+| db.VersionEdit(Tag, VersionEdit, FileMetaData)                                   | fengyang     | 10% |
+| db.VersionSet(Version, LevelFileNumIterator, SaverState)                         | fengyang     | 10% |
 | WriteBatch                                                                       | peach        |     |
 
 #### 1.1.0 计划

@@ -118,6 +118,37 @@ pub trait LinkedListBuilder<T>: Default {
     /// ```
     fn add_by_position(&mut self, position: usize, data: T) -> Result<bool>;
 
+    /// 弹出此列表所代表的堆栈中的元素。(将元素从链表中删除，并且返回)
+    /// 等价于  pop_last
+    fn pop(&mut self) -> Option<T>;
+
+    /// Removes the first element from a list and returns it, or `None` if it is empty.
+    fn pop_first(&mut self) -> Option<T>;
+
+    /// Removes the last element from a list and returns it, or `None` if it is empty.
+    fn pop_last(&mut self) -> Option<T>;
+
+    /// 查看和返回第一个元素。不可变引用类型
+    /// 等价于  peek_first
+    /// 仅仅返回元素的引用，而元素的所有权还是在链表中
+    fn peek(&mut self) -> Option<T>;
+
+    // public E element()	返回第一个元素。
+
+    /// 查看和返回第一个元素。可变引用类型
+    /// 返回元素的可变引用类型，使得能够对链表中的节点元素值进行修改，但是不真正获取元素的所有权！
+    fn peek_mut(&mut self) -> Option<T>;
+
+    /// 返回头部元素
+    fn peek_first(&mut self) -> Option<T>;
+
+    /// 返回尾部元素
+    fn peek_last(&mut self) -> Option<T>;
+
+    /// 返回尾部元素
+    /// 返回元素的可变引用类型，使得能够对链表中的节点元素值进行修改，但是不真正获取元素的所有权！
+    fn peek_last_mut(&mut self) -> Option<T>;
+
     /// 删除并返回第一个元素。
     fn remove_first(&mut self) -> Result<Option<&T>>;
 
@@ -126,7 +157,9 @@ pub trait LinkedListBuilder<T>: Default {
 
     /// 删除指定位置的元素并返回。
     fn remove(&mut self, position: usize) -> Result<Option<&T>>;
+
     // public boolean remove(Object o)	删除某一元素，返回是否成功，成功为 true，失败为 false。
+    // public boolean remove(int index)	删除某一位置元素，返回是否成功，成功为 true，失败为 false。
 
     /// 获取列表开头的元素
     fn get_first(&self) -> Result<Option<&T>>;
@@ -169,16 +202,6 @@ pub trait LinkedListBuilder<T>: Default {
     // public E poll()	删除并返回第一个元素。
     // public E pollFirst()    检索并删除此列表的第一个元素，如果此列表为空，则返回 null 。
     // public E	pollLast()  检索并删除此列表的最后一个元素，如果此列表为空，则返回 null 。
-
-    // public E	pop()  弹出此列表所代表的堆栈中的元素。(将元素从链表中删除，并且返回)
-    // public E	popFirst()
-    // public E	popLast()
-
-    // public E element()	返回第一个元素。
-    // public E peek()	返回第一个元素。不可变引用类型
-    // public E peek_mut()	返回第一个元素。可变引用类型
-    // public E peekFirst()	返回头部元素。
-    // public E peekLast()	返回尾部元素。
 
     // public Iterator descendingIterator()	返回倒序迭代器。
     // public ListIterator listIterator(int index)	返回从指定位置开始到末尾的迭代器。
@@ -316,6 +339,38 @@ impl<T> LinkedListBuilder<T> for LinkedList<T> {
         self.length += 1;
 
         Ok(true)
+    }
+
+    fn pop(&mut self) -> Option<T> {
+        self.pop_last()
+    }
+
+    fn pop_first(&mut self) -> Option<T> {
+        todo!()
+    }
+
+    fn pop_last(&mut self) -> Option<T> {
+        todo!()
+    }
+
+    fn peek(&mut self) -> Option<T> {
+        self.peek_first()
+    }
+
+    fn peek_mut(&mut self) -> Option<T> {
+        todo!()
+    }
+
+    fn peek_first(&mut self) -> Option<T> {
+        todo!()
+    }
+
+    fn peek_last(&mut self) -> Option<T> {
+        todo!()
+    }
+
+    fn peek_last_mut(&mut self) -> Option<T> {
+        todo!()
     }
 
     fn remove_first(&mut self) -> Result<Option<&T>> {
