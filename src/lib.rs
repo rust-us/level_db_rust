@@ -1,4 +1,5 @@
 #![feature(box_syntax)]
+#![feature(allocator_api)]
 
 mod db;
 mod table;

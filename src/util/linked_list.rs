@@ -1,3 +1,4 @@
+use std::alloc::{Allocator, Global};
 use std::fmt::{Display, Formatter};
 use std::ptr::NonNull;
 use crate::util::Result;
@@ -18,6 +19,7 @@ struct Node<T> {
 
 /// 双向链表
 #[derive(Debug)]
+#[allow(missing_debug_implementations)]
 pub struct LinkedList<T> {
     // 双向链表的当前长度
     length: usize,
@@ -25,11 +27,18 @@ pub struct LinkedList<T> {
     head: Option<NonNull<Node<T>>>,
     // 尾
     tail: Option<NonNull<Node<T>>>,
+    // 内存分配器
+    allocator: Allocator
 }
 
-pub trait LinkedListBuilder<T>: Default {
+pub trait LinkedListBuilder<T, #[unstable(feature = "allocator_api", issue = "32838")] A: Allocator = Global>: Default {
     /// 构造函数, 构造空的双向链表
     fn new() -> Self;
+
+    /// 指定内存分配器
+    #[inline]
+    #[unstable(feature = "allocator_api", issue = "32838")]
+    fn new_in(alloc: A) -> Self;
 
     fn length(&self) -> usize;
 
@@ -215,6 +224,9 @@ pub trait LinkedListBuilder<T>: Default {
     // public int lastIndexOf(Object o)	查找指定元素最后一次出现的索引。
 }
 
+pub trait LinkedListBuilderIn<T, A: Allocator>: Default {
+}
+
 impl<T> Node<T> {
     fn new(val: T) -> Node<T> {
         Node {
@@ -244,6 +256,18 @@ impl<T> LinkedListBuilder<T> for LinkedList<T> {
             length: 0,
             head: None,
             tail: None,
+            allocator: Global
+        }
+    }
+
+    // #[unstable(feature = "allocator_api", issue = "32838")] A: Allocator = Global
+    #[inline]
+    fn new_in(alloc: A) -> Self {
+        Self {
+            length: 0,
+            head: None,
+            tail: None,
+            allocator: alloc,
         }
     }
 
@@ -265,6 +289,7 @@ impl<T> LinkedListBuilder<T> for LinkedList<T> {
     #[inline]
     fn add_first(&mut self, val: T) -> Result<bool> {
         // 使用入参中的 val 创建一个链表节点Node，为了方便后续直接从 Box 获取到 raw ptr 裸指针， 使用 Box 包装
+        // Box.new_in(v, 自定义 )
         let mut node = Box::new(Node::new(val));
 
         node.next = self.head;
