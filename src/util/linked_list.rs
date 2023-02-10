@@ -1,4 +1,3 @@
-use std::alloc::{Allocator, Global};
 use std::fmt::{Display, Formatter};
 use std::ptr::NonNull;
 use crate::util::Result;
@@ -225,7 +224,7 @@ pub trait LinkedListBuilder<T>: Default {
     // public int lastIndexOf(Object o)	查找指定元素最后一次出现的索引。
 }
 
-pub trait LinkedListBuilderIn<T, A: Allocator>: Default {
+pub trait LinkedListBuilderIn<T>: Default {
 }
 
 impl<T> Node<T> {
