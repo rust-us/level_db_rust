@@ -5,6 +5,8 @@ use crate::util::Result;
 use crate::util::slice::Slice;
 use crate::util::status::{LevelError, Status};
 
+type Link<T> = Option<NonNull<Node<T>>>;
+
 /// 节点
 #[derive(Debug)]
 struct Node<T> {
@@ -12,33 +14,32 @@ struct Node<T> {
     val: T,
     // 前驱
     // 因为会出现一个节点同时存在多个可变引用的情况，因此需要使用裸指针(裸指针的包装 NonNull)
-    prev: Option<NonNull<Node<T>>>,
+    prev: Link<T>,
     // 后继. Option<T> 表示该节点为空，即不存在 prev 前置节点（整个链表为空时）、或不存在next 后置节点（链表的尾节点）
-    next: Option<NonNull<Node<T>>>,
+    next: Link<T>,
 }
 
 /// 双向链表
 #[derive(Debug)]
-#[allow(missing_debug_implementations)]
 pub struct LinkedList<T> {
     // 双向链表的当前长度
     length: usize,
     // 头
-    head: Option<NonNull<Node<T>>>,
+    head: Link<T>,
     // 尾
-    tail: Option<NonNull<Node<T>>>,
-    // 内存分配器
-    allocator: Allocator
+    tail: Link<T>,
+    // // 内存分配器
+    // allocator: Allocator
 }
 
-pub trait LinkedListBuilder<T, #[unstable(feature = "allocator_api", issue = "32838")] A: Allocator = Global>: Default {
+pub trait LinkedListBuilder<T>: Default {
     /// 构造函数, 构造空的双向链表
     fn new() -> Self;
 
-    /// 指定内存分配器
-    #[inline]
-    #[unstable(feature = "allocator_api", issue = "32838")]
-    fn new_in(alloc: A) -> Self;
+    // /// 指定内存分配器
+    // #[inline]
+    // #[unstable(feature = "allocator_api", issue = "32838")]
+    // fn new_in(alloc: A) -> Self;
 
     fn length(&self) -> usize;
 
@@ -256,20 +257,19 @@ impl<T> LinkedListBuilder<T> for LinkedList<T> {
             length: 0,
             head: None,
             tail: None,
-            allocator: Global
+            // allocator: Global
         }
     }
 
-    // #[unstable(feature = "allocator_api", issue = "32838")] A: Allocator = Global
-    #[inline]
-    fn new_in(alloc: A) -> Self {
-        Self {
-            length: 0,
-            head: None,
-            tail: None,
-            allocator: alloc,
-        }
-    }
+    // #[inline]
+    // fn new_in(alloc: A) -> Self {
+    //     Self {
+    //         length: 0,
+    //         head: None,
+    //         tail: None,
+    //         allocator: alloc,
+    //     }
+    // }
 
     #[inline]
     fn length(&self) -> usize {
