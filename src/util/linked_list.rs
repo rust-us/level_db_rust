@@ -208,6 +208,7 @@ pub trait LinkedListBuilder<T>: Default {
     // public boolean offerFirst(E e)	头部插入元素，返回是否成功，成功为 true，失败为 false。
     // public boolean offerLast(E e)	尾部插入元素，返回是否成功，成功为 true，失败为 false。
 
+
     // public E poll()	删除并返回第一个元素。
     // public E pollFirst()    检索并删除此列表的第一个元素，如果此列表为空，则返回 null 。
     // public E	pollLast()  检索并删除此列表的最后一个元素，如果此列表为空，则返回 null 。
