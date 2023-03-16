@@ -60,7 +60,7 @@ LSM tree 是许多 KV型或日志型数据库所依赖的核心实现，例如Bi
 | Histgram                      | kazeseiriou     | 100% |
 | loging                        |                 |      |
 | MutexLock                     | kazeseiriou     | 100% |
-| Random                        | colagy          |      |
+| Random                        | colagy          | 100% |
 | Status                        | fengyang        | 100% |
 | Slice                         | wangboo         | 100% |
 
@@ -74,8 +74,8 @@ LSM tree 是许多 KV型或日志型数据库所依赖的核心实现，例如Bi
 | util.Logger                                                                      | peach                |     |
 | table.Block, BlockBuilder, FilterBlockBuilder                                    | colagy               |     |
 | FilterBlock, FilterBlockReader                                                   | colagy               |     |
-| table.format(Footer, BlockHandle)                                                | 半支烟         | 20% |
-| db.dbformat(InternalKeyComparator, InternalFilterPolicy, LookupKey, InternalKey) | 半支烟         | 20% |
+| table.format(Footer, BlockHandle)                                                | fengyang、半支烟         | 20% |
+| db.dbformat(InternalKeyComparator, InternalFilterPolicy, LookupKey, InternalKey) | fengyang、半支烟         | 20% |
 | db.SkipList                                                                      | wangboo              | 80% |
 | table.Iterator(DBIter, MergingIterator, TwoLevelIterator...)                     | kazeseiriou          |     |
 | IteratorWrapper                                                                  | kazeseiriou          |     |
@@ -86,7 +86,7 @@ LSM tree 是许多 KV型或日志型数据库所依赖的核心实现，例如Bi
 | db.log_format                                                                    | wangboo              |     |
 | db.LogReader                                                                     | wangboo              | 90% |
 | db.LogWriter                                                                     | wangboo              | 90% |
-| db.TableCache                                                                    | colagy               |     |
+| db.TableCache                                                                    | colagy               | 10% |
 | LinkedList                                                                       | fengyang             | 60% |
 | db.VersionEdit(Tag, VersionEdit, FileMetaData)                                   | fengyang             | 10% |
 | db.VersionSet(Version, LevelFileNumIterator, SaverState)                         | fengyang             | 10% |
