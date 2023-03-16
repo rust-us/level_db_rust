@@ -91,6 +91,7 @@ LSM tree 是许多 KV型或日志型数据库所依赖的核心实现，例如Bi
 | db.VersionEdit(Tag, VersionEdit, FileMetaData)                                   | fengyang             | 10% |
 | db.VersionSet(Version, LevelFileNumIterator, SaverState)                         | fengyang             | 10% |
 | WriteBatch                                                                       | tzcyujunyong         |     |
+| <website>                                                                        | 半支烟                  |     |
 
 #### 1.1.0 计划
 * 完成gitee ->  github  (同步)  主仓库gitee
