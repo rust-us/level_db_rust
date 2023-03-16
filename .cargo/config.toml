@@ -1,0 +1,5 @@
+[target.dev]
+rustc-cfg=['DEBUG="true"']
+
+[target.release]
+rustc-cfg=['DEBUG="false"']

@@ -1,5 +1,7 @@
 use std::fmt::format;
 use std::io::Write;
+
+#[cfg(DEBUG = "true")]
 #[macro_export]
 macro_rules! debug {
     () => {
@@ -13,5 +15,14 @@ macro_rules! debug {
             std::io::stdout().write(format!($($arg)*).as_bytes());
             debug!();
         }
+    }};
+}
+
+#[cfg(not(DEBUG = "true"))]
+#[macro_export]
+macro_rules! debug {
+    () => {
+    };
+    ($($arg:tt)*) => {{
     }};
 }
