@@ -152,24 +152,20 @@ impl PartialEq for Slice {
 impl PartialOrd for Slice {
     /// 判断两个 slice 的大小关系
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match self.size().partial_cmp(&other.size()) {
-            Some(Ordering::Equal) => {
-                let cmp = unsafe {
-                    memcmp(
-                        self.data.as_ptr() as *const i8,
-                        other.data.as_ptr() as *const i8,
-                        self.size(),
-                    )
-                };
-                if cmp == 0 {
-                    Some(Ordering::Equal)
-                } else if cmp > 0 {
-                    Some(Ordering::Greater)
-                } else {
-                    Some(Ordering::Less)
-                }
-            }
-            op => op
+        let min = self.size().min(other.size());
+        let cmp = unsafe {
+            memcmp(
+                self.data.as_ptr() as *const i8,
+                other.data.as_ptr() as *const i8,
+                min,
+            )
+        };
+        if cmp == 0 {
+            self.size().partial_cmp(&other.size())
+        } else if cmp > 0 {
+            Some(Ordering::Greater)
+        } else {
+            Some(Ordering::Less)
         }
     }
 }

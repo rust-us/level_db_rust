@@ -88,7 +88,7 @@ mod test {
     #[test]
     fn test_merge2() {
         let mut a0 = Slice::from("123");
-        let mut a2 = Slice::from("456");
+        let a2 = Slice::from("456");
         a0.merge(a2, None);
         assert_eq!(String::from("123456"), String::from(a0));
     }

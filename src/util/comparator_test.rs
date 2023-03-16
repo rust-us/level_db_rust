@@ -20,12 +20,9 @@ mod test {
         let option_val = comp.compare(&Slice::from("a"), &Slice::from("ab"));
         assert_eq!(option_val.unwrap(), Ordering::Less);
 
-        // // todo  Slice 存在 bug 未修复
-        // let comp = BytewiseComparatorImpl::default();
-        // let option_val = comp.compare(&Slice::from("b"), &Slice::from("abcd"));
-        // assert_eq!(option_val.unwrap(), Ordering::Greater);
+        let option_val = comp.compare(&Slice::from("b"), &Slice::from("abcd"));
+        assert_eq!(option_val.unwrap(), Ordering::Greater);
 
-        let comp = BytewiseComparatorImpl::default();
         let option_val = comp.compare(&Slice::from("abcd"), &Slice::from("abcd"));
         assert_eq!(option_val.unwrap(), Ordering::Equal);
     }
