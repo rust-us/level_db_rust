@@ -4,6 +4,8 @@ use crate::util::Result;
 use crate::util::slice::Slice;
 use crate::util::status::{LevelError, Status};
 
+type Link<T> = Option<NonNull<Node<T>>>;
+
 /// 节点
 #[derive(Debug)]
 struct Node<T> {
@@ -11,9 +13,9 @@ struct Node<T> {
     val: T,
     // 前驱
     // 因为会出现一个节点同时存在多个可变引用的情况，因此需要使用裸指针(裸指针的包装 NonNull)
-    prev: Option<NonNull<Node<T>>>,
+    prev: Link<T>,
     // 后继. Option<T> 表示该节点为空，即不存在 prev 前置节点（整个链表为空时）、或不存在next 后置节点（链表的尾节点）
-    next: Option<NonNull<Node<T>>>,
+    next: Link<T>,
 }
 
 /// 双向链表
@@ -22,14 +24,21 @@ pub struct LinkedList<T> {
     // 双向链表的当前长度
     length: usize,
     // 头
-    head: Option<NonNull<Node<T>>>,
+    head: Link<T>,
     // 尾
-    tail: Option<NonNull<Node<T>>>,
+    tail: Link<T>,
+    // // 内存分配器
+    // allocator: Allocator
 }
 
 pub trait LinkedListBuilder<T>: Default {
     /// 构造函数, 构造空的双向链表
     fn new() -> Self;
+
+    // /// 指定内存分配器
+    // #[inline]
+    // #[unstable(feature = "allocator_api", issue = "32838")]
+    // fn new_in(alloc: A) -> Self;
 
     fn length(&self) -> usize;
 
@@ -118,6 +127,37 @@ pub trait LinkedListBuilder<T>: Default {
     /// ```
     fn add_by_position(&mut self, position: usize, data: T) -> Result<bool>;
 
+    /// 弹出此列表所代表的堆栈中的元素。(将元素从链表中删除，并且返回)
+    /// 等价于  pop_last
+    fn pop(&mut self) -> Option<T>;
+
+    /// Removes the first element from a list and returns it, or `None` if it is empty.
+    fn pop_first(&mut self) -> Option<T>;
+
+    /// Removes the last element from a list and returns it, or `None` if it is empty.
+    fn pop_last(&mut self) -> Option<T>;
+
+    /// 查看和返回第一个元素。不可变引用类型
+    /// 等价于  peek_first
+    /// 仅仅返回元素的引用，而元素的所有权还是在链表中
+    fn peek(&mut self) -> Option<T>;
+
+    // public E element()	返回第一个元素。
+
+    /// 查看和返回第一个元素。可变引用类型
+    /// 返回元素的可变引用类型，使得能够对链表中的节点元素值进行修改，但是不真正获取元素的所有权！
+    fn peek_mut(&mut self) -> Option<T>;
+
+    /// 返回头部元素
+    fn peek_first(&mut self) -> Option<T>;
+
+    /// 返回尾部元素
+    fn peek_last(&mut self) -> Option<T>;
+
+    /// 返回尾部元素
+    /// 返回元素的可变引用类型，使得能够对链表中的节点元素值进行修改，但是不真正获取元素的所有权！
+    fn peek_last_mut(&mut self) -> Option<T>;
+
     /// 删除并返回第一个元素。
     fn remove_first(&mut self) -> Result<Option<&T>>;
 
@@ -126,7 +166,9 @@ pub trait LinkedListBuilder<T>: Default {
 
     /// 删除指定位置的元素并返回。
     fn remove(&mut self, position: usize) -> Result<Option<&T>>;
+
     // public boolean remove(Object o)	删除某一元素，返回是否成功，成功为 true，失败为 false。
+    // public boolean remove(int index)	删除某一位置元素，返回是否成功，成功为 true，失败为 false。
 
     /// 获取列表开头的元素
     fn get_first(&self) -> Result<Option<&T>>;
@@ -170,16 +212,6 @@ pub trait LinkedListBuilder<T>: Default {
     // public E pollFirst()    检索并删除此列表的第一个元素，如果此列表为空，则返回 null 。
     // public E	pollLast()  检索并删除此列表的最后一个元素，如果此列表为空，则返回 null 。
 
-    // public E	pop()  弹出此列表所代表的堆栈中的元素。(将元素从链表中删除，并且返回)
-    // public E	popFirst()
-    // public E	popLast()
-
-    // public E element()	返回第一个元素。
-    // public E peek()	返回第一个元素。不可变引用类型
-    // public E peek_mut()	返回第一个元素。可变引用类型
-    // public E peekFirst()	返回头部元素。
-    // public E peekLast()	返回尾部元素。
-
     // public Iterator descendingIterator()	返回倒序迭代器。
     // public ListIterator listIterator(int index)	返回从指定位置开始到末尾的迭代器。
     // public Object[] toArray()	返回一个由链表元素组成的数组。
@@ -190,6 +222,9 @@ pub trait LinkedListBuilder<T>: Default {
 
     // public int indexOf(Object o)	查找指定元素从前往后第一次出现的索引。
     // public int lastIndexOf(Object o)	查找指定元素最后一次出现的索引。
+}
+
+pub trait LinkedListBuilderIn<T>: Default {
 }
 
 impl<T> Node<T> {
@@ -221,8 +256,19 @@ impl<T> LinkedListBuilder<T> for LinkedList<T> {
             length: 0,
             head: None,
             tail: None,
+            // allocator: Global
         }
     }
+
+    // #[inline]
+    // fn new_in(alloc: A) -> Self {
+    //     Self {
+    //         length: 0,
+    //         head: None,
+    //         tail: None,
+    //         allocator: alloc,
+    //     }
+    // }
 
     #[inline]
     fn length(&self) -> usize {
@@ -242,6 +288,7 @@ impl<T> LinkedListBuilder<T> for LinkedList<T> {
     #[inline]
     fn add_first(&mut self, val: T) -> Result<bool> {
         // 使用入参中的 val 创建一个链表节点Node，为了方便后续直接从 Box 获取到 raw ptr 裸指针， 使用 Box 包装
+        // Box.new_in(v, 自定义 )
         let mut node = Box::new(Node::new(val));
 
         node.next = self.head;
@@ -316,6 +363,38 @@ impl<T> LinkedListBuilder<T> for LinkedList<T> {
         self.length += 1;
 
         Ok(true)
+    }
+
+    fn pop(&mut self) -> Option<T> {
+        self.pop_last()
+    }
+
+    fn pop_first(&mut self) -> Option<T> {
+        todo!()
+    }
+
+    fn pop_last(&mut self) -> Option<T> {
+        todo!()
+    }
+
+    fn peek(&mut self) -> Option<T> {
+        self.peek_first()
+    }
+
+    fn peek_mut(&mut self) -> Option<T> {
+        todo!()
+    }
+
+    fn peek_first(&mut self) -> Option<T> {
+        todo!()
+    }
+
+    fn peek_last(&mut self) -> Option<T> {
+        todo!()
+    }
+
+    fn peek_last_mut(&mut self) -> Option<T> {
+        todo!()
     }
 
     fn remove_first(&mut self) -> Result<Option<&T>> {
