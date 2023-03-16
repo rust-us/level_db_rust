@@ -1,24 +1,22 @@
 use std::fmt::format;
 use std::io::Write;
 
-#[cfg(DEBUG = "true")]
+// #[cfg(feature = "debug-macro")]
+#[cfg(CORE_DEBUG = "true")]
 #[macro_export]
 macro_rules! debug {
     () => {
-        if (crate::util::r#const::DEBUG_ENABLE) {
-            std::io::stdout().write("\n".as_bytes()).unwrap();
-        }
+        std::io::stdout().write("\n".as_bytes()).unwrap();
     };
     ($($arg:tt)*) => {{
         use std::io::Write;
-        if(crate::util::r#const::DEBUG_ENABLE) {
-            std::io::stdout().write(format!($($arg)*).as_bytes());
-            debug!();
-        }
+        std::io::stdout().write(format!($($arg)*).as_bytes());
+        debug!();
     }};
 }
 
-#[cfg(not(DEBUG = "true"))]
+// #[cfg(not(feature = "debug-macro"))]
+#[cfg(not(CORE_DEBUG = "true"))]
 #[macro_export]
 macro_rules! debug {
     () => {

@@ -21,7 +21,14 @@ LSM tree 是许多 KV型或日志型数据库所依赖的核心实现，例如Bi
 
 #### 使用说明
 
-1.  xxxx
+1. 编译参数
+   CORE_DEBUG 默认开启，打印调试信息
+
+在构建正式版本时，用户可以用 RUSTFLAGS 环境变量覆盖以上编译参数。
+eg:
+```bash 
+RUSTFLAGS='--cfg CORE_DEBUG="false"' cargo test db::skip_list_test::test::test_add
+```
 
 #### 参与贡献
 

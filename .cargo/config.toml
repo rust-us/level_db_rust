@@ -1,5 +1,2 @@
-[target.dev]
-rustc-cfg=['DEBUG="true"']
-
-[target.release]
-rustc-cfg=['DEBUG="false"']
+[build]
+rustflags='--cfg CORE_DEBUG="true"'
