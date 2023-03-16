@@ -62,7 +62,6 @@ impl Comparator for BytewiseComparatorImpl {
         }
 
         let shortest_separator: &[u8] = &start_char_vec[0..diff_index+1];
-
         let shortest_separator_val:  String= Slice::from_buf(shortest_separator).into();
         shortest_separator_val
     }

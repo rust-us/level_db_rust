@@ -1,5 +1,5 @@
-use crate::util::crc::{AsCrc, CRC, ToMask};
-use crate::util::slice::Slice;
+
+
 
 #[test]
 fn test_crc() {

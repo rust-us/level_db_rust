@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 use std::ptr::null;
 use crate::traits::filter_policy_trait::FilterPolicy;
 use crate::util::bloom_filter;
@@ -27,6 +28,20 @@ fn test_new() {
     assert_eq!(bloom_filter.from_bits_per_key(), 800);
     assert_eq!(bloom_filter.from_k(), 30);
 }
+=======
+
+
+
+
+#[test]
+fn test_new() {
+    let _bloom_filter = BloomFilterPolicy::new(8);
+    println!("hash:{}", "a");
+    // assert_eq!(bloom_filter, null());
+
+    let _bloom_filter = BloomFilterPolicy::new(800);
+    println!("hash:{}", "a");
+>>>>>>> 7ab46579f8abd8c45c40227dfb601ec7468625eb
 
 // ####################  FilterPolicy test
 #[test]

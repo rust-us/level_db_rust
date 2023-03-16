@@ -1,10 +1,18 @@
 
 mod test {
+<<<<<<< HEAD
     use std::cmp::Ordering;
     use std::io::Write;
     use crate::traits::comparator_trait::Comparator;
     use crate::util::comparator::{BytewiseComparatorImpl};
     use crate::util::slice::Slice;
+=======
+    
+    
+    
+    
+    
+>>>>>>> 7ab46579f8abd8c45c40227dfb601ec7468625eb
 
     // ##################### BytewiseComparatorImpl test
     #[test]

@@ -25,16 +25,21 @@ LSM tree 是许多 KV型或日志型数据库所依赖的核心实现，例如Bi
 
 ## 使用说明
 
-1. xxxx
+1. 编译参数
+   CORE_DEBUG 默认开启，打印调试信息
 
-## 参与贡献
+在构建正式版本时，用户可以用 RUSTFLAGS 环境变量覆盖以上编译参数。
+eg:
+```bash 
+RUSTFLAGS='--cfg CORE_DEBUG="false"' cargo build --release
+```
 
-1. Fork 本仓库
-2. 新建 feat/1.0.0_util_xxx 分支
-3. 提交代码
-4. 新建 Pull Request
+#### 参与贡献
 
-## TODO
+1.  Fork 本仓库
+2.  新建 feat/1.0.0_util_xxx 分支
+3.  提交代码
+4.  新建 Pull Request
 
 [TODO和分工](doc/TODOList.md)
 
@@ -64,8 +69,7 @@ LSM tree 是许多 KV型或日志型数据库所依赖的核心实现，例如Bi
 | Status                        | fengyang        | 100% |
 | Slice                         | wangboo         | 100% |
 
-### 1.1.0
-1.1.0 版本, 完成基础零部件
+### 1.1.0 版本, 完成基础零部件
 
 | 功能模块                                                                             | 完成人                  | 进度  |
 |----------------------------------------------------------------------------------|----------------------|-----|

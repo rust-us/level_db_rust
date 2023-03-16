@@ -1,7 +1,11 @@
 use std::ops::{BitOr, Mul, Shl};
 use crate::traits::filter_policy_trait::{FilterPolicy};
+<<<<<<< HEAD
 use crate::util::hash::{Hash, ToHash};
 use crate::util::r#const::HASH_DEFAULT_SEED;
+=======
+use crate::util::hash::{ToHash};
+>>>>>>> 7ab46579f8abd8c45c40227dfb601ec7468625eb
 use crate::util::slice::Slice;
 
 pub trait FromPolicy {
@@ -81,6 +85,7 @@ impl FilterPolicy for BloomFilterPolicy {
         String::from("leveldb.BuiltinBloomFilter2")
     }
 
+<<<<<<< HEAD
     fn create_filter(&self, keys: Vec<Slice>) -> Slice {
         let n: usize = keys.len();
 
@@ -177,6 +182,17 @@ impl FilterPolicy for InternalFilterPolicy {
     }
 
     fn key_may_match(&self, key: &Slice, bloom_filter: &Slice) -> bool {
+=======
+    fn create_filter(&self, _keys: Slice, _n: u32, _dst: String) -> String {
+        // 根据指定的参数创建过滤器，并返回结果， 结果为dst的原始内容 + append结果。
+        // 参数keys[0,n-1]包含依据用户提供的comparator排序的key列表--可重复，
+        // 并把根据这些key创建的filter追加到 dst中。
+        //
+        todo!()
+    }
+
+    fn key_may_match(_key: &Slice, _filter: &Slice) -> bool {
+>>>>>>> 7ab46579f8abd8c45c40227dfb601ec7468625eb
         todo!()
     }
 }
