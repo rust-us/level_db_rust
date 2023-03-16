@@ -1,7 +1,7 @@
 use crate::db::mem_table::MemTable;
 use crate::db::skip_list::SkipList;
 use crate::util::comparator::{BytewiseComparatorImpl, InternalKeyComparator};
-use crate::util::slice::Slice;
+
 
 pub mod log_writer;
 pub mod log_reader;

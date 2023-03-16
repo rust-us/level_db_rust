@@ -1,15 +1,15 @@
 mod test {
-    use std::collections::HashSet;
-    use std::sync::{Arc, Mutex};
+    
+    
 
-    use rand::Rng;
+    
 
-    use crate::db::DefaultSkipList;
-    use crate::debug;
-    use crate::util::Arena;
-    use crate::util::comparator::BytewiseComparatorImpl;
-    use crate::util::Result;
-    use crate::util::slice::Slice;
+    
+    
+    
+    
+    
+    
 
     #[test]
     fn test_add() -> Result<()> {
@@ -41,7 +41,7 @@ mod test {
         let len = 10;
         let mut rnd = rand::thread_rng();
         let mut set = HashSet::new();
-        for i in 0..10 {
+        for _i in 0..10 {
             let j = rnd.gen_range(0..len);
             let key = format!("key_{}", j);
             set.insert(key.clone());

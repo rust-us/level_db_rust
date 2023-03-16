@@ -1,7 +1,7 @@
 use std::rc::Rc;
 use crate::traits::comparator_trait::ComparatorTrait;
 use crate::traits::DataIterator;
-use crate::util::comparator::InternalKeyComparator;
+
 use crate::util::slice::Slice;
 
 use crate::util::Result;

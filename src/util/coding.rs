@@ -28,7 +28,7 @@ macro_rules! varint {
 pub struct Coding {}
 
 impl CodingTrait for Coding {
-    fn put_fixed32(mut dst: &mut String, value: u32) {
+    fn put_fixed32(dst: &mut String, value: u32) {
         let mut buf: [u8; 4] = [0, 0, 0, 0];
         Self::encode_fixed32(value, &mut buf, 0);
         for b in buf.iter() {
@@ -36,7 +36,7 @@ impl CodingTrait for Coding {
         }
     }
 
-    fn put_fixed64(mut dst: &mut String, value: u64) {
+    fn put_fixed64(dst: &mut String, value: u64) {
         let mut buf: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
         Self::encode_fixed64(value, &mut buf, 0);
         for b in buf.iter() {
@@ -48,7 +48,7 @@ impl CodingTrait for Coding {
 
     varint!(u64,encode_varint64);
 
-    fn put_varint32(mut dst: &mut String, value: u32) {
+    fn put_varint32(dst: &mut String, value: u32) {
         let mut buf: [u8; 4] = [0, 0, 0, 0];
         Self::encode_fixed32(value, &mut buf, 0);
         for b in buf.iter() {
@@ -56,7 +56,7 @@ impl CodingTrait for Coding {
         }
     }
 
-    fn put_varint64(mut dst: &mut String, value: u64) {
+    fn put_varint64(dst: &mut String, value: u64) {
         let mut buf: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
         Self::encode_fixed64(value, &mut buf, 0);
         for b in buf.iter() {
@@ -125,7 +125,7 @@ impl CodingTrait for Coding {
         len
     }
 
-    fn encode_fixed32(mut value: u32, buf: &mut [u8], mut offset: usize) -> usize {
+    fn encode_fixed32(value: u32, buf: &mut [u8], mut offset: usize) -> usize {
         buf[offset] = value as u8;
         offset += 1;
         buf[offset] = (value >> 8) as u8;
@@ -137,7 +137,7 @@ impl CodingTrait for Coding {
         offset
     }
 
-    fn encode_fixed64(mut value: u64, buf: &mut [u8], mut offset: usize) -> usize {
+    fn encode_fixed64(value: u64, buf: &mut [u8], mut offset: usize) -> usize {
         buf[offset] = value as u8;
         offset += 1;
         buf[offset] = (value >> 8) as u8;
@@ -196,7 +196,7 @@ macro_rules! encoding_impl {
             ///     let value: u32 = 65534;
             ///     let offset = value.varint(&mut buf, 0);
             /// ```
-            fn varint(self, buf: &mut [u8], mut offset: usize) -> usize {
+            fn varint(self, buf: &mut [u8], offset: usize) -> usize {
                 Coding::$VAR_NAME (self, buf, offset)
             }
             /// 定长正整数编码
@@ -215,7 +215,7 @@ macro_rules! encoding_impl {
             ///     let value: u32 = 65534;
             ///     let offset = value.fixedint(&mut buf, 0);
             /// ```
-            fn fixedint(self, buf: &mut [u8], mut offset: usize) -> usize {
+            fn fixedint(self, buf: &mut [u8], offset: usize) -> usize {
                 Coding::$FIXED_NAME (self, buf, offset)
             }
         }

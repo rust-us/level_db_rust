@@ -1,6 +1,6 @@
 use std::ops::Mul;
 use crate::traits::filter_policy_trait::{FilterPolicy};
-use crate::util::hash::{Hash, ToHash};
+use crate::util::hash::{ToHash};
 use crate::util::slice::Slice;
 
 pub struct BloomFilterPolicy {
@@ -43,7 +43,7 @@ impl FilterPolicy for BloomFilterPolicy {
         String::from("leveldb.BuiltinBloomFilter2")
     }
 
-    fn create_filter(&self, keys: Slice, n: u32, dst: String) -> String {
+    fn create_filter(&self, _keys: Slice, _n: u32, _dst: String) -> String {
         // 根据指定的参数创建过滤器，并返回结果， 结果为dst的原始内容 + append结果。
         // 参数keys[0,n-1]包含依据用户提供的comparator排序的key列表--可重复，
         // 并把根据这些key创建的filter追加到 dst中。
@@ -51,7 +51,7 @@ impl FilterPolicy for BloomFilterPolicy {
         todo!()
     }
 
-    fn key_may_match(key: &Slice, filter: &Slice) -> bool {
+    fn key_may_match(_key: &Slice, _filter: &Slice) -> bool {
         todo!()
     }
 }
