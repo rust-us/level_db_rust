@@ -1,19 +1,14 @@
-use std::cell::{Cell, RefCell};
-use std::cmp::{max, min, Ordering};
-use std::fmt::format;
+use std::cmp::Ordering;
 use std::mem;
-use std::mem::{ManuallyDrop, size_of};
-use std::ops::{Deref, DerefMut};
-use std::ptr::{NonNull, null_mut};
+use std::mem::size_of;
+use std::ptr::null_mut;
 use std::sync::Arc;
 
 use rand::prelude::*;
 use crate::debug;
 
 use crate::traits::comparator_trait::ComparatorTrait;
-use crate::util::Arena;
 use crate::util::arena::{ArenaAllocLike, ArenaRef};
-use crate::util::comparator::BytewiseComparatorImpl;
 use crate::util::Result;
 use crate::util::slice::Slice;
 use crate::util::status::{LevelError, Status};
@@ -34,7 +29,7 @@ struct Node {
 
 pub struct SkipList<Cmp: ComparatorTrait> {
     /// 最高层数
-    level: usize,
+    height: usize,
     /// 存储数据数量
     num: usize,
     /// 头部指针
@@ -55,7 +50,7 @@ pub struct Iter<'a, Cmp: ComparatorTrait> {
 impl<Cmp: ComparatorTrait> SkipList<Cmp> {
     pub fn create(comparator: Arc<Cmp>, arena: ArenaRef) -> Self {
         Self {
-            level: 0,
+            height: 0,
             num: 0,
             head: Node::create_head(arena.clone()),
             tail: Node::create_tail(),
@@ -65,10 +60,16 @@ impl<Cmp: ComparatorTrait> SkipList<Cmp> {
     }
 
     pub fn insert(&mut self, key: Slice) -> Result<()> {
+        // TODO 这里是否可以优化
+        if self.contains(&key) {
+            return Ok(());
+        }
         if self.num == 0 {
             self.insert_ele0(key)
         } else {
-            self.insert_elen(key)
+            unsafe {
+                self.insert_elen(key)
+            }
         }
     }
 
@@ -87,58 +88,55 @@ impl<Cmp: ComparatorTrait> SkipList<Cmp> {
                 (&mut *node).set_node(l, self.tail);
             }
         }
-        self.level = level;
+        self.height = level;
         self.num = 1;
         return Ok(());
     }
 
-    fn insert_elen(&mut self, key: Slice) -> Result<()> {
+    unsafe fn insert_elen(&mut self, key: Slice) -> Result<()> {
         let mut current = self.head;
-        let level = rand_level();
-        debug!("insert {}, level: {}", &key, level);
+        let node_height = rand_level();
+        let node_top_level = node_height - 1;
+        debug!("insert {}, level: {}", &key, node_height);
         let node_ptr = unsafe {
-            Node::create(key, level, self.arena.clone())
+            Node::create(key, node_height, self.arena.clone())
         };
         let node = unsafe { &mut *node_ptr };
         // loop from highest level to 0
-        for l in (0..self.level).rev() {
+        for l in (0..self.height).rev() {
             'inner_loop: loop {
                 let ele_ptr = unsafe { (&*current).get_node(l) };
                 let ele = unsafe { &mut *ele_ptr };
                 if ele.is_tail() {
-                    if l < level {
+                    if l <= node_top_level {
                         // ele is tail node, add node to last
-                        unsafe {
-                            (&mut *current).set_node(l, node_ptr);
-                            node.set_node(l, self.tail);
-                            debug!("bind: {} before: {}, after: <tail>, at level: {}",
+                        (&mut *current).set_node(l, node_ptr);
+                        node.set_node(l, self.tail);
+                        debug!("bind: {} before: {}, after: <tail>, at level: {}",
                                         node.key.as_ref().unwrap(),
                                         (&*current).key.as_ref().unwrap(),
                                         l);
-                        };
                     }
                     break 'inner_loop;
                 } else {
                     match self.cmp.compare(node.key.as_ref().unwrap(), ele.key.as_ref().unwrap()) {
                         Some(Ordering::Less) => {
                             // node higher than current level at ele
-                            if level > l {
-                                unsafe {
-                                    (&mut *current).set_node(l, node_ptr);
-                                    node.set_node(l, ele_ptr);
-                                    if (&*current).is_head() {
-                                        debug!("bind: {} before: <head>, after: {}, at level: {}",
+                            if node_top_level >= l {
+                                (&mut *current).set_node(l, node_ptr);
+                                node.set_node(l, ele_ptr);
+                                if (&*current).is_head() {
+                                    debug!("bind: {} before: <head>, after: {}, at level: {}",
                                         node.key.as_ref().unwrap(),
                                         ele.key.as_ref().unwrap(),
                                         l);
-                                    } else {
-                                        debug!("bind: {} before: {}, after: {}, at level: {}",
+                                } else {
+                                    debug!("bind: {} before: {}, after: {}, at level: {}",
                                         node.key.as_ref().unwrap(),
                                         (&*current).key.as_ref().unwrap(),
                                         ele.key.as_ref().unwrap(),
                                         l);
-                                    }
-                                };
+                                }
                             }
                             break 'inner_loop;
                         }
@@ -157,14 +155,12 @@ impl<Cmp: ComparatorTrait> SkipList<Cmp> {
             }
         }
         // if head level is less than new node, then fix head node height
-        if self.level < level {
-            for l in (self.level()..level).rev() {
-                unsafe {
-                    (&mut *self.head).set_node(l, node_ptr);
-                    node.set_node(l, self.tail);
-                };
+        if self.height < node_height {
+            for l in (self.height()..node_height).rev() {
+                (&mut *self.head).set_node(l, node_ptr);
+                node.set_node(l, self.tail);
             }
-            self.level = level;
+            self.height = node_height;
         }
         self.num += 1;
         Ok(())
@@ -178,7 +174,7 @@ impl<Cmp: ComparatorTrait> SkipList<Cmp> {
         }
         unsafe {
             let mut current = unsafe { &*self.head };
-            for level in (0..self.level).rev() {
+            for level in (0..self.height).rev() {
                 'a_loop: loop {
                     let ele_ptr = current.get_node(level);
                     let ele = &*ele_ptr;
@@ -222,8 +218,8 @@ impl<Cmp: ComparatorTrait> SkipList<Cmp> {
     }
 
     #[inline]
-    pub fn level(&self) -> usize {
-        self.level
+    pub fn height(&self) -> usize {
+        self.height
     }
 
     #[inline]
@@ -270,7 +266,7 @@ impl<Cmp: ComparatorTrait> ToString for SkipList<Cmp> {
             }
         }
         tree.push_str("-> [tail]");
-        format!("height: {}, num: {}\n {}", self.level, self.num, tree)
+        format!("height: {}, num: {}\n {}", self.height, self.num, tree)
     }
 }
 

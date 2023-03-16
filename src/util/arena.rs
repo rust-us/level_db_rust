@@ -1,11 +1,7 @@
-use std::{ptr, slice};
+use std::slice;
 use std::alloc::{alloc, dealloc, Layout};
-use std::cell::Cell;
-use std::ops::Deref;
 use std::ptr::NonNull;
-use std::rc::Rc;
 use std::sync::{Arc, Mutex};
-use crate::util::mutex_lock::MutexLock;
 
 use crate::util::slice::Slice;
 

@@ -1,16 +1,14 @@
-
 mod test {
     use std::collections::HashSet;
-    use std::io::{stdout, Write};
-    use std::panic;
     use std::sync::{Arc, Mutex};
+
     use rand::Rng;
-    use crate::util::Result;
+
     use crate::db::DefaultSkipList;
-    use crate::db::skip_list::SkipList;
     use crate::debug;
     use crate::util::Arena;
     use crate::util::comparator::BytewiseComparatorImpl;
+    use crate::util::Result;
     use crate::util::slice::Slice;
 
     #[test]
@@ -58,5 +56,4 @@ mod test {
 
         Ok(())
     }
-
 }
