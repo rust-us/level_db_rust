@@ -23,23 +23,20 @@ mod test {
             list.insert(format!("key_{}", i).into()).expect("insert ok");
         }
         assert_eq!(10, list.len(), "expect 10, but actually is: {}", list.len());
-        println!("{}", list.to_string());
+        debug!("{}", list.to_string());
         for i in 0..len {
             let key: Slice = format!("key_{}", i).into();
-            println!("contains key: {}", key);
+            debug!("contains key: {}", key);
             assert!(list.contains(&key), "contains key: {}", key);
         }
         list.iter().for_each(|slice| {
-            println!("slice: {}", slice.as_str())
+            debug!("slice: {}", slice.as_str())
         });
         Ok(())
     }
 
     #[test]
     fn test_rnd_add() -> Result<()> {
-        panic::set_hook(Box::new(|_panic_info| {
-            stdout().flush().unwrap();
-        }));
         let cmp = Arc::new(BytewiseComparatorImpl::default());
         let arena = Arc::new(Mutex::new(Arena::default()));
         let mut list = DefaultSkipList::create(cmp, arena);
