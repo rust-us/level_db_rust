@@ -115,7 +115,7 @@ impl Drop for Arena {
 }
 
 impl ArenaAllocLike for Slice {
-    fn copy_with_arena(&self, mut arena: ArenaRef) -> Self {
+    fn copy_with_arena(&self, arena: ArenaRef) -> Self {
         unsafe {
             let mut lock_guard = arena.lock().unwrap();
             let dst = lock_guard.allocate(self.len());

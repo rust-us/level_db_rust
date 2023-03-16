@@ -273,7 +273,7 @@ impl<Cmp: Comparator> ToString for SkipList<Cmp> {
 
 impl Node {
     #[inline]
-    fn create(src: Slice, level: usize, mut arena: ArenaRef) -> RawNode {
+    fn create(src: Slice, level: usize, arena: ArenaRef) -> RawNode {
         let key = src.copy_with_arena(arena.clone());
         let node = box Self {
             key: Some(key),
@@ -284,7 +284,7 @@ impl Node {
     }
 
     #[inline]
-    fn create_head(mut arena: ArenaRef) -> RawNode {
+    fn create_head(arena: ArenaRef) -> RawNode {
         let node = box Self {
             key: None,
             next_elems: allocate_next_elems(arena),
@@ -352,7 +352,7 @@ fn rand_level() -> usize {
     level
 }
 
-fn allocate_next_elems(mut arena: ArenaRef) -> *mut RawNode {
+fn allocate_next_elems(arena: ArenaRef) -> *mut RawNode {
     // RawNode is a raw ptr
     assert_eq!(size_of::<RawNode>(), size_of::<usize>());
     // allocate next_elems to 8 capacity array
