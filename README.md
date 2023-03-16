@@ -74,8 +74,8 @@ LSM tree 是许多 KV型或日志型数据库所依赖的核心实现，例如Bi
 | util.Logger                                                                      | peach                |     |
 | table.Block, BlockBuilder, FilterBlockBuilder                                    | colagy               |     |
 | FilterBlock, FilterBlockReader                                                   | colagy               |     |
-| table.format(Footer, BlockHandle)                                                | fengyang、半支烟         | 20% |
-| db.dbformat(InternalKeyComparator, InternalFilterPolicy, LookupKey, InternalKey) | fengyang、半支烟         | 20% |
+| table.format(Footer, BlockHandle)                                                | 半支烟         | 20% |
+| db.dbformat(InternalKeyComparator, InternalFilterPolicy, LookupKey, InternalKey) | 半支烟         | 20% |
 | db.SkipList                                                                      | wangboo              | 80% |
 | table.Iterator(DBIter, MergingIterator, TwoLevelIterator...)                     | kazeseiriou          |     |
 | IteratorWrapper                                                                  | kazeseiriou          |     |
