@@ -1,6 +1,8 @@
 use std::mem;
 use std::borrow::Cow;
 use std::cmp::Ordering;
+use std::fmt::{Display, Formatter};
+use std::mem::ManuallyDrop;
 use std::ops::Deref;
 
 #[derive(Debug)]
@@ -38,6 +40,12 @@ impl Slice {
         Self {
             data
         }
+    }
+
+    #[inline]
+    pub unsafe fn from_raw_parts(ptr: *mut u8, len: usize) -> Self {
+        let data = Vec::from_raw_parts(ptr, len, len);
+        Self { data }
     }
 
     /// 获取 slice 长度
@@ -96,6 +104,10 @@ impl Slice {
         }
     }
 
+    pub fn as_str(&self) -> &str {
+        let s = self.as_ref();
+        std::str::from_utf8(s).unwrap()
+    }
 }
 
 impl<'a> Slice {
@@ -195,3 +207,16 @@ impl Deref for Slice {
     }
 }
 
+impl Display for Slice {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        unsafe {
+            let string = ManuallyDrop::new(
+                String::from_raw_parts(
+                    self.as_ptr() as *mut u8,
+                    self.data.len(),
+                    self.data.capacity())
+            );
+            f.write_str(string.as_str())
+        }
+    }
+}

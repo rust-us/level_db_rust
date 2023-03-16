@@ -34,6 +34,7 @@ mod hash_test;
 mod mutex_lock;
 mod mutex_lock_test;
 pub mod options;
+pub mod debug;
 
 /// 定义别名
 pub type Result<T> = result::Result<T, Status>;
