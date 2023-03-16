@@ -1,5 +1,6 @@
 use std::fmt::{Display, Formatter};
 use std::io;
+use std::ops::Deref;
 use crate::util::r#const::COLON_WHITE_SPACE;
 use crate::util::slice::Slice;
 use crate::util::status::LevelError::{KCorruption, KIOError, KInvalidArgument, KNotSupported, KNotFound, KOk, KBadRecord, KRepeatedRecord};
@@ -14,26 +15,49 @@ pub struct Status {
 }
 
 impl Default for Status {
+    #[inline]
     fn default() -> Self {
         LevelError::ok()
     }
 }
 
 impl Status {
-    ///
+    /// 封装 LevelError 和 错误描述，得到 Status
     ///
     /// # Arguments
     ///
-    /// * `err`:
-    /// * `slice`:
+    /// * `err`:  LevelError 错误码
+    /// * `str`:  错误描述
     ///
     /// returns: Status
     ///
     /// # Examples
     ///
     /// ```
+    /// Status::wrapper_str(LevelError::KInvalidArgument, "IndexOutOfRange");
+    /// ```
+    #[inline]
+    pub fn wrapper_str(err: LevelError, mut str: &str) -> Status {
+        Status::wrapper(err, str.into())
+    }
+
+    /// 封装 LevelError 和 错误描述，得到 Status
+    ///
+    /// # Arguments
+    ///
+    /// * `err`:  LevelError 错误码
+    /// * `slice`:  错误描述
+    ///
+    /// returns: Status
+    ///
+    /// # Examples
     ///
     /// ```
+    /// Status::wrapper(LevelError::KCorruption, "bad record, crc check failed".into());
+    ///
+    /// Status::wrapper(LevelError::KInvalidArgument, "IndexOutOfRange".into());
+    /// ```
+    #[inline]
     pub fn wrapper(err: LevelError, mut slice: Slice) -> Status {
         if err.is_ok() {
             slice = Slice::default();
@@ -186,45 +210,27 @@ pub enum LevelError {
 
 impl LevelError {
     pub fn is_ok(&self) -> bool {
-        match self {
-            KOk => true,
-            _ => false
-        }
+        matches!(*self, KOk)
     }
 
     pub fn is_not_found(&self) -> bool {
-        match self {
-            KNotFound => true,
-            _ => false
-        }
+        matches!(*self, KNotFound)
     }
 
     pub fn is_corruption(&self) -> bool {
-        match self {
-            KCorruption => true,
-            _ => false
-        }
+        matches!(*self, KCorruption)
     }
 
     pub fn is_io_error(&self) -> bool {
-        match self {
-            KIOError => true,
-            _ => false
-        }
+        matches!(*self, KIOError)
     }
 
     pub fn is_not_supported_error(&self) -> bool {
-        match self {
-            KNotSupported => true,
-            _ => false
-        }
+        matches!(*self, KNotSupported)
     }
 
     pub fn is_invalid_argument(&self) -> bool {
-        match self {
-            KInvalidArgument => true,
-            _ => false
-        }
+        matches!(*self, KInvalidArgument)
     }
 
     pub fn is_repeated_record(&self) -> bool {
@@ -319,9 +325,25 @@ impl LevelError {
             msg
         }
     }
+
+    pub fn get_value(&self) -> i32 {
+        let le = match self {
+            KOk => 0,
+            KNotFound => 1,
+            KCorruption => 2,
+            KNotSupported => 3,
+            KInvalidArgument => 4,
+            KIOError => 5,
+            KBadRecord => 6,
+            KRepeatedRecord => 7
+        };
+
+        le
+    }
 }
 
 impl Default for LevelError {
+    #[inline]
     fn default() -> LevelError {
         KOk
     }
@@ -344,6 +366,7 @@ impl TryFrom<i32> for LevelError {
     ///        let rs: LevelError = LevelError::try_from(3)?;
     ///         assert!(&rs.is_not_supported_error());
     /// ```
+    #[inline]
     fn try_from(value: i32) -> Result<Self, Self::Error> {
         match value {
             0 => Ok(KOk),
@@ -367,6 +390,7 @@ impl From<io::Error> for Status {
 }
 
 impl Display for LevelError {
+    #[inline]
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
         let mut print = String::new();
 
@@ -385,21 +409,3 @@ impl Display for LevelError {
         write!(f, "{}", print)
     }
 }
-
-// impl Deref for LevelError {
-//     type Target = i32;
-//
-//     /// StatusTrait 解引用到 i32
-//     fn deref(&self) -> &Self::Target {
-//         let le = match self {
-//             KOk => 0,
-//             KNotFound(_) => 1,
-//             KCorruption(_) => 2,
-//             KNotSupported(_) => 3,
-//             KInvalidArgument(_) => 4,
-//             KIOError(_) => 5,
-//         };
-//
-//         &*le
-//     }
-// }

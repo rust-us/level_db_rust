@@ -1,5 +1,5 @@
 use crate::db::db::Snapshot;
-use crate::traits::comparator_trait::ComparatorTrait;
+use crate::traits::comparator_trait::Comparator;
 use crate::util::comparator::BytewiseComparatorImpl;
 
 pub enum CompressionType {
@@ -22,7 +22,7 @@ pub struct Options {
     /// REQUIRES: The client must ensure that the comparator supplied
     /// here has the same name and orders keys *exactly* the same as the
     /// comparator provided to previous open calls on the same DB.
-    pub cmp: Box<dyn ComparatorTrait>,
+    pub cmp: Box<dyn Comparator>,
     /// If true, the database will be created if it is missing.
     pub create_if_missing: bool,
     /// If true, an error is raised if the database already exists.
@@ -97,7 +97,7 @@ pub struct Options {
     /// NewBloomFilterPolicy() here.
     pub filter_policy: Option<FilterPolicy>,
 }
- /// Options that control read operations
+/// Options that control read operations
 pub struct ReadOptions {
     /// If true, all data read from underlying storage will be
     /// verified against corresponding checksums.

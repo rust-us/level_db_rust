@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use crate::util::slice::Slice;
 
 /// 比较器
-pub trait ComparatorTrait {
+pub trait Comparator {
 
     ///  Slice 的大小比较, 按字典逐字节序进行比较
     ///

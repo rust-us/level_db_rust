@@ -6,8 +6,8 @@ use std::sync::Arc;
 
 use rand::prelude::*;
 use crate::debug;
+use crate::traits::comparator_trait::Comparator;
 
-use crate::traits::comparator_trait::ComparatorTrait;
 use crate::util::arena::{ArenaAllocLike, ArenaRef};
 use crate::util::Result;
 use crate::util::slice::Slice;
@@ -27,7 +27,7 @@ struct Node {
     level: usize,
 }
 
-pub struct SkipList<Cmp: ComparatorTrait> {
+pub struct SkipList<Cmp: Comparator> {
     /// 最高层数
     height: usize,
     /// 存储数据数量
@@ -42,12 +42,12 @@ pub struct SkipList<Cmp: ComparatorTrait> {
     arena: ArenaRef,
 }
 
-pub struct Iter<'a, Cmp: ComparatorTrait> {
+pub struct Iter<'a, Cmp: Comparator> {
     list: &'a SkipList<Cmp>,
     node: RawNode,
 }
 
-impl<Cmp: ComparatorTrait> SkipList<Cmp> {
+impl<Cmp: Comparator> SkipList<Cmp> {
     pub fn create(comparator: Arc<Cmp>, arena: ArenaRef) -> Self {
         Self {
             height: 0,
@@ -243,7 +243,7 @@ impl<Cmp: ComparatorTrait> SkipList<Cmp> {
     }
 }
 
-impl<Cmp: ComparatorTrait> ToString for SkipList<Cmp> {
+impl<Cmp: Comparator> ToString for SkipList<Cmp> {
     fn to_string(&self) -> String {
         let mut tree = String::with_capacity(1024);
         // calculate each item width
@@ -375,7 +375,7 @@ fn min_max(a: usize, b: usize) -> (usize, usize) {
 }
 
 // 'b lifetime is bigger than 'a
-impl<'a, Cmp: ComparatorTrait> Iter<'a, Cmp> {
+impl<'a, Cmp: Comparator> Iter<'a, Cmp> {
     fn create(list: &'a SkipList<Cmp>) -> Self {
         Self {
             list,
@@ -384,7 +384,7 @@ impl<'a, Cmp: ComparatorTrait> Iter<'a, Cmp> {
     }
 }
 
-impl<'a, Cmp: ComparatorTrait> Iterator for Iter<'a, Cmp> {
+impl<'a, Cmp: Comparator> Iterator for Iter<'a, Cmp> {
     type Item = &'a Slice;
 
     #[inline]

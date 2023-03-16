@@ -6,10 +6,8 @@ use crate::util::slice::Slice;
 macro_rules! varint {
     ($TYPE: ty, $NAME: ident, $SNAME: expr) => {
          fn $NAME(mut value: $TYPE, buf: &mut [u8], mut offset: usize) -> usize {
-            const B: $ TYPE = 128;
-
-            while value >= B {
-                buf[offset] = (value | B) as u8;
+            while value >= 128 {
+                buf[offset] = (value | 128) as u8;
                 offset += 1;
                 value >>= 7;
             }
@@ -17,58 +15,77 @@ macro_rules! varint {
 
             offset
         }
-        };
+    };
 
-        ($TYPE: ty, $NAME: ident) => {
-            varint!( $TYPE, $NAME, stringify!($NAME));
-        }
-
+    ($TYPE: ty, $NAME: ident) => {
+        varint!( $TYPE, $NAME, stringify!($NAME));
+    }
 }
 
 pub struct Coding {}
 
 impl CodingTrait for Coding {
-    fn put_fixed32(mut dst: &mut String, value: u32) {
+    fn put_fixed32(dst: &mut [u8], mut offset: usize, value: u32) -> usize {
         let mut buf: [u8; 4] = [0, 0, 0, 0];
         Self::encode_fixed32(value, &mut buf, 0);
-        for b in buf.iter() {
-            dst.push(char::from(*b));
-        }
+        dst[offset] = buf[0];
+        offset += 1;
+        dst[offset] = buf[1];
+        offset += 1;
+        dst[offset] = buf[2];
+        offset += 1;
+        dst[offset] = buf[3];
+        offset
     }
 
-    fn put_fixed64(mut dst: &mut String, value: u64) {
+    fn put_fixed64(dst: &mut [u8], mut offset: usize, value: u64) -> usize {
         let mut buf: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
         Self::encode_fixed64(value, &mut buf, 0);
-        for b in buf.iter() {
-            dst.push(char::from(*b));
-        }
+        dst[offset] = buf[0];
+        offset += 1;
+        dst[offset] = buf[1];
+        offset += 1;
+        dst[offset] = buf[2];
+        offset += 1;
+        dst[offset] = buf[3];
+        offset += 1;
+        dst[offset] = buf[4];
+        offset += 1;
+        dst[offset] = buf[5];
+        offset += 1;
+        dst[offset] = buf[6];
+        offset += 1;
+        dst[offset] = buf[7];
+        offset
     }
 
     varint!(u32,encode_varint32);
 
     varint!(u64,encode_varint64);
 
-    fn put_varint32(mut dst: &mut String, value: u32) {
+    fn put_varint32(dst: &mut [u8], mut offset: usize, value: u32) -> usize {
         let mut buf: [u8; 4] = [0, 0, 0, 0];
-        Self::encode_fixed32(value, &mut buf, 0);
-        for b in buf.iter() {
-            dst.push(char::from(*b));
+        let var_offset = Self::encode_varint32(value, &mut buf, 0);
+        for i in 0..var_offset {
+            dst[offset] = buf[i];
+            offset += 1;
         }
+        offset
     }
 
-    fn put_varint64(mut dst: &mut String, value: u64) {
+    fn put_varint64(dst: &mut [u8], mut offset: usize, value: u64) -> usize {
         let mut buf: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
-        Self::encode_fixed64(value, &mut buf, 0);
-        for b in buf.iter() {
-            dst.push(char::from(*b));
+        let var_offset = Self::encode_varint64(value, &mut buf, 0);
+        for i in 0..var_offset {
+            dst[offset] = buf[i];
+            offset += 1;
         }
+        offset
     }
 
-    fn put_length_prefixed_slice(dst: &mut String, value: &mut Slice) {
-        Self::put_varint64(dst, value.size() as u64);
-        for b in value.borrow_data().as_bytes() {
-            dst.push(char::from(*b));
-        }
+    fn put_length_prefixed_slice(dst: &mut [u8], offset: usize, value: Slice) -> usize {
+        Self::put_varint64(dst, offset, value.size() as u64);
+        offset
     }
 
     fn get_varint32(input: &mut Slice) -> u32 {
@@ -125,7 +142,7 @@ impl CodingTrait for Coding {
         len
     }
 
-    fn encode_fixed32(mut value: u32, buf: &mut [u8], mut offset: usize) -> usize {
+    fn encode_fixed32(value: u32, buf: &mut [u8], mut offset: usize) -> usize {
         buf[offset] = value as u8;
         offset += 1;
         buf[offset] = (value >> 8) as u8;
@@ -137,7 +154,7 @@ impl CodingTrait for Coding {
         offset
     }
 
-    fn encode_fixed64(mut value: u64, buf: &mut [u8], mut offset: usize) -> usize {
+    fn encode_fixed64(value: u64, buf: &mut [u8], mut offset: usize) -> usize {
         buf[offset] = value as u8;
         offset += 1;
         buf[offset] = (value >> 8) as u8;
@@ -177,51 +194,19 @@ impl CodingTrait for Coding {
     }
 }
 
-macro_rules! encoding_impl {
+macro_rules! coding_impl {
     {$TRAIT: ident, $TYPE: ty, $VAR_NAME: ident, $FIXED_NAME: ident} => {
         impl $TRAIT for $TYPE {
-            /// 变长正整数编码
-            ///
-            /// # Arguments
-            ///
-            /// * `buf`: 目标数组
-            /// * `offset`: 偏移量
-            ///
-            /// returns: usize : 编码后的偏移量
-            ///
-            /// # Examples
-            ///
-            /// ```
-            ///     let mut buf: [u8; 4] = [0, 0, 0, 0];
-            ///     let value: u32 = 65534;
-            ///     let offset = value.varint(&mut buf, 0);
-            /// ```
-            fn varint(self, buf: &mut [u8], mut offset: usize) -> usize {
+            fn varint(self, buf: &mut [u8], offset: usize) -> usize {
                 Coding::$VAR_NAME (self, buf, offset)
             }
-            /// 定长正整数编码
-            ///
-            /// # Arguments
-            ///
-            /// * `buf`: 目标数组
-            /// * `offset`: 偏移量
-            ///
-            /// returns: usize : 编码后的偏移量
-            ///
-            /// # Examples
-            ///
-            /// ```
-            ///     let mut buf: [u8; 4] = [0, 0, 0, 0];
-            ///     let value: u32 = 65534;
-            ///     let offset = value.fixedint(&mut buf, 0);
-            /// ```
-            fn fixedint(self, buf: &mut [u8], mut offset: usize) -> usize {
+            fn fixedint(self, buf: &mut [u8], offset: usize) -> usize {
                 Coding::$FIXED_NAME (self, buf, offset)
             }
         }
     }
 }
 
-encoding_impl!(Coding32,u32,encode_varint32,encode_fixed32);
+coding_impl!(Coding32,u32,encode_varint32,encode_fixed32);
 
-encoding_impl!(Coding64,u64,encode_varint64,encode_fixed64);
+coding_impl!(Coding64,u64,encode_varint64,encode_fixed64);
