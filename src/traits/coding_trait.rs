@@ -172,7 +172,7 @@ pub trait CodingTrait {
     ///
     /// ```
     /// 从slice的开头解码一个32位的变长整数, 并将slice的索引置于解码后的位置
-    fn varint_length(value: u64) -> i32;
+    fn varint_length(value: usize) -> usize;
     /// 32位定长正整数编码
     ///
     /// # Arguments

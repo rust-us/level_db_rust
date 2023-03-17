@@ -121,6 +121,13 @@ impl<'a> Slice {
     }
 }
 
+impl Clone for Slice {
+    fn clone(&self) -> Self {
+        let data = self.data.clone();
+        Slice::from_vec(data)
+    }
+}
+
 impl From<Slice> for String {
     /// 将 Slice 内数据的所有权移交给 String
     #[inline]

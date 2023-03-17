@@ -1,3 +1,4 @@
+use std::io::Write;
 use crate::traits::coding_trait::CodingTrait;
 use crate::traits::coding_trait::Coding32;
 use crate::traits::coding_trait::Coding64;
@@ -25,11 +26,7 @@ macro_rules! varint {
 pub struct Coding {}
 
 impl CodingTrait for Coding {
-<<<<<<< HEAD
     fn put_fixed32(dst: &mut [u8], mut offset: usize, value: u32) -> usize {
-=======
-    fn put_fixed32(dst: &mut String, value: u32) {
->>>>>>> 7ab46579f8abd8c45c40227dfb601ec7468625eb
         let mut buf: [u8; 4] = [0, 0, 0, 0];
         Self::encode_fixed32(value, &mut buf, 0);
         dst[offset] = buf[0];
@@ -42,11 +39,7 @@ impl CodingTrait for Coding {
         offset
     }
 
-<<<<<<< HEAD
     fn put_fixed64(dst: &mut [u8], mut offset: usize, value: u64) -> usize {
-=======
-    fn put_fixed64(dst: &mut String, value: u64) {
->>>>>>> 7ab46579f8abd8c45c40227dfb601ec7468625eb
         let mut buf: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
         Self::encode_fixed64(value, &mut buf, 0);
         dst[offset] = buf[0];
@@ -71,11 +64,7 @@ impl CodingTrait for Coding {
 
     varint!(u64,encode_varint64);
 
-<<<<<<< HEAD
     fn put_varint32(dst: &mut [u8], mut offset: usize, value: u32) -> usize {
-=======
-    fn put_varint32(dst: &mut String, value: u32) {
->>>>>>> 7ab46579f8abd8c45c40227dfb601ec7468625eb
         let mut buf: [u8; 4] = [0, 0, 0, 0];
         let var_offset = Self::encode_varint32(value, &mut buf, 0);
         for i in 0..var_offset {
@@ -85,11 +74,7 @@ impl CodingTrait for Coding {
         offset
     }
 
-<<<<<<< HEAD
     fn put_varint64(dst: &mut [u8], mut offset: usize, value: u64) -> usize {
-=======
-    fn put_varint64(dst: &mut String, value: u64) {
->>>>>>> 7ab46579f8abd8c45c40227dfb601ec7468625eb
         let mut buf: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
         let var_offset = Self::encode_varint64(value, &mut buf, 0);
         for i in 0..var_offset {
@@ -149,7 +134,7 @@ impl CodingTrait for Coding {
         Slice::from_buf(decode.to_le_bytes().as_mut_slice())
     }
 
-    fn varint_length(mut value: u64) -> i32 {
+    fn varint_length(mut value: usize) -> usize {
         let mut len = 1;
         while value >= 128 {
             value >>= 7;
@@ -159,35 +144,13 @@ impl CodingTrait for Coding {
     }
 
     fn encode_fixed32(value: u32, buf: &mut [u8], mut offset: usize) -> usize {
-        buf[offset] = value as u8;
-        offset += 1;
-        buf[offset] = (value >> 8) as u8;
-        offset += 1;
-        buf[offset] = (value >> 16) as u8;
-        offset += 1;
-        buf[offset] = (value >> 24) as u8;
-        offset += 1;
-        offset
+        (&mut buf[offset..]).write(&value.to_le_bytes()).unwrap();
+        offset+4
     }
 
     fn encode_fixed64(value: u64, buf: &mut [u8], mut offset: usize) -> usize {
-        buf[offset] = value as u8;
-        offset += 1;
-        buf[offset] = (value >> 8) as u8;
-        offset += 1;
-        buf[offset] = (value >> 16) as u8;
-        offset += 1;
-        buf[offset] = (value >> 24) as u8;
-        offset += 1;
-        buf[offset] = (value >> 32) as u8;
-        offset += 1;
-        buf[offset] = (value >> 40) as u8;
-        offset += 1;
-        buf[offset] = (value >> 48) as u8;
-        offset += 1;
-        buf[offset] = (value >> 56) as u8;
-        offset += 1;
-        offset
+        (&mut buf[offset..]).write(&value.to_le_bytes()).unwrap();
+        offset+8
     }
 
 
@@ -213,11 +176,6 @@ impl CodingTrait for Coding {
 macro_rules! coding_impl {
     {$TRAIT: ident, $TYPE: ty, $VAR_NAME: ident, $FIXED_NAME: ident} => {
         impl $TRAIT for $TYPE {
-<<<<<<< HEAD
-            fn varint(self, buf: &mut [u8], offset: usize) -> usize {
-                Coding::$VAR_NAME (self, buf, offset)
-            }
-=======
             /// 变长正整数编码
             ///
             /// # Arguments
@@ -253,7 +211,6 @@ macro_rules! coding_impl {
             ///     let value: u32 = 65534;
             ///     let offset = value.fixedint(&mut buf, 0);
             /// ```
->>>>>>> 7ab46579f8abd8c45c40227dfb601ec7468625eb
             fn fixedint(self, buf: &mut [u8], offset: usize) -> usize {
                 Coding::$FIXED_NAME (self, buf, offset)
             }

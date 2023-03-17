@@ -1,6 +1,7 @@
 use std::fmt::{Display, Formatter};
 use std::io;
 use std::ops::Deref;
+use std::sync::PoisonError;
 use crate::util::r#const::COLON_WHITE_SPACE;
 use crate::util::slice::Slice;
 use crate::util::status::LevelError::{KCorruption, KIOError, KInvalidArgument, KNotSupported, KNotFound, KOk, KBadRecord, KRepeatedRecord};
@@ -386,6 +387,12 @@ impl TryFrom<i32> for LevelError {
 impl From<io::Error> for Status {
     fn from(e: io::Error) -> Self {
         LevelError::io_error(e.to_string().into(), "".into())
+    }
+}
+
+impl <T> From<PoisonError<T>> for Status {
+    fn from(_value: PoisonError<T>) -> Self {
+        Status::wrapper(KCorruption, "PoisonError".into())
     }
 }
 

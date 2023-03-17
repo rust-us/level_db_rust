@@ -1,4 +1,4 @@
-
+use crate::util::Arena;
 
 #[test]
 fn test_memory_usage() {

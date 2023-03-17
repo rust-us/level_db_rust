@@ -2,14 +2,14 @@ use std::cmp::Ordering;
 use std::mem;
 use std::mem::size_of;
 use std::ptr::null_mut;
-use std::sync::Arc;
+use std::sync::{Arc, RwLock};
 
 use rand::prelude::*;
 use crate::debug;
 use crate::traits::comparator_trait::Comparator;
 
-use crate::util::arena::{ArenaAllocLike, ArenaRef};
-use crate::util::Result;
+use crate::util::arena::ArenaRef;
+use crate::util::{Arena, Result};
 use crate::util::slice::Slice;
 use crate::util::status::{LevelError, Status};
 
@@ -77,7 +77,7 @@ impl<Cmp: Comparator> SkipList<Cmp> {
     fn insert_ele0(&mut self, key: Slice) -> Result<()> {
         let level = rand_level();
         debug!("insert {}, level: {}", &key, level);
-        let node = unsafe { Node::create(key, level, self.arena.clone()) };
+        let node = Node::create(key, level, self.arena.clone());
         // head bind node
         // TODO, use macro to expand for-loop
         unsafe {
@@ -98,9 +98,7 @@ impl<Cmp: Comparator> SkipList<Cmp> {
         let node_height = rand_level();
         let node_top_level = node_height - 1;
         debug!("insert {}, level: {}", &key, node_height);
-        let node_ptr = unsafe {
-            Node::create(key, node_height, self.arena.clone())
-        };
+        let node_ptr = Node::create(key, node_height, self.arena.clone());
         let node = unsafe { &mut *node_ptr };
         // loop from highest level to 0
         for l in (0..self.height).rev() {
@@ -166,7 +164,6 @@ impl<Cmp: Comparator> SkipList<Cmp> {
         Ok(())
     }
 
-    #[macro_use]
     pub fn contains(&self, key: &Slice) -> bool {
         debug!("================== begin contains, key: {} ==================", key);
         if self.num == 0 {
@@ -232,6 +229,13 @@ impl<Cmp: Comparator> SkipList<Cmp> {
         Iter::create(&self)
     }
 
+    #[inline]
+    pub fn memory_usage(&self) -> usize {
+        let a = Arc::new(RwLock::new(Arena::default()));
+        a.read().unwrap().memory_usage();
+        self.arena.lock().unwrap().memory_usage()
+    }
+
     fn rnd_level(&self) -> usize {
         let mut level = 1;
         for _ in 1..MAX_LEVEL {
@@ -274,9 +278,8 @@ impl<Cmp: Comparator> ToString for SkipList<Cmp> {
 impl Node {
     #[inline]
     fn create(src: Slice, level: usize, arena: ArenaRef) -> RawNode {
-        let key = src.copy_with_arena(arena.clone());
         let node = box Self {
-            key: Some(key),
+            key: Some(src),
             next_elems: allocate_next_elems(arena),
             level,
         };

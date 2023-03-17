@@ -1,6 +1,6 @@
 
 mod test{
-    
+    use crate::util::histogram::Histogram;
 
     #[test]
     fn test_add() {
