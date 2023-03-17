@@ -1,5 +1,5 @@
 mod test {
-    
+    use std::cmp::Ordering;
     use crate::util::slice::Slice;
 
     #[test]

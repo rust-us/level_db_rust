@@ -1,12 +1,6 @@
 mod test {
-<<<<<<< HEAD
     use crate::traits::coding_trait::{Coding32, Coding64, CodingTrait};
     use crate::util::coding::{Coding};
-=======
-    
-    
-    
->>>>>>> 7ab46579f8abd8c45c40227dfb601ec7468625eb
 
     #[test]
     fn test_put_fixed32() {
@@ -133,7 +127,7 @@ mod test {
 
     #[test]
     fn test_varint_length() {
-        let len = Coding::varint_length( 65535 as u64);
+        let len = Coding::varint_length(65535 as u64 as usize);
         println!("len: {:?}", len);
         assert_eq!(len, 3);
     }
