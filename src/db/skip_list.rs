@@ -7,6 +7,7 @@ use std::sync::{Arc, RwLock};
 use rand::prelude::*;
 use crate::debug;
 use crate::traits::comparator_trait::Comparator;
+use crate::traits::DataIterator;
 
 use crate::util::arena::ArenaRef;
 use crate::util::{Arena, Result};
@@ -40,6 +41,13 @@ pub struct SkipList<Cmp: Comparator> {
     cmp: Arc<Cmp>,
     /// 内存分配器
     arena: ArenaRef,
+}
+
+struct DataIter<Cmp: Comparator> {
+    head: RawNode,
+    tail: RawNode,
+    current: RawNode,
+    cmp: Cmp,
 }
 
 pub struct Iter<'a, Cmp: Comparator> {
@@ -400,5 +408,53 @@ impl<'a, Cmp: Comparator> Iterator for Iter<'a, Cmp> {
             }
             (&*self.node).key.as_ref()
         }
+    }
+}
+
+impl<Cmp: Comparator> DataIterator for DataIter<Cmp> {
+
+    #[inline]
+    fn valid(&self) -> bool {
+        unsafe {
+            (&*self.current).is_head_or_tail()
+        }
+    }
+
+    #[inline]
+    fn seek_to_first(&mut self) {
+        self.current = self.head
+    }
+
+    #[inline]
+    fn seek_to_last(&mut self) {
+        self.current = self.tail
+    }
+
+    fn seek(&mut self, key: &Slice) {
+        todo!()
+    }
+
+    fn next(&mut self) {
+        unsafe {
+            if (&*self.current).is_tail() {
+                return;
+            }
+            self.current = (&*self.current).get_node(0);
+        }
+    }
+
+    fn pre(&mut self) {
+        todo!()
+    }
+
+    fn key(&self) -> &Slice {
+        let mem_key = unsafe {
+            (&*self.current).key.as_ref().unwrap()
+        };
+        mem_key
+    }
+
+    fn value(&self) -> &Slice {
+        todo!()
     }
 }
