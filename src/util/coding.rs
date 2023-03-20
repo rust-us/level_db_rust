@@ -84,8 +84,9 @@ impl CodingTrait for Coding {
         offset
     }
 
-    fn put_length_prefixed_slice(dst: &mut [u8], offset: usize, value: Slice) -> usize {
-        Self::put_varint64(dst, offset, value.size() as u64);
+    // fn put_length_prefixed_slice(dst: &mut [u8], offset: usize, value: &Slice) -> usize {
+    fn put_length_prefixed_slice(dst: &mut [u8], offset: usize, value_len: usize) -> usize {
+        Self::put_varint64(dst, offset, value_len as u64);
         offset
     }
 
