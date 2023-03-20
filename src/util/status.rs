@@ -270,6 +270,10 @@ impl LevelError {
         }
     }
 
+    pub fn corruption_string(msg: &str, msg2: &str) -> Status {
+        LevelError::corruption(Slice::from(msg), Slice::from(msg2))
+    }
+
     pub fn not_supported(mut msg: Slice, msg2: Slice) -> Status {
         let _ = &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
 
