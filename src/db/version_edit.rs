@@ -236,7 +236,7 @@ impl VersionEdit {
             position += Coding::put_varint32(target, position, Tag::kCompactPointer.get_value() as u32);
             position += Coding::put_varint32(target, position, self.compact_pointers_[i].0);
             position += Coding::put_length_prefixed_slice(target, position,
-                                                          self.compact_pointers_[i].1.encode_len());
+                                      self.compact_pointers_[i].1.encode_len());
         }
 
         for i in 0..self.deleted_files_.len() {
@@ -270,30 +270,32 @@ impl VersionEdit {
     /// ```
     ///
     /// ```
-    pub fn decode_from(&mut self, source: &mut Slice) -> Status {
+    pub fn decode_from(&mut self, source: &Slice) -> Status {
         self.clear();
 
+        let version_edit = VersionEdit::new();
+
         let msg : Option<Tag> = Option::None;
-        // while msg == None && Coding::get_varint32(source) != 0_u32 {
-        //     let tag_value = Coding::get_varint32(source);
-        //     let tag = Tag::from_value(tag_value);
-        //
-        //     if tag.is_none() {
-        //         return LevelError::corruption_string("VersionEdit", "unknown tag");
-        //     }
-        //
-        //     // match tag {
-        //     //     Tag::k_comparator => 1,
-        //     //     Tag::kLogNumber => 2,
-        //     //     Tag::kNextFileNumber => 3,
-        //     //     Tag::kLastSequence => 4,
-        //     //     Tag::kCompactPointer => 5,
-        //     //     Tag::kDeletedFile => 6,
-        //     //     Tag::kNewFile => 7,
-        //     //     Tag::kPrevLogNumber => 9,
-        //     //     _ => 0
-        //     // };
-        // }
+        while msg.is_none() && Coding::get_varint32(source) != 0_u32 {
+            let tag_value = Coding::get_varint32(source);
+            let tag = Tag::from_value(tag_value);
+
+            if tag.is_none() {
+                return LevelError::corruption_string("VersionEdit", "unknown tag");
+            }
+
+            // match tag {
+            //     Tag::k_comparator => 1,
+            //     Tag::kLogNumber => 2,
+            //     Tag::kNextFileNumber => 3,
+            //     Tag::kLastSequence => 4,
+            //     Tag::kCompactPointer => 5,
+            //     Tag::kDeletedFile => 6,
+            //     Tag::kNewFile => 7,
+            //     Tag::kPrevLogNumber => 9,
+            //     _ => 0
+            // };
+        }
         todo!()
     }
 

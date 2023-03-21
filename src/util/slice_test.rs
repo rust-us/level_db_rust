@@ -40,7 +40,7 @@ mod test {
 
     #[test]
     fn test_borrow_data() {
-        let mut a0 = Slice::from("123");
+        let a0 = Slice::from("123");
         let borrowed = a0.borrow_data();
         assert_eq!(3, borrowed.len());
         let owned = borrowed.to_owned();

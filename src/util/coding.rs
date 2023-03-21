@@ -90,7 +90,7 @@ impl CodingTrait for Coding {
         offset
     }
 
-    fn get_varint32(input: &mut Slice) -> u32 {
+    fn get_varint32(input: &Slice) -> u32 {
         let cow = input.borrow_data();
         let bytes = cow.as_bytes();
         let mut result = 0_u32;
@@ -110,7 +110,7 @@ impl CodingTrait for Coding {
         result
     }
 
-    fn get_varint64(input: &mut Slice) -> u64 {
+    fn get_varint64(input: &Slice) -> u64 {
         let cow = input.borrow_data();
         let bytes = cow.as_bytes();
         let mut result = 0_u64;
