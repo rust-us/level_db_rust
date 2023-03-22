@@ -84,12 +84,13 @@ impl CodingTrait for Coding {
         offset
     }
 
-    fn put_length_prefixed_slice(dst: &mut [u8], offset: usize, value: Slice) -> usize {
-        Self::put_varint64(dst, offset, value.size() as u64);
+    // fn put_length_prefixed_slice(dst: &mut [u8], offset: usize, value: &Slice) -> usize {
+    fn put_length_prefixed_slice(dst: &mut [u8], offset: usize, value_len: usize) -> usize {
+        Self::put_varint64(dst, offset, value_len as u64);
         offset
     }
 
-    fn get_varint32(input: &mut Slice) -> u32 {
+    fn get_varint32(input: &Slice) -> u32 {
         let cow = input.borrow_data();
         let bytes = cow.as_bytes();
         let mut result = 0_u32;
@@ -109,7 +110,7 @@ impl CodingTrait for Coding {
         result
     }
 
-    fn get_varint64(input: &mut Slice) -> u64 {
+    fn get_varint64(input: &Slice) -> u64 {
         let cow = input.borrow_data();
         let bytes = cow.as_bytes();
         let mut result = 0_u64;
