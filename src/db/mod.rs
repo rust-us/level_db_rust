@@ -23,4 +23,4 @@ mod version_edit_test;
 /// 默认调表
 pub type DefaultSkipList = SkipList<BytewiseComparatorImpl>;
 /// 默认内存表
-pub type DefaultMemTable = MemTable<InternalKeyComparator>;
+pub type DefaultMemTable = MemTable<BytewiseComparatorImpl>;
