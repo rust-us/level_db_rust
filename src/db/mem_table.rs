@@ -9,6 +9,7 @@ use crate::util::arena::ArenaRef;
 use crate::util::slice::Slice;
 use crate::util::{Arena, Result};
 use crate::util::coding::Coding;
+use crate::util::unsafe_slice::UnsafeSlice;
 
 /// 内存表
 pub struct MemTable<Cmp: Comparator> {
@@ -65,9 +66,11 @@ impl <Cmp: Comparator> MemTable<Cmp> {
     }
 
     /// 像内存表中写入或删除一个元素
-    pub fn add(&mut self, seq_no: usize, v_type: ValueType, key: &Slice, value: Slice) -> Result<()> {
-        let key_size = key.size();
-        let value_size = value.size();
+    pub fn add<R: AsRef<[u8]>>(&mut self, seq_no: usize, v_type: ValueType, key: &R, value: &R) -> Result<()> {
+        let key_buf = key.as_ref();
+        let value_buf = value.as_ref();
+        let key_size = key_buf.len();
+        let value_size = value_buf.len();
         let internal_key_size = key_size + 8;
         let encoded_len = Coding::varint_length(key_size)
             + internal_key_size
@@ -79,13 +82,13 @@ impl <Cmp: Comparator> MemTable<Cmp> {
         // write key size
         offset = Coding::encode_varint32(internal_key_size as u32, buf, offset);
         // write key slice
-        offset += (&mut buf[offset..]).write(key.as_ref())?;
+        offset += (&mut buf[offset..]).write(key_buf)?;
         // write seq_no and type
         offset = Coding::encode_fixed64((seq_no << 8 | v_type.get_value()) as u64, buf, offset);
         // write value slice
-        (&mut buf[offset..]).write(value.as_ref())?;
+        (&mut buf[offset..]).write(value_buf)?;
         let slice = Slice::from_buf(buf);
-        self.list.insert(slice)
+        self.list.insert(UnsafeSlice::new_with_arena(buf, self.arena.clone())?)
     }
 
     /// 通过 key 查找结果

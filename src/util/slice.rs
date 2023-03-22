@@ -154,6 +154,13 @@ impl <R: AsRef<str>> From<R> for Slice {
     }
 }
 
+impl AsRef<[u8]> for Slice {
+    #[inline]
+    fn as_ref(&self) -> &[u8] {
+        self.data.as_slice()
+    }
+}
+
 impl PartialEq for Slice {
     /// 判断两个 Slice 是否相同
     #[inline]

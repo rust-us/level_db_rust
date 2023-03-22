@@ -1,5 +1,6 @@
 use std::cmp::Ordering;
 use std::io::Write;
+use std::sync::Arc;
 use crate::db::db_format::ValueType::{KTypeDeletion, KTypeValue};
 use crate::db::file_meta_data::FileMetaData;
 use crate::traits::coding_trait::CodingTrait;
@@ -28,7 +29,7 @@ pub struct InternalKey {
 
 /// InternalKeyComparator
 pub struct InternalKeyComparator {
-    user_comparator_: dyn Comparator
+    user_comparator_: Arc<dyn Comparator>
 }
 
 /// 查找键
@@ -201,8 +202,14 @@ impl InternalKey {
     }
 }
 
+impl Default for InternalKeyComparator {
+    fn default() -> Self {
+        todo!()
+    }
+}
+
 impl InternalKeyComparator {
-    pub fn create(c: Box<dyn Comparator>) -> Box<Self> {
+    pub fn create(_cmp: Box<dyn Comparator>) -> Box<Self> {
         todo!()
     }
 
@@ -223,7 +230,7 @@ impl Comparator for InternalKeyComparator {
     //     todo!()
     // }
 
-    fn compare(&self, _a: &Slice, _b: &Slice) -> Option<Ordering> {
+    fn compare(&self, _a: &[u8], _b: &[u8]) -> Option<Ordering> {
         todo!()
     }
 

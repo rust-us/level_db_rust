@@ -8,15 +8,16 @@ mod test {
     use crate::util::comparator::BytewiseComparatorImpl;
     use crate::util::Result;
     use crate::util::slice::Slice;
+    use crate::util::unsafe_slice::TryIntoUnsafeSlice;
 
     #[test]
     fn test_add() -> Result<()> {
         let cmp = Arc::new(BytewiseComparatorImpl::default());
         let arena = Arc::new(Mutex::new(Arena::default()));
-        let mut list = DefaultSkipList::create(cmp, arena);
+        let mut list = DefaultSkipList::create(cmp, arena.clone());
         let len = 10;
         for i in 0..len {
-            list.insert(format!("key_{}", i).into()).expect("insert ok");
+            list.insert(format!("key_{}", i).try_into_unsafe_slice(arena.clone())?).expect("insert ok");
         }
         assert_eq!(10, list.len(), "expect 10, but actually is: {}", list.len());
         debug!("{}", list.to_string());
@@ -35,7 +36,7 @@ mod test {
     fn test_rnd_add() -> Result<()> {
         let cmp = Arc::new(BytewiseComparatorImpl::default());
         let arena = Arc::new(Mutex::new(Arena::default()));
-        let mut list = DefaultSkipList::create(cmp, arena);
+        let mut list = DefaultSkipList::create(cmp, arena.clone());
         let len = 10;
         let mut rnd = rand::thread_rng();
         let mut set = HashSet::new();
@@ -43,12 +44,12 @@ mod test {
             let j = rnd.gen_range(0..len);
             let key = format!("key_{}", j);
             set.insert(key.clone());
-            list.insert(key.into())?;
+            list.insert(key.try_into_unsafe_slice(arena.clone())?)?;
             debug!("skiplist: {}", list.to_string());
         }
         assert_eq!(set.len(), list.len(), "list length must eq: {}", list.len());
         set.iter().for_each(|key| {
-            let c = list.contains(&key.clone().into());
+            let c = list.contains(&key);
             assert!(c, "must contains key: {}", key)
         });
 
