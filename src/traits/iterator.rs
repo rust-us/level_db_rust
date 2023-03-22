@@ -1,4 +1,5 @@
 use crate::util::slice::Slice;
+use crate::util::unsafe_slice::UnsafeSlice;
 
 pub trait DataIterator {
     /// 检查当前位置是否有效
@@ -92,7 +93,7 @@ pub trait DataIterator {
     /// ```
     ///
     /// ```
-    fn key(&self) -> &Slice;
+    fn key(&self) -> UnsafeSlice;
     /// 获取value值
     ///
     /// # Arguments
@@ -105,6 +106,6 @@ pub trait DataIterator {
     /// ```
     ///
     /// ```
-    fn value(&self) -> &Slice;
+    fn value(&self) -> UnsafeSlice;
 
 }

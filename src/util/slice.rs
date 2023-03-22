@@ -1,6 +1,8 @@
 use std::mem;
 use std::borrow::Cow;
 use std::cmp::Ordering;
+use std::fmt::{Display, Formatter};
+use std::mem::ManuallyDrop;
 use std::ops::Deref;
 
 #[derive(Debug)]
@@ -23,16 +25,8 @@ impl Default for Slice {
     }
 }
 
-impl Clone for Slice {
-    fn clone(&self) -> Self {
-        let data = self.data.clone();
-        Self {
-            data
-        }
-    }
-}
-
 impl Slice {
+
     /// 从 &mut [u8] 转到 Slice, 这里存在内存拷贝开销
     #[inline]
     pub fn from_buf(buf: &[u8]) -> Self {
@@ -46,6 +40,12 @@ impl Slice {
         Self {
             data
         }
+    }
+
+    #[inline]
+    pub unsafe fn from_raw_parts(ptr: *mut u8, len: usize) -> Self {
+        let data = Vec::from_raw_parts(ptr, len, len);
+        Self { data }
     }
 
     /// 获取 slice 长度
@@ -103,16 +103,28 @@ impl Slice {
             }
         }
     }
+
+    pub fn as_str(&self) -> &str {
+        let s = self.as_ref();
+        std::str::from_utf8(s).unwrap()
+    }
 }
 
 impl<'a> Slice {
     /// 借取 Slice 中的数据, 调用方只拥有读权限
-    pub fn borrow_data(&mut self) -> Cow<'a, String> {
+    pub fn borrow_data(&self) -> Cow<'a, String> {
         unsafe {
             // String & Vec<u8> has the same layout
             let s: &String = mem::transmute(&self.data);
             Cow::Borrowed(s)
         }
+    }
+}
+
+impl Clone for Slice {
+    fn clone(&self) -> Self {
+        let data = self.data.clone();
+        Slice::from_vec(data)
     }
 }
 
@@ -143,12 +155,19 @@ impl From<Slice> for Vec<u8> {
     }
 }
 
-impl<R: AsRef<str>> From<R> for Slice {
+impl <R: AsRef<str>> From<R> for Slice {
     #[inline]
     fn from(r: R) -> Self {
         Self {
             data: Vec::from(r.as_ref())
         }
+    }
+}
+
+impl AsRef<[u8]> for Slice {
+    #[inline]
+    fn as_ref(&self) -> &[u8] {
+        self.data.as_slice()
     }
 }
 
@@ -169,24 +188,20 @@ impl PartialEq for Slice {
 impl PartialOrd for Slice {
     /// 判断两个 slice 的大小关系
     fn partial_cmp(&self, other: &Self) -> Option<Ordering> {
-        match self.size().partial_cmp(&other.size()) {
-            Some(Ordering::Equal) => {
-                let cmp = unsafe {
-                    memcmp(
-                        self.data.as_ptr() as *const i8,
-                        other.data.as_ptr() as *const i8,
-                        self.size(),
-                    )
-                };
-                if cmp == 0 {
-                    Some(Ordering::Equal)
-                } else if cmp > 0 {
-                    Some(Ordering::Greater)
-                } else {
-                    Some(Ordering::Less)
-                }
-            }
-            op => op
+        let min = self.size().min(other.size());
+        let cmp = unsafe {
+            memcmp(
+                self.data.as_ptr() as *const i8,
+                other.data.as_ptr() as *const i8,
+                min,
+            )
+        };
+        if cmp == 0 {
+            self.size().partial_cmp(&other.size())
+        } else if cmp > 0 {
+            Some(Ordering::Greater)
+        } else {
+            Some(Ordering::Less)
         }
     }
 }
@@ -212,3 +227,16 @@ impl Deref for Slice {
     }
 }
 
+impl Display for Slice {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        unsafe {
+            let string = ManuallyDrop::new(
+                String::from_raw_parts(
+                    self.as_ptr() as *mut u8,
+                    self.data.len(),
+                    self.data.capacity())
+            );
+            f.write_str(string.as_str())
+        }
+    }
+}

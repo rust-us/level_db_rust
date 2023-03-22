@@ -1,5 +1,9 @@
 #![feature(box_syntax)]
 #![feature(label_break_value)]
+#![feature(let_else)]
+#![feature(generic_associated_types)]
+
+extern crate core;
 
 mod db;
 mod table;

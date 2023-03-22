@@ -41,7 +41,7 @@ pub struct VersionSet {
     dbname_: Slice,
     options_: Options,
     table_cache_: TableCache,
-    icmp_: Box<InternalKeyComparator>,
+    icmp_: InternalKeyComparator,
     next_file_number_: u64,
     manifest_file_number_: u64,
     last_sequence_: u64,
@@ -100,7 +100,7 @@ struct GetStats {
 
 // ,cc line 163
 struct LevelFileNumIterator {
-    icmp_: Rc<InternalKeyComparator>,
+    icmp_: InternalKeyComparator,
     flist_: Vec<FileMetaData>,
     index_: u32,
 
@@ -328,7 +328,7 @@ impl VersionSet {
     /// ```
     ///
     /// ```
-    fn find_file(icmp: &InternalKeyComparator, files:&Vec<FileMetaData>, key:&Slice) -> u32 {
+    fn find_file(icmp: InternalKeyComparator, files:&Vec<FileMetaData>, key:&Slice) -> u32 {
         todo!()
     }
 
@@ -358,7 +358,7 @@ impl VersionSet {
     /// ```
     ///
     /// ```
-    fn some_file_overlaps_range(icmp: &InternalKeyComparator, disjoint_sorted_files:bool,
+    fn some_file_overlaps_range(icmp: InternalKeyComparator, disjoint_sorted_files:bool,
                                 files:&Vec<FileMetaData>, smallest_user_key:&Slice,largest_user_key:&Slice) -> bool {
         todo!()
     }

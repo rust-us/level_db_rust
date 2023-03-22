@@ -1,3 +1,4 @@
+use std::io::Write;
 use crate::traits::coding_trait::CodingTrait;
 use crate::traits::coding_trait::Coding32;
 use crate::traits::coding_trait::Coding64;
@@ -83,12 +84,13 @@ impl CodingTrait for Coding {
         offset
     }
 
-    fn put_length_prefixed_slice(dst: &mut [u8], offset: usize, value: Slice) -> usize {
-        Self::put_varint64(dst, offset, value.size() as u64);
+    // fn put_length_prefixed_slice(dst: &mut [u8], offset: usize, value: &Slice) -> usize {
+    fn put_length_prefixed_slice(dst: &mut [u8], offset: usize, value_len: usize) -> usize {
+        Self::put_varint64(dst, offset, value_len as u64);
         offset
     }
 
-    fn get_varint32(input: &mut Slice) -> u32 {
+    fn get_varint32(input: &Slice) -> u32 {
         let cow = input.borrow_data();
         let bytes = cow.as_bytes();
         let mut result = 0_u32;
@@ -108,7 +110,7 @@ impl CodingTrait for Coding {
         result
     }
 
-    fn get_varint64(input: &mut Slice) -> u64 {
+    fn get_varint64(input: &Slice) -> u64 {
         let cow = input.borrow_data();
         let bytes = cow.as_bytes();
         let mut result = 0_u64;
@@ -133,7 +135,7 @@ impl CodingTrait for Coding {
         Slice::from_buf(decode.to_le_bytes().as_mut_slice())
     }
 
-    fn varint_length(mut value: u64) -> i32 {
+    fn varint_length(mut value: usize) -> usize {
         let mut len = 1;
         while value >= 128 {
             value >>= 7;
@@ -143,35 +145,13 @@ impl CodingTrait for Coding {
     }
 
     fn encode_fixed32(value: u32, buf: &mut [u8], mut offset: usize) -> usize {
-        buf[offset] = value as u8;
-        offset += 1;
-        buf[offset] = (value >> 8) as u8;
-        offset += 1;
-        buf[offset] = (value >> 16) as u8;
-        offset += 1;
-        buf[offset] = (value >> 24) as u8;
-        offset += 1;
-        offset
+        (&mut buf[offset..]).write(&value.to_le_bytes()).unwrap();
+        offset+4
     }
 
     fn encode_fixed64(value: u64, buf: &mut [u8], mut offset: usize) -> usize {
-        buf[offset] = value as u8;
-        offset += 1;
-        buf[offset] = (value >> 8) as u8;
-        offset += 1;
-        buf[offset] = (value >> 16) as u8;
-        offset += 1;
-        buf[offset] = (value >> 24) as u8;
-        offset += 1;
-        buf[offset] = (value >> 32) as u8;
-        offset += 1;
-        buf[offset] = (value >> 40) as u8;
-        offset += 1;
-        buf[offset] = (value >> 48) as u8;
-        offset += 1;
-        buf[offset] = (value >> 56) as u8;
-        offset += 1;
-        offset
+        (&mut buf[offset..]).write(&value.to_le_bytes()).unwrap();
+        offset+8
     }
 
 
@@ -197,9 +177,41 @@ impl CodingTrait for Coding {
 macro_rules! coding_impl {
     {$TRAIT: ident, $TYPE: ty, $VAR_NAME: ident, $FIXED_NAME: ident} => {
         impl $TRAIT for $TYPE {
+            /// 变长正整数编码
+            ///
+            /// # Arguments
+            ///
+            /// * `buf`: 目标数组
+            /// * `offset`: 偏移量
+            ///
+            /// returns: usize : 编码后的偏移量
+            ///
+            /// # Examples
+            ///
+            /// ```
+            ///     let mut buf: [u8; 4] = [0, 0, 0, 0];
+            ///     let value: u32 = 65534;
+            ///     let offset = value.varint(&mut buf, 0);
+            /// ```
             fn varint(self, buf: &mut [u8], offset: usize) -> usize {
                 Coding::$VAR_NAME (self, buf, offset)
             }
+            /// 定长正整数编码
+            ///
+            /// # Arguments
+            ///
+            /// * `buf`: 目标数组
+            /// * `offset`: 偏移量
+            ///
+            /// returns: usize : 编码后的偏移量
+            ///
+            /// # Examples
+            ///
+            /// ```
+            ///     let mut buf: [u8; 4] = [0, 0, 0, 0];
+            ///     let value: u32 = 65534;
+            ///     let offset = value.fixedint(&mut buf, 0);
+            /// ```
             fn fixedint(self, buf: &mut [u8], offset: usize) -> usize {
                 Coding::$FIXED_NAME (self, buf, offset)
             }

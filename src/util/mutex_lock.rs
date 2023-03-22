@@ -1,4 +1,4 @@
-use std::ops::Deref;
+
 use std::sync::{Arc, LockResult, Mutex, MutexGuard, TryLockResult};
 
 pub struct Lock<T> {

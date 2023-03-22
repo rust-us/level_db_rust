@@ -4,9 +4,9 @@ use std::slice as stds;
 
 use crate::traits::coding_trait::CodingTrait;
 use crate::util::coding::Coding;
-use crate::util::crc::AsCrc;
+
 use crate::util::r#const::HASH_DEFAULT_SEED;
-use crate::util::slice;
+
 use crate::util::slice::Slice;
 
 /// 一种可以计算 hash 的特质

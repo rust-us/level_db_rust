@@ -1,4 +1,5 @@
 use crate::db::db::Snapshot;
+use crate::db::db_format::InternalKeyComparator;
 use crate::traits::comparator_trait::Comparator;
 use crate::util::comparator::BytewiseComparatorImpl;
 
@@ -132,7 +133,7 @@ pub struct WriteOptions {
 impl Default for Options {
     fn default() -> Self {
         Self {
-            cmp: Box::new(BytewiseComparatorImpl::default()),
+            cmp: Box::new(InternalKeyComparator::default()),
             create_if_missing: false,
             error_if_exists: false,
             paranoid_checks: false,

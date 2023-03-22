@@ -6,8 +6,8 @@ mod test {
     use crate::traits::coding_trait::CodingTrait;
     use crate::util::coding::Coding;
     use crate::util::crc::{AsCrc, ToMask};
-    use crate::util::Result;
     use crate::util::slice::Slice;
+    use crate::util::Result;
 
     #[test]
     fn write() -> Result<()> {
@@ -28,7 +28,7 @@ mod test {
         let sample: Vec<u8> = ('0'..='9').map(|a|a as u8).collect();
         for i in 0..100 {
             let slice = reader.read_next().expect("not error").expect("must have record");
-            let mut expect = generate_slice(i, &sample);
+            let expect = generate_slice(i, &sample);
             assert_eq!(expect.len(), slice.len());
             assert_eq!(expect.as_ref(), slice.as_ref())
         }
