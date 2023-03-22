@@ -23,8 +23,16 @@ impl Default for Slice {
     }
 }
 
-impl Slice {
+impl Clone for Slice {
+    fn clone(&self) -> Self {
+        let data = self.data.clone();
+        Self {
+            data
+        }
+    }
+}
 
+impl Slice {
     /// 从 &mut [u8] 转到 Slice, 这里存在内存拷贝开销
     #[inline]
     pub fn from_buf(buf: &[u8]) -> Self {
@@ -54,7 +62,7 @@ impl Slice {
 
     #[inline]
     pub fn as_sub_ref(&self, start: usize, length: usize) -> &[u8] {
-        &(**self)[start..(start+length)]
+        &(**self)[start..(start + length)]
     }
 
     /// 移除头部 n 个元素
@@ -95,7 +103,6 @@ impl Slice {
             }
         }
     }
-
 }
 
 impl<'a> Slice {
@@ -119,6 +126,16 @@ impl From<Slice> for String {
     }
 }
 
+impl From<&Slice> for String {
+    #[inline]
+    fn from(s: &Slice) -> Self {
+        let data = &s.data;
+        unsafe {
+            String::from_utf8_unchecked(data.clone())
+        }
+    }
+}
+
 impl From<Slice> for Vec<u8> {
     #[inline]
     fn from(s: Slice) -> Self {
@@ -126,7 +143,7 @@ impl From<Slice> for Vec<u8> {
     }
 }
 
-impl <R: AsRef<str>> From<R> for Slice {
+impl<R: AsRef<str>> From<R> for Slice {
     #[inline]
     fn from(r: R) -> Self {
         Self {
@@ -191,7 +208,7 @@ impl Deref for Slice {
     /// Slice 解引用到 &[u8]
     #[inline]
     fn deref(&self) -> &Self::Target {
-            &*self.data
+        &*self.data
     }
 }
 

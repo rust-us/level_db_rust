@@ -5,7 +5,6 @@ use crate::db::file_meta_data::FileMetaData;
 use crate::db::table_cache::TableCache;
 use crate::db::version_edit::VersionEdit;
 use crate::traits::comparator_trait::Comparator;
-use crate::util::cache::Cache;
 use crate::util::options::{Env, Options, ReadOptions};
 use crate::util::slice::Slice;
 use crate::util::Result;

@@ -1,4 +1,5 @@
 #![feature(box_syntax)]
+#![feature(label_break_value)]
 
 mod db;
 mod table;
