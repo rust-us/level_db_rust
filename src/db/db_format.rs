@@ -183,8 +183,13 @@ impl InternalKey {
         todo!()
     }
 
-    fn encode(self) -> Slice {
+    pub fn encode(self) -> Slice {
         self.rep_
+    }
+
+    /// 取得  Slice的长度
+    pub fn encode_len(&self) -> usize {
+        self.rep_.size()
     }
 
     fn user_key(self) -> Slice {

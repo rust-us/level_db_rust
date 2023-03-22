@@ -55,7 +55,7 @@ RUSTFLAGS='--cfg CORE_DEBUG="false"' cargo build --release
 |-------------------------------|-----------------|------|
 | Arena (Memory Management)     | wangboo         | 100% |
 | bloom                         | fengyang        | 100% |
-| Cache                         | colagy          | 10%  |
+| Cache                         | colagy          | 30%  |
 | Coding (Primitive Type SerDe) | colagy          | 100% |
 | Comparator                    | fengyang        | 100% |
 | CRC                           | wangboo、lxd5866 | 100% |

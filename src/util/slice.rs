@@ -112,7 +112,7 @@ impl Slice {
 
 impl<'a> Slice {
     /// 借取 Slice 中的数据, 调用方只拥有读权限
-    pub fn borrow_data(&mut self) -> Cow<'a, String> {
+    pub fn borrow_data(&self) -> Cow<'a, String> {
         unsafe {
             // String & Vec<u8> has the same layout
             let s: &String = mem::transmute(&self.data);
