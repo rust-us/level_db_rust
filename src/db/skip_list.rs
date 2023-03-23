@@ -7,20 +7,21 @@ use std::sync::{Arc, RwLock};
 use rand::prelude::*;
 use crate::debug;
 use crate::traits::comparator_trait::Comparator;
+use crate::traits::DataIterator;
 
 use crate::util::arena::ArenaRef;
 use crate::util::{Arena, Result};
 use crate::util::slice::Slice;
+use crate::util::unsafe_slice::UnsafeSlice;
 use crate::util::status::{LevelError, Status};
 
 type RawNode = *mut Node;
 
 const MAX_LEVEL: usize = 8;
 
-// todo
 struct Node {
     /// 存储的值, 如果为空，则是头指针或者尾指针
-    key: Option<Slice>,
+    key: Option<UnsafeSlice>,
     /// 数组元素首地址，代表一个数组，指向每层的下一个节点。
     next_elems: *mut RawNode,
     /// 当前节点高度
@@ -42,9 +43,11 @@ pub struct SkipList<Cmp: Comparator> {
     arena: ArenaRef,
 }
 
-pub struct Iter<'a, Cmp: Comparator> {
-    list: &'a SkipList<Cmp>,
-    node: RawNode,
+pub struct Iter<Cmp: Comparator> {
+    head: RawNode,
+    tail: RawNode,
+    current: RawNode,
+    cmp: Arc<Cmp>,
 }
 
 impl<Cmp: Comparator> SkipList<Cmp> {
@@ -59,7 +62,7 @@ impl<Cmp: Comparator> SkipList<Cmp> {
         }
     }
 
-    pub fn insert(&mut self, key: Slice) -> Result<()> {
+    pub fn insert(&mut self, key: UnsafeSlice) -> Result<()> {
         // TODO 这里是否可以优化
         if self.contains(&key) {
             return Ok(());
@@ -74,9 +77,9 @@ impl<Cmp: Comparator> SkipList<Cmp> {
     }
 
     #[inline]
-    fn insert_ele0(&mut self, key: Slice) -> Result<()> {
+    fn insert_ele0(&mut self, key: UnsafeSlice) -> Result<()> {
         let level = rand_level();
-        debug!("insert {}, level: {}", &key, level);
+        debug!("insert {}, level: {}", String::from_utf8_lossy(key.as_ref()), level);
         let node = Node::create(key, level, self.arena.clone());
         // head bind node
         // TODO, use macro to expand for-loop
@@ -93,7 +96,7 @@ impl<Cmp: Comparator> SkipList<Cmp> {
         return Ok(());
     }
 
-    unsafe fn insert_elen(&mut self, key: Slice) -> Result<()> {
+    unsafe fn insert_elen(&mut self, key: UnsafeSlice) -> Result<()> {
         let mut current = self.head;
         let node_height = rand_level();
         let node_top_level = node_height - 1;
@@ -111,13 +114,13 @@ impl<Cmp: Comparator> SkipList<Cmp> {
                         (&mut *current).set_node(l, node_ptr);
                         node.set_node(l, self.tail);
                         debug!("bind: {} before: {}, after: <tail>, at level: {}",
-                                        node.key.as_ref().unwrap(),
-                                        (&*current).key.as_ref().unwrap(),
+                                        node.key.unwrap(),
+                                        (&*current).key.unwrap(),
                                         l);
                     }
                     break 'inner_loop;
                 } else {
-                    match self.cmp.compare(node.key.as_ref().unwrap(), ele.key.as_ref().unwrap()) {
+                    match self.cmp.compare(node.key.unwrap().as_ref(), ele.key.unwrap().as_ref()) {
                         Some(Ordering::Less) => {
                             // node higher than current level at ele
                             if node_top_level >= l {
@@ -125,14 +128,14 @@ impl<Cmp: Comparator> SkipList<Cmp> {
                                 node.set_node(l, ele_ptr);
                                 if (&*current).is_head() {
                                     debug!("bind: {} before: <head>, after: {}, at level: {}",
-                                        node.key.as_ref().unwrap(),
-                                        ele.key.as_ref().unwrap(),
+                                        node.key.unwrap(),
+                                        ele.key.unwrap(),
                                         l);
                                 } else {
                                     debug!("bind: {} before: {}, after: {}, at level: {}",
-                                        node.key.as_ref().unwrap(),
-                                        (&*current).key.as_ref().unwrap(),
-                                        ele.key.as_ref().unwrap(),
+                                        node.key.unwrap(),
+                                        (&*current).key.unwrap(),
+                                        ele.key.unwrap(),
                                         l);
                                 }
                             }
@@ -164,8 +167,9 @@ impl<Cmp: Comparator> SkipList<Cmp> {
         Ok(())
     }
 
-    pub fn contains(&self, key: &Slice) -> bool {
-        debug!("================== begin contains, key: {} ==================", key);
+    pub fn contains<R: AsRef<[u8]>>(&self, key: &R) -> bool {
+        let key_buf = key.as_ref();
+        debug!("================== begin contains, key: {} ==================", String::from_utf8_lossy(key_buf));
         if self.num == 0 {
             return false;
         }
@@ -186,9 +190,9 @@ impl<Cmp: Comparator> SkipList<Cmp> {
                         }
                     }
                     {
-                        debug!("node: {} at level: {}", ele.key.as_ref().unwrap(), level)
+                        debug!("node: {} at level: {}", ele.key.unwrap(), level)
                     }
-                    match self.cmp.compare(key, ele.key.as_ref().unwrap()) {
+                    match self.cmp.compare(key_buf, ele.key.unwrap().as_ref()) {
                         None => return false,
                         Some(Ordering::Equal) => return true,
                         Some(Ordering::Less) => {
@@ -253,7 +257,7 @@ impl<Cmp: Comparator> ToString for SkipList<Cmp> {
         // calculate each item width
         let mut widths = Vec::with_capacity(tree.len());
         self.iter().for_each(|s| {
-            widths.push(s.size());
+            widths.push(s.len());
         });
         // print value list
         if self.num > 0 {
@@ -262,7 +266,7 @@ impl<Cmp: Comparator> ToString for SkipList<Cmp> {
                 tree.push_str("[head]");
                 while !node.is_head_or_tail() {
                     tree.push_str(" -> ");
-                    tree.push_str(node.key.as_ref().unwrap().as_str());
+                    tree.push_str(node.key.unwrap().as_str());
                     let level_str = format!("({})", node.level);
                     tree.push_str(level_str.as_str());
                     node = &*node.get_node(0);
@@ -277,7 +281,7 @@ impl<Cmp: Comparator> ToString for SkipList<Cmp> {
 
 impl Node {
     #[inline]
-    fn create(src: Slice, level: usize, arena: ArenaRef) -> RawNode {
+    fn create(src: UnsafeSlice, level: usize, arena: ArenaRef) -> RawNode {
         let node = box Self {
             key: Some(src),
             next_elems: allocate_next_elems(arena),
@@ -378,27 +382,77 @@ fn min_max(a: usize, b: usize) -> (usize, usize) {
 }
 
 // 'b lifetime is bigger than 'a
-impl<'a, Cmp: Comparator> Iter<'a, Cmp> {
-    fn create(list: &'a SkipList<Cmp>) -> Self {
+impl<Cmp: Comparator> Iter<Cmp> {
+    fn create(list: &SkipList<Cmp>) -> Self {
         Self {
-            list,
-            node: list.head,
+            head: list.head,
+            tail: list.tail,
+            current: list.head,
+            cmp: list.cmp.clone(),
         }
     }
 }
 
-impl<'a, Cmp: Comparator> Iterator for Iter<'a, Cmp> {
-    type Item = &'a Slice;
+impl<Cmp: Comparator> Iterator for Iter<Cmp> {
+    type Item = UnsafeSlice;
 
     #[inline]
     fn next(&mut self) -> Option<Self::Item> {
         unsafe {
-            if (&*self.node).is_tail() {
+            if (&*self.current).is_tail() {
                 return None;
             } else {
-                self.node = (&*self.node).get_node(0);
+                self.current = (&*self.current).get_node(0);
             }
-            (&*self.node).key.as_ref()
+            (&*self.current).key
         }
+    }
+}
+
+impl<Cmp: Comparator> DataIterator for Iter<Cmp> {
+
+    #[inline]
+    fn valid(&self) -> bool {
+        unsafe {
+            (&*self.current).is_head_or_tail()
+        }
+    }
+
+    #[inline]
+    fn seek_to_first(&mut self) {
+        self.current = self.head
+    }
+
+    #[inline]
+    fn seek_to_last(&mut self) {
+        self.current = self.tail
+    }
+
+    fn seek(&mut self, key: &Slice) {
+        todo!()
+    }
+
+    fn next(&mut self) {
+        unsafe {
+            if (&*self.current).is_tail() {
+                return;
+            }
+            self.current = (&*self.current).get_node(0);
+        }
+    }
+
+    fn pre(&mut self) {
+        todo!()
+    }
+
+    fn key(&self) -> UnsafeSlice {
+        let mem_key = unsafe {
+            (&*self.current).key.unwrap()
+        };
+        mem_key
+    }
+
+    fn value(&self) -> UnsafeSlice {
+        todo!()
     }
 }
