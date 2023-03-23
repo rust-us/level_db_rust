@@ -103,10 +103,13 @@ impl Status {
         self.err.is_invalid_argument()
     }
 
-    pub fn get_error_string(&self) -> String {
-        self.err.to_string()
+    pub fn get_msg(&self) -> String {
+        let msg = &self.msg;
+
+        String::from(msg.as_str())
     }
 
+    /// 得到 LevelError
     /// 请注意， err 的所有权会发生转移！！！
     pub fn get_error(self) -> LevelError {
         self.err
