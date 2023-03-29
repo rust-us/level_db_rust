@@ -87,7 +87,7 @@ impl <Cmp: Comparator> MemTable<Cmp> {
         offset = Coding::encode_fixed64((seq_no << 8 | v_type.get_value()) as u64, buf, offset);
         // write value slice
         (&mut buf[offset..]).write(value_buf)?;
-        let slice = Slice::from_buf(buf);
+        // let slice = Slice::from_buf(buf);
         self.list.insert(UnsafeSlice::new_with_arena(buf, self.arena.clone())?)
     }
 
