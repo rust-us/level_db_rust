@@ -4,9 +4,9 @@
 
 extern crate core;
 
-mod db;
+pub mod db;
 mod table;
-mod util;
+pub mod util;
 mod traits;
 
 mod test {
