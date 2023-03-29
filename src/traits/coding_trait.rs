@@ -93,7 +93,7 @@ pub trait CodingTrait {
     /// ```
     ///
     /// ```
-    fn get_varint32(input: &mut Slice) -> u32;
+    fn get_varint32(input: &mut Slice) -> Option<u32>;
     /// 从slice的开头解码一个64位的变长整数, 并将slice的索引置于解码后的位置
     ///
     /// # Arguments
@@ -121,7 +121,7 @@ pub trait CodingTrait {
     /// ```
     ///
     /// ```
-    fn get_length_prefixed_slice(input: &mut Slice) -> Slice;
+    fn get_length_prefixed_slice(input: &mut Slice) -> Option<Slice>;
     /// 32位变长正整数编码
     ///
     /// # Arguments

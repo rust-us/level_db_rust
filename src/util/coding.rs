@@ -28,34 +28,26 @@ impl CodingTrait for Coding {
     fn put_fixed32(dst: &mut [u8], mut offset: usize, value: u32) -> usize {
         let mut buf: [u8; 4] = [0, 0, 0, 0];
         Self::encode_fixed32(value, &mut buf, 0);
-        dst[offset] = buf[0];
-        offset += 1;
-        dst[offset] = buf[1];
-        offset += 1;
-        dst[offset] = buf[2];
-        offset += 1;
-        dst[offset] = buf[3];
+        dst[0] = buf[0];
+        dst[1] = buf[1];
+        dst[2] = buf[2];
+        dst[3] = buf[3];
+        offset += 4;
         offset
     }
 
     fn put_fixed64(dst: &mut [u8], mut offset: usize, value: u64) -> usize {
         let mut buf: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
         Self::encode_fixed64(value, &mut buf, 0);
-        dst[offset] = buf[0];
-        offset += 1;
-        dst[offset] = buf[1];
-        offset += 1;
-        dst[offset] = buf[2];
-        offset += 1;
-        dst[offset] = buf[3];
-        offset += 1;
-        dst[offset] = buf[4];
-        offset += 1;
-        dst[offset] = buf[5];
-        offset += 1;
-        dst[offset] = buf[6];
-        offset += 1;
-        dst[offset] = buf[7];
+        dst[0] = buf[0];
+        dst[1] = buf[1];
+        dst[2] = buf[2];
+        dst[3] = buf[3];
+        dst[4] = buf[4];
+        dst[5] = buf[5];
+        dst[6] = buf[6];
+        dst[7] = buf[7];
+        offset += 8;
         offset
     }
 
@@ -88,24 +80,25 @@ impl CodingTrait for Coding {
         offset
     }
 
-    fn get_varint32(input: &mut Slice) -> u32 {
+    fn get_varint32(input: &mut Slice) -> Option<u32> {
         let cow = input.borrow_data();
         let bytes = cow.as_bytes();
-        let mut result = 0_u32;
+        let mut result: Option<u32> = None;
         let mut shift = 0_u32;
         let limit = input.size();
         let mut i = 0;
+        let mut value = 0_u32;
         while shift <= 28 && i < limit {
             let b = bytes[i];
             i += 1;
             if (b & 128) != 0 {
-                result |= ((b & 127) << shift) as u32;
+                value |= ((b & 127) << shift) as u32;
             } else {
-                result |= (b << shift) as u32;
+                value |= (b << shift) as u32;
             }
             shift += 7;
         }
-        result
+        Some(value)
     }
 
     fn get_varint64(input: &mut Slice) -> u64 {
@@ -128,9 +121,16 @@ impl CodingTrait for Coding {
         result
     }
 
-    fn get_length_prefixed_slice(input: &mut Slice) -> Slice {
+    fn get_length_prefixed_slice(input: &mut Slice) -> Option<Slice> {
         let decode = Coding::get_varint32(input);
-        Slice::from_buf(decode.to_le_bytes().as_mut_slice())
+        match decode {
+            None => {
+                None
+            }
+            Some(v) => {
+                Some(Slice::from_buf(v.to_le_bytes().as_mut_slice()))
+            }
+        }
     }
 
     fn varint_length(mut value: u64) -> i32 {
@@ -143,34 +143,24 @@ impl CodingTrait for Coding {
     }
 
     fn encode_fixed32(value: u32, buf: &mut [u8], mut offset: usize) -> usize {
-        buf[offset] = value as u8;
-        offset += 1;
-        buf[offset] = (value >> 8) as u8;
-        offset += 1;
-        buf[offset] = (value >> 16) as u8;
-        offset += 1;
-        buf[offset] = (value >> 24) as u8;
-        offset += 1;
+        buf[0] = value as u8;
+        buf[1] = (value >> 8) as u8;
+        buf[2] = (value >> 16) as u8;
+        buf[3] = (value >> 24) as u8;
+        offset += 4;
         offset
     }
 
     fn encode_fixed64(value: u64, buf: &mut [u8], mut offset: usize) -> usize {
-        buf[offset] = value as u8;
-        offset += 1;
-        buf[offset] = (value >> 8) as u8;
-        offset += 1;
-        buf[offset] = (value >> 16) as u8;
-        offset += 1;
-        buf[offset] = (value >> 24) as u8;
-        offset += 1;
-        buf[offset] = (value >> 32) as u8;
-        offset += 1;
-        buf[offset] = (value >> 40) as u8;
-        offset += 1;
-        buf[offset] = (value >> 48) as u8;
-        offset += 1;
-        buf[offset] = (value >> 56) as u8;
-        offset += 1;
+        buf[0] = value as u8;
+        buf[1] = (value >> 8) as u8;
+        buf[2] = (value >> 16) as u8;
+        buf[3] = (value >> 24) as u8;
+        buf[4] = (value >> 32) as u8;
+        buf[5] = (value >> 40) as u8;
+        buf[6] = (value >> 48) as u8;
+        buf[7] = (value >> 56) as u8;
+        offset += 8;
         offset
     }
 

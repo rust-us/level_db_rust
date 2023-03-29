@@ -41,6 +41,11 @@ mod test {
     }
 
     #[test]
+    fn test_get_varint32(){
+        let mut value = 65535;
+    }
+
+    #[test]
     fn test_encode_varint32() {
         let mut buf: [u8; 4] = [0, 0, 0, 0];
         let mut value: u32 = 65534;
