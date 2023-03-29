@@ -44,4 +44,11 @@ mod test {
         assert!(&status.is_corruption());
         assert_eq!(&status.get_msg(), "VersionEdit: unknown tag");
     }
+
+    #[test]
+    fn test_version_edit_debug_string() {
+        let mut version_edit = VersionEdit::new_with_log_number(6);
+        let debug_str = version_edit.debug_string();
+        println!("debug_str: \n {}", debug_str);
+    }
 }
