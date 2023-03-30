@@ -32,7 +32,9 @@ pub trait FilterPolicy {
     ///     let policy = BloomFilterPolicy::new(800);
     ///     let bloom_filter: Slice = policy.create_filter(keys);
     /// ```
-    fn create_filter(&self, keys: Vec<Slice>) -> Slice;
+    fn create_filter(&self, keys: Vec<&Slice>) -> Slice;
+
+    fn create_filter_with_len(&self, len: usize, keys: Vec<&Slice>) -> Slice;
 
     ///
     ///

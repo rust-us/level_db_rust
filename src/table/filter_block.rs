@@ -1,5 +1,6 @@
 use std::io::Write;
 use std::sync::Arc;
+use crate::traits::coding_trait::CodingTrait;
 use crate::traits::filter_policy_trait::FilterPolicy;
 use crate::util::coding::Coding;
 use crate::util::slice::Slice;
@@ -21,6 +22,7 @@ pub trait FilterBlock<FP: FilterPolicy> {
     /// # Arguments
     ///
     /// * `policy`:
+    /// * `capacity`: 初始化容量
     ///
     /// returns: Self
     ///
@@ -34,7 +36,7 @@ pub trait FilterBlock<FP: FilterPolicy> {
     /// let filter_block: FilterBlockBuilder<BloomFilterPolicy> = FilterBlockBuilder::new_with_policy(policy);
     /// ```
     #[inline]
-    fn new_with_policy(policy: Arc<FP>) -> Self;
+    fn new_with_policy(policy: Arc<FP>, capacity: usize) -> Self;
 
     /// 设置block的起始位置
     ///
@@ -80,11 +82,11 @@ pub trait FilterBlock<FP: FilterPolicy> {
 
     fn get_policy(&self) -> Box<&FP>;
 
-    fn get_keys(&self) -> &str;
+    fn get_keys(&self) -> Vec<u8>;
 
     fn get_start(&self) -> Vec<usize>;
 
-    fn get_result(&self) -> &str;
+    fn get_result(&self) -> Vec<u8>;
 
     fn get_tmp_keys(&self) -> Vec<Slice>;
 
@@ -95,11 +97,11 @@ pub trait FilterBlock<FP: FilterPolicy> {
 pub struct FilterBlockBuilder<FP: FilterPolicy> {
     policy: Arc<FP>,
     // Flattened key contents
-    keys: String,
+    keys: Vec<u8>,
     // Starting index in keys_ of each key
     start: Vec<usize>,
     // Filter data computed so far
-    result: String,
+    result: Vec<u8>,
     // policy_->CreateFilter() argument
     tmp_keys: Vec<Slice>,
     filter_offsets: Vec<u32>,
@@ -118,10 +120,10 @@ pub struct FilterBlockReader<FP: FilterPolicy> {
 }
 
 impl <FP: FilterPolicy> FilterBlock<FP> for FilterBlockBuilder<FP> {
-    fn new_with_policy(policy: Arc<FP>) -> Self {
-        let keys = String::new();
-        let start:Vec<usize> = vec![];
-        let result = String::new();
+    fn new_with_policy(policy: Arc<FP>, capacity: usize) -> Self {
+        let keys:Vec<u8> = Vec::with_capacity(capacity);
+        let start:Vec<usize> =  Vec::with_capacity(capacity);
+        let result:Vec<u8> =  Vec::with_capacity(capacity);
         let tmp_keys:Vec<Slice> = vec![];
         let filter_offsets:Vec<u32> = vec![];
 
@@ -149,29 +151,54 @@ impl <FP: FilterPolicy> FilterBlock<FP> for FilterBlockBuilder<FP> {
     }
 
     fn add_key(&mut self, key: &Slice) {
-        todo!()
+        self.start.push(key.len());
+        self.keys.write(key.as_str().as_bytes()).expect("add_key error!");
     }
 
     fn finish(&mut self) -> Result<Slice> {
-        self.generate_filter();
+        if self.start.len() != 0 {
+            self.generate_filter();
+        }
 
-        todo!()
+        // Append array of per-filter offsets
+        let array_offset = self.result.len() as u32;
+        // 当前需要写入的位置。result 中可能存在数据，因此为 self.result.len()  的位置
+        let mut pos: usize = self.result.len();
+
+        // todo 判断是否需要扩容
+        let result_total_capacity = self.result.capacity();
+
+        let dst_append = self.result.as_mut_slice();
+
+        for i in 0..self.filter_offsets.len() {
+            // 判断当前 pos + len 4
+            let filter_offset_val = self.filter_offsets[i];
+            pos = Coding::put_fixed32(dst_append, pos, filter_offset_val);
+        }
+
+        pos = Coding::put_fixed32(dst_append, pos, array_offset);
+
+        // Save encoding parameter in result
+        // todo 判断是否需要扩容
+        Coding::put_varint64(self.result.as_mut_slice(), pos, FILTER_BASE_LG as u64);
+
+        Ok(Slice::from_buf(&self.result))
     }
 
     fn get_policy(&self) -> Box<&FP> {
         Box::new(self.policy.as_ref())
     }
 
-    fn get_keys(&self) -> &str {
-        self.keys.as_str()
+    fn get_keys(&self) -> Vec<u8> {
+        self.keys.to_vec()
     }
 
     fn get_start(&self) -> Vec<usize> {
         self.start.to_vec()
     }
 
-    fn get_result(&self) -> &str {
-        self.result.as_str()
+    fn get_result(&self) -> Vec<u8> {
+        self.result.to_vec()
     }
 
     fn get_tmp_keys(&self) -> Vec<Slice> {
@@ -200,7 +227,7 @@ impl <FP: FilterPolicy> FilterBlockBuilder<FP> {
         self.tmp_keys.resize(num_keys, Slice::default());
 
         for i in 0..num_keys {
-            let base = &self.keys.as_bytes()[self.start[i]..];
+            let base = &self.keys[self.start[i]..];
             let length = self.start[i+1] - self.start[i];
 
             let mut tmp_key = Vec::with_capacity(length);
@@ -209,7 +236,21 @@ impl <FP: FilterPolicy> FilterBlockBuilder<FP> {
         }
 
         // Generate filter for current set of keys and append to result_.
+        self.filter_offsets.push(self.result.len() as u32);
 
+        let mut keys: Vec<&Slice> = Vec::new();
+        keys.push(&self.tmp_keys[0]);
+        let create_filter:Slice = self.policy.create_filter_with_len(num_keys, keys);
+
+        // let result_len = self.result.len();
+        // let result_total_capacity = self.result.capacity();
+        self.result.write(create_filter.as_ref());
+        // let result_len = self.result.len();
+        // let result_total_capacity = self.result.capacity();
+
+        self.tmp_keys.clear();
+        self.keys.clear();
+        self.start.clear();
     }
 }
 
