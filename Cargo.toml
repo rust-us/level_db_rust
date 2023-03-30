@@ -16,7 +16,7 @@ jemallocator = "0.5"
 jemalloc-sys = {version = "0.5", features = ["stats"]}
 
 [dev-dependencies]
-criterion = "0.3.0"
+criterion = {version = "0.4.0", features = ["html_reports"]}
 crc32fast = "1.3.2"
 skiplist = "0.4.0"
 
@@ -34,5 +34,5 @@ name = "skiplist_bench"
 harness = false
 
 [[bench]]
-name = "skiplist_memory_useage"
+name = "u32_shift"
 harness = false

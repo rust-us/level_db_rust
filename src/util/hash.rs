@@ -11,10 +11,9 @@ use crate::util::slice::Slice;
 
 /// 一种可以计算 hash 的特质
 pub trait ToHash {
-    #[inline]
+
     fn to_hash(&self) -> u32;
 
-    #[inline]
     fn to_hash_with_seed(&self, seed: u32) -> u32;
 }
 
