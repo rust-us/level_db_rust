@@ -30,9 +30,9 @@ mod filter_policy_test;
 
 pub mod histogram;
 mod histogram_test;
-mod hash;
+pub mod hash;
 mod hash_test;
-mod mutex_lock;
+pub mod mutex_lock;
 mod mutex_lock_test;
 pub mod random;
 mod random_test;
