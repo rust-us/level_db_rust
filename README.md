@@ -76,8 +76,8 @@ RUSTFLAGS='--cfg CORE_DEBUG="false"' cargo build --release
 | util.Options(ReadOptions, WriteOptions)                                          | kazeseiriou,wangboo  | 0%   |
 | util.ENV(WritableFile, SequentialFile, RandomAccessFile, FileLock)               | lxd5866              | 0%   |
 | util.Logger/Log日志库                                                               | peach                | 50%  |
-| table.Block, BlockBuilder, FilterBlockBuilder                                    | colagy               | 0%   |
-| FilterBlock, FilterBlockReader                                                   | colagy               | 0%   |
+| table.Block, BlockBuilder, FilterBlockBuilder                                    | colagy,fengyang      | 20%  |
+| FilterBlock, FilterBlockReader                                                   | colagy,fengyang      | 80%  |
 | table.format(Footer, BlockHandle)                                                | 半支烟                  | 20%  |
 | db.dbformat(InternalKeyComparator, InternalFilterPolicy, LookupKey, InternalKey) | 半支烟                  | 20%  |
 | db.SkipList                                                                      | wangboo              | 100% |

@@ -79,7 +79,7 @@ impl FromPolicy for BloomFilterPolicy {
 impl FilterPolicy for BloomFilterPolicy {
 
     fn name(&self) -> String {
-        String::from("leveldb.BuiltinBloomFilter2")
+        String::from("leveldb.BuiltinBloomFilter")
     }
 
     fn create_filter(&self, keys: Vec<Slice>) -> Slice {

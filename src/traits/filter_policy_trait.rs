@@ -23,6 +23,8 @@ pub trait FilterPolicy {
     /// # Examples
     ///
     /// ```
+    ///    use crate::util::slice::Slice;
+    ///
     ///    let mut keys : Vec<Slice>  = Vec::new();
     ///     keys.push(Slice::try_from(String::from("hello")).unwrap());
     ///     keys.push(Slice::try_from(String::from("world")).unwrap());
