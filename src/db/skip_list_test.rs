@@ -1,11 +1,21 @@
 mod test {
     use std::collections::HashSet;
+    use std::env::args;
+    use std::ffi::{c_char, c_void};
+    use std::ptr::{null, null_mut};
     use std::sync::{Arc, Mutex};
+
+    use criterion::{Criterion, criterion_group, criterion_main};
     use rand::Rng;
+    use skiplist::OrderedSkipList;
+
     use crate::db::DefaultSkipList;
+    use crate::db::skip_list::SkipList;
     use crate::debug;
     use crate::util::Arena;
+    use crate::util::arena::ArenaRef;
     use crate::util::comparator::BytewiseComparatorImpl;
+    use crate::util::mem_debug::mem_print;
     use crate::util::Result;
     use crate::util::slice::Slice;
     use crate::util::unsafe_slice::TryIntoUnsafeSlice;
@@ -54,5 +64,46 @@ mod test {
         });
 
         Ok(())
+    }
+
+
+    fn default_skiplist(mut list: SkipList<BytewiseComparatorImpl>, arena: ArenaRef, record_count: usize) {
+        for j in 0..record_count {
+            let value = format!("key_{}", j);
+            list.insert(value.try_into_unsafe_slice(arena.clone()).unwrap()).unwrap();
+        }
+        println!("bench_default_skiplist: ");
+        mem_print();
+    }
+
+    fn bench_skiplist_v_0_4_0(mut list: OrderedSkipList<String>, record_count: usize) {
+        for j in 0..record_count {
+            let value = format!("key_{}", j);
+            list.insert(value.clone());
+        }
+        println!("bench_skiplist_v_0_4_0: ");
+        mem_print();
+    }
+
+    #[test]
+    fn bench_default_skiplist() {
+        let record_count = 100 * 1024;
+        println!("bench default skiplist");
+        let cmp = Arc::new(BytewiseComparatorImpl::default());
+        let arena = Arc::new(Mutex::new(Arena::default()));
+        let list = SkipList::create(cmp, arena.clone());
+        default_skiplist(list, arena, record_count);
+    }
+
+    #[test]
+    fn bench_crate_skiplist() {
+        let record_count = 100 * 1024;
+        println!("bench crate skiplist");
+        let list: OrderedSkipList<String> = unsafe {
+            OrderedSkipList::with_comp(|a: &String, b: &String| {
+                a.cmp(b)
+            })
+        };
+        bench_skiplist_v_0_4_0(list, record_count);
     }
 }

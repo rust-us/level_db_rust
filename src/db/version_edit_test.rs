@@ -5,7 +5,7 @@ mod test {
     use crate::util::slice::Slice;
 
     #[test]
-    fn test_Tag() {
+    fn test_tag() {
         let tag = Tag::kCompactPointer;
         assert_eq!(tag.get_value(), 5);
 

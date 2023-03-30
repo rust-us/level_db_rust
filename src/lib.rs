@@ -1,6 +1,4 @@
 #![feature(box_syntax)]
-#![feature(let_else)]
-#![feature(generic_associated_types)]
 
 extern crate core;
 
@@ -8,6 +6,9 @@ pub mod db;
 mod table;
 pub mod util;
 mod traits;
+
+#[global_allocator]
+static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
 mod test {
 
