@@ -76,14 +76,21 @@ RUSTFLAGS='--cfg CORE_DEBUG="false"' cargo build --release
 | util.Options(ReadOptions, WriteOptions)                                          | kazeseiriou,wangboo  | 0%   |
 | util.ENV(WritableFile, SequentialFile, RandomAccessFile, FileLock)               | lxd5866              | 0%   |
 | util.Logger/Log日志库                                                               | peach                | 50%  |
-| table.Block, BlockBuilder, FilterBlockBuilder                                    | colagy,fengyang      | 20%  |
-| FilterBlock, FilterBlockReader                                                   | colagy,fengyang      | 80%  |
 | table.format(Footer, BlockHandle)                                                | 半支烟                  | 20%  |
 | db.dbformat(InternalKeyComparator, InternalFilterPolicy, LookupKey, InternalKey) | 半支烟                  | 20%  |
 | db.SkipList                                                                      | wangboo              | 100% |
-| table.Iterator(DBIter, MergingIterator, TwoLevelIterator...)                     | kazeseiriou          | 0%   |
+| table.Iterator(DBIter、EmptyIterator)                                             | kazeseiriou          | 0%   |
+| table.Iterator(merger.MergingIterator)                                           | kazeseiriou          | 0%   |
+| table.Iterator(TwoLevelIterator)                                                 | kazeseiriou          | 0%   |
+| table.Iterator(tabletest.KeyConvertingIterator)                                  | kazeseiriou          | 0%   |
+| table.Iterator(dbtest.ModelIter)                                                 | kazeseiriou          | 0%   |
+| table.Iterator(Block::Iter)                                                      | fengyang             | 0%   |
 | IteratorWrapper                                                                  | kazeseiriou          | 0%   |
 | db.MemTable(MemTable, MemTableIterator)                                          | wangboo,tzcyujunyong | 20%  | 
+| db.Builder                                                                       | fengyang             | 20%  |
+| table.Block                                                                      | fengyang             | 80%  |
+| table.BlockBuilder, table.FilterBlockBuilder                                     |                      |      |
+| FilterBlock, FilterBlockReader                                                   | fengyang             | 80%  |
 | SSTable                                                                          | fengyang             | 0%   |
 | table.Table                                                                      | peach,tzcyujunyong   |      |
 | db.leveldb_util                                                                  | wangboo              | 0%   |
@@ -95,6 +102,9 @@ RUSTFLAGS='--cfg CORE_DEBUG="false"' cargo build --release
 | db.VersionEdit(Tag, VersionEdit, FileMetaData)                                   | fengyang             | 20%  |
 | db.VersionSet(Version, LevelFileNumIterator, SaverState)                         | fengyang             | 20%  |
 | WriteBatch                                                                       | tzcyujunyong,wangboo | 50%  |
+| table.table_builder                                                              |                      |      |
+| filename                                                                         |                      |      |
+| env                                                                              |                      |      |
 | <website>                                                                        | 半支烟                  | 40%  |
 
 

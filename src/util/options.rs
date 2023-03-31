@@ -4,14 +4,12 @@ use crate::db::db_format::InternalKeyComparator;
 use crate::traits::comparator_trait::Comparator;
 use crate::traits::filter_policy_trait::FilterPolicy;
 use crate::util::comparator::BytewiseComparatorImpl;
+use crate::util::env::Env;
 
 pub enum CompressionType {
     NoCompression,
     SnappyCompression
 }
-
-/// TODO temp
-pub struct  Env {}
 
 pub struct Cache {}
 

@@ -1,3 +1,4 @@
+use crate::util::options::Options;
 use crate::util::slice::Slice;
 
 use crate::util::Result;
@@ -5,6 +6,10 @@ use crate::util::Result;
 pub struct BlockBuilder {}
 
 impl BlockBuilder {
+    pub fn new(options: &Options) -> Self {
+        todo!()
+    }
+
     /// 添加数据到block
     ///
     /// # Arguments

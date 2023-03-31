@@ -41,6 +41,8 @@ pub mod debug;
 pub mod linked_list;
 mod linked_list_test;
 pub mod unsafe_slice;
+pub mod env;
+mod env_test;
 
 /// 定义别名
 pub type Result<T> = result::Result<T, Status>;
