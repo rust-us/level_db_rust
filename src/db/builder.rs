@@ -80,16 +80,16 @@ impl BuildTable {
                 assert!(meta.get_file_size() > 0);
             }
 
-            // Finish and check for file errors
-            // 将文件刷新到磁盘
-            if s.is_ok() {
-                let rs:io::Result<()> = writableFile.sync_data();
-                if rs.is_ok() {
-                    s = Status::default();
-                }else{
-                    s = Status::wrapper_str(LevelError::KIOError, rs.unwrap_err().to_string().as_str());
-                }
-            }
+            // // Finish and check for file errors
+            // // 将文件刷新到磁盘
+            // if s.is_ok() {
+            //     let rs:io::Result<()> = writableFile.sync_data();
+            //     if rs.is_ok() {
+            //         s = Status::default();
+            //     }else{
+            //         s = Status::wrapper_str(LevelError::KIOError, rs.unwrap_err().to_string().as_str());
+            //     }
+            // }
             // // 关闭文件
             // if s.is_ok() {
             //     writableFile.close
