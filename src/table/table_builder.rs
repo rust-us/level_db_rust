@@ -1,12 +1,14 @@
 use std::borrow::Borrow;
+use std::fs::File;
 use std::sync::Arc;
 use crate::table::block_builder::BlockBuilder;
 use crate::table::filter_block::FilterBlockBuilder;
+use crate::table::format::BlockHandle;
 use crate::traits::filter_policy_trait::FilterPolicy;
-use crate::util::env::WritableFile;
-use crate::util::options::Options;
+use crate::util::options::{CompressionType, Options};
 use crate::util::slice::Slice;
 use crate::util::status::Status;
+use crate::util::unsafe_slice::UnsafeSlice;
 
 pub struct TableBuilder {
     rep: Rep
@@ -15,7 +17,7 @@ pub struct TableBuilder {
 struct Rep {
     // options: Box<Options>,
     // index_block_options: Options,
-    file: Arc<WritableFile>,
+    file: Arc<File>,
     offset: u64,
     status: Status,
     // data_block: BlockBuilder,
@@ -27,7 +29,7 @@ struct Rep {
 }
 
 impl TableBuilder {
-    pub fn new_with_writable_file(options: &Options, writableFile: Arc<WritableFile>) -> Self {
+    pub fn new_with_writable_file(options: &Options, writableFile: Arc<File>) -> Self {
         let rep = Rep::new(options, writableFile);
 
         // Self {
@@ -37,13 +39,45 @@ impl TableBuilder {
         todo!()
     }
 
-    pub fn add(&self, key: &Slice, value: &Slice) {
+    pub fn add(&self, key: &UnsafeSlice, value: &UnsafeSlice) {
+        todo!()
+    }
+
+    pub fn flush(&self) {
+        todo!()
+    }
+
+    pub fn write_block(&self, block: &BlockBuilder, handler: &BlockHandle) {
+        todo!()
+    }
+
+    pub fn write_raw_block(&self, block_contents: &UnsafeSlice, compression_type: CompressionType, handler: &BlockHandle) {
+        todo!()
+    }
+
+    pub fn status(&self) -> Status {
+        todo!()
+    }
+
+    pub fn finish(&self) -> Status {
+        todo!()
+    }
+
+    pub fn abandon(&self) {
+        todo!()
+    }
+
+    pub fn get_num_entries(&self) -> u64 {
+        todo!()
+    }
+
+    pub fn get_file_size(&self) -> u64 {
         todo!()
     }
 }
 
 impl Rep {
-    pub fn new(opt: &Options, writableFile: Arc<WritableFile>) -> Self {
+    pub fn new(opt: &Options, writableFile: Arc<File>) -> Self {
         Self {
             // options: Box::new(*opt),
             file: writableFile,
