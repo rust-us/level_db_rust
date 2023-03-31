@@ -7,6 +7,7 @@ use crate::traits::coding_trait::CodingTrait;
 use crate::traits::comparator_trait::Comparator;
 use crate::util::coding::Coding;
 use crate::util::slice::Slice;
+use crate::util::unsafe_slice::UnsafeSlice;
 
 pub enum ValueType {
     /// 0x0
@@ -93,21 +94,21 @@ impl Default for ParsedInternalKey {
 
 impl ParsedInternalKey {
 
-    fn debug_string(&self) -> Slice {
+    pub fn debug_string(&self) -> Slice {
         Slice::default()
     }
 
     /// Return the length of the encoding of "key".
-    fn internal_key_encoding_length(&self, key: ParsedInternalKey) -> usize {
+    pub fn internal_key_encoding_length(&self, key: ParsedInternalKey) -> usize {
         key.user_key.size() + 8
     }
 
     // 将 self 的数据追加到 result 中
-    fn append_internal_key(&self, result: Slice) {
+    pub fn append_internal_key(&self, result: Slice) {
         todo!()
     }
 
-    fn new(user_key: Slice, sequence: u64, value_type: ValueType) -> Self {
+    pub fn new(user_key: Slice, sequence: u64, value_type: ValueType) -> Self {
         Self {
             user_key,
             sequence,
@@ -118,13 +119,13 @@ impl ParsedInternalKey {
     /// Attempt to parse an internal key from "internal_key".  On success,
     /// stores the parsed data in "*result", and returns true.
     /// On error, returns false, leaves "*result" in an undefined state.
-    fn parse_internal_key(internal_key : Slice, target: ParsedInternalKey) -> bool {
+    pub fn parse_internal_key(internal_key : Slice, target: ParsedInternalKey) -> bool {
         // line 173
         todo!()
     }
 
     /// Returns the user key portion of an internal key.
-    fn extract_user_key(internal_key : Slice) -> Slice {
+    pub fn extract_user_key(internal_key : Slice) -> Slice {
         todo!()
     }
 }
@@ -147,7 +148,7 @@ impl PartialEq for InternalKey {
 }
 
 impl InternalKey {
-    fn new(user_key: Slice, sequence: u64, value_type: ValueType) -> Self {
+    pub fn new(user_key: Slice, sequence: u64, value_type: ValueType) -> Self {
         // line 145
         let result: Slice = Slice::default();
         ParsedInternalKey::new(user_key, sequence, value_type)
@@ -171,7 +172,7 @@ impl InternalKey {
     /// ```
     ///
     /// ```
-    fn decode_from(&self, input: Slice) {
+    pub fn decode_from(&self, input: &UnsafeSlice) {
         todo!()
 
         // wangbo
@@ -179,7 +180,7 @@ impl InternalKey {
     }
 
     /// 输出 InternalKey 调试信息
-    fn debug_string(&self) -> Slice {
+    pub fn debug_string(&self) -> Slice {
         // line 164
         todo!()
     }
@@ -193,16 +194,16 @@ impl InternalKey {
         self.rep_.size()
     }
 
-    fn user_key(self) -> Slice {
+    pub fn user_key(self) -> Slice {
         ParsedInternalKey::extract_user_key(self.rep_)
     }
 
-    fn set_from(self, p: ParsedInternalKey) {
+    pub fn set_from(self, p: ParsedInternalKey) {
         // self.rep_.clear();
         p.append_internal_key(self.rep_);
     }
 
-    fn clear(self) {
+    pub fn clear(self) {
         // self.rep_.clear();
     }
 }
@@ -255,7 +256,7 @@ impl Comparator for InternalKeyComparator {
 impl LookupKey {
     /// Initialize *this for looking up user_key at a snapshot with
     /// the specified sequence number.
-    fn new(user_key: Slice, sequence: usize) -> Self {
+    pub fn new(user_key: Slice, sequence: usize) -> Self {
         let user_key_size = user_key.size();
         let need = user_key_size + 13; // A conservative estimate
         let mut data = Vec::with_capacity(need);
@@ -278,12 +279,12 @@ impl LookupKey {
     }
 
     /// Return a key suitable for lookup in a MemTable.
-    fn mem_table_key(&self) -> Slice {
+    pub fn mem_table_key(&self) -> Slice {
         self.data.clone()
     }
 
     /// Return an internal key (suitable for passing to an internal iterator)
-    fn internal_key(&self) -> Slice {
+    pub fn internal_key(&self) -> Slice {
         // line 204
         let buf = self.data.as_ref();
         let internal_key_buf = &buf[self.user_key_start..];
@@ -291,7 +292,7 @@ impl LookupKey {
     }
 
     /// Return the user key
-    fn user_key(&self) -> Slice {
+    pub fn user_key(&self) -> Slice {
         // line 207
         todo!()
     }
