@@ -33,9 +33,12 @@ fn test_new() {
 fn test_create_filter() {
     let policy = BloomFilterPolicy::new(800);
 
-    let mut keys : Vec<Slice>  = Vec::new();
-    keys.push(Slice::try_from(String::from("hello")).unwrap());
-    keys.push(Slice::try_from(String::from("world")).unwrap());
+    let s1 = Slice::try_from(String::from("hello")).unwrap();
+    let s2 = Slice::try_from(String::from("world")).unwrap();
+
+    let mut keys : Vec<&Slice>  = Vec::new();
+    keys.push(&s1);
+    keys.push(&s2);
 
     let bloom_filter: Slice = policy.create_filter(keys);
 

@@ -470,6 +470,10 @@ impl<Cmp: Comparator> DataIterator for Iter<Cmp> {
         }
     }
 
+    fn has_next(&self) -> bool {
+        todo!()
+    }
+
     fn pre(&mut self) {
         todo!()
     }

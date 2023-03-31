@@ -276,6 +276,8 @@ impl VersionEdit {
         let version_edit = VersionEdit::new();
 
         let msg : Option<Tag> = Option::None;
+
+        // todo Coding::get_varint32 存在问题。开发暂停
         while msg.is_none() && Coding::get_varint32(source) != 0_u32 {
             let tag_value = Coding::get_varint32(source);
             let tag = Tag::from_value(tag_value);
@@ -284,31 +286,47 @@ impl VersionEdit {
                 return LevelError::corruption_string("VersionEdit", "unknown tag");
             }
 
-            // match tag {
-            //     Tag::k_comparator => 1,
-            //     Tag::kLogNumber => 2,
-            //     Tag::kNextFileNumber => 3,
-            //     Tag::kLastSequence => 4,
-            //     Tag::kCompactPointer => 5,
-            //     Tag::kDeletedFile => 6,
-            //     Tag::kNewFile => 7,
-            //     Tag::kPrevLogNumber => 9,
-            //     _ => 0
-            // };
         }
         todo!()
     }
 
     /// VersionEdit 输出调试信息
     pub fn debug_string(&self) -> Slice {
-        todo!()
+        let debug_str = String::from("VersionEdit {");
+
+        let mut has_comparator_str = String::default();
+        if(self.has_comparator_){
+            has_comparator_str.push_str(format!("\n Comparator: {}", self.comparator_.as_str()).as_str());
+        }
+
+        let mut has_log_number__str = String::default();
+        // if(self.has_log_number_){
+            // todo
+        //     // let append_log_number = logging.AppendNumberTo(&r, self.log_number_);
+        //     let append_log_number = self.log_number_ + "".as_ref();
+        //     has_log_number__str.push_str(format!("\n LogNumber: {}", append_log_number).as_str());
+        // }
+
+        let rs = format!("{}{}{}", debug_str, has_log_number__str, "\n}\n");
+
+        Slice::from(rs)
     }
 }
 
 /// 静态方法
 impl<'a> VersionEdit {
-    pub fn get_internal_key(inout: Slice) -> Result<InternalKey> {
+    pub fn get_internal_key(input: Slice) -> Result<InternalKey> {
+        let key= InternalKey::default();
+
         todo!()
+
+        // Slice str;
+        // if (GetLengthPrefixedSlice(input, &str)) {
+        //     dst->DecodeFrom(str);
+        //     return true;
+        // } else {
+        //     return false;
+        // }
     }
 
     /// 从 Slice 中解出 level 值
