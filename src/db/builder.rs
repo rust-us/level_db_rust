@@ -64,7 +64,7 @@ impl BuildTable {
             meta.get_smallest().decode_from(&iter.key());
             // todo 逻辑 check
             // 调用迭代器，依次将每个键-值对加入 TableBuilder
-            while iter.valid() && iter.has_next(){
+            while iter.valid() {
                 iter.next();
 
                 let key = iter.key();
@@ -80,17 +80,17 @@ impl BuildTable {
                 assert!(meta.get_file_size() > 0);
             }
 
-            // // Finish and check for file errors
-            // // 将文件刷新到磁盘
-            // if s.is_ok() {
-            //     let rs:io::Result<()> = writableFile.sync_data();
-            //     if rs.is_ok() {
-            //         s = Status::default();
-            //     }else{
-            //         s = Status::wrapper_str(LevelError::KIOError, rs.unwrap_err().to_string().as_str());
-            //     }
-            // }
-            // // 关闭文件
+            // Finish and check for file errors
+            // 将文件刷新到磁盘
+            if s.is_ok() {
+                let rs:io::Result<()> = writableFile.sync_data();
+                if rs.is_ok() {
+                    s = Status::default();
+                }else{
+                    s = Status::wrapper_str(LevelError::KIOError, rs.unwrap_err().to_string().as_str());
+                }
+            }
+            // 关闭文件
             // if s.is_ok() {
             //     writableFile.close
             // }

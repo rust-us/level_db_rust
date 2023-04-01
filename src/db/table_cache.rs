@@ -11,6 +11,11 @@ struct Table {}
 pub struct TableCache {}
 
 impl TableCache {
+    pub fn new() -> Self {
+        Self {
+
+        }
+    }
     /// 从缓存中获取Table
     ///
     /// # Arguments

@@ -71,9 +71,6 @@ pub trait DataIterator {
     /// ```
     fn next(&mut self);
 
-    /// 是否存在下一个元素
-    fn has_next(&self) -> bool;
-
     /// 定位到上一个元素
     ///
     /// # Arguments
