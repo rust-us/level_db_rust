@@ -74,7 +74,7 @@ RUSTFLAGS='--cfg CORE_DEBUG="false"' cargo build --release
 | 功能模块                                                                             | 完成人                  | 进度   |
 |----------------------------------------------------------------------------------|----------------------|------|
 | util.Options(ReadOptions, WriteOptions)                                          | kazeseiriou,wangboo  | 0%   |
-| util.ENV(WritableFile, SequentialFile, RandomAccessFile, FileLock)               | lxd5866              | 0%   |
+| util.ENV(SequentialFile, RandomAccessFile, FileLock)                             | lxd5866              | 0%   |
 | util.Logger/Log日志库                                                               | peach                | 50%  |
 | table.format(Footer, BlockHandle)                                                | 半支烟                  | 20%  |
 | db.dbformat(InternalKeyComparator, InternalFilterPolicy, LookupKey, InternalKey) | 半支烟                  | 20%  |
@@ -88,7 +88,7 @@ RUSTFLAGS='--cfg CORE_DEBUG="false"' cargo build --release
 | IteratorWrapper                                                                  | kazeseiriou          | 0%   |
 | db.MemTable(MemTable, MemTableIterator)                                          | wangboo,tzcyujunyong | 20%  | 
 | db.Builder                                                                       | fengyang             | 20%  |
-| table.Block                                                                      | fengyang             | 80%  |
+| table.Block                                                                      | fengyang             | 30%  |
 | table.BlockBuilder, table.FilterBlockBuilder                                     |                      |      |
 | FilterBlock, FilterBlockReader                                                   | fengyang             | 80%  |
 | SSTable                                                                          | fengyang             | 0%   |
@@ -102,9 +102,8 @@ RUSTFLAGS='--cfg CORE_DEBUG="false"' cargo build --release
 | db.VersionEdit(Tag, VersionEdit, FileMetaData)                                   | fengyang             | 20%  |
 | db.VersionSet(Version, LevelFileNumIterator, SaverState)                         | fengyang             | 20%  |
 | WriteBatch                                                                       | tzcyujunyong,wangboo | 50%  |
-| table.table_builder                                                              |                      |      |
-| filename                                                                         |                      |      |
-| env                                                                              |                      |      |
+| table.table_builder                                                              |                      | 30%  |
+| db.filename                                                                      |                      |      |
 | <website>                                                                        | 半支烟                  | 40%  |
 
 
