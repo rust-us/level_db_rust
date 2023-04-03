@@ -113,9 +113,10 @@ mod test {
 
     #[test]
     fn test_filter_block_new_with_policy() {
-        let policy = Box::new(TestHashFilter::new());
+        let policy: Arc<Box<dyn FilterPolicy>> = Arc::new(Box::new(TestHashFilter::new()));
 
-        let filter_block: FilterBlockBuilder<TestHashFilter> = FilterBlockBuilder::new_with_policy(policy, 10);
+        let filter_block: FilterBlockBuilder = FilterBlockBuilder::
+                                            new_with_policy_capacity(policy, 10);
 
         let fp = filter_block.get_policy();
         let filter_policy_name = fp.name();
@@ -129,10 +130,10 @@ mod test {
 
     #[test]
     fn test_filter_block_reader_new_with_policy_empty_content() {
-        let policy = Box::new(TestHashFilter::new());
+        let policy: Arc<Box<dyn FilterPolicy>> = Arc::new(Box::new(TestHashFilter::new()));
         let contents = Slice::default();
 
-        let filter_block_reader: FilterBlockReader<TestHashFilter> = FilterBlockReader::new_with_policy(policy, contents);
+        let filter_block_reader: FilterBlockReader = FilterBlockReader::new_with_policy(policy, contents);
 
         let fp_reader = filter_block_reader.get_policy();
         let _reader_filter_policy_name = fp_reader.name();
@@ -145,8 +146,8 @@ mod test {
 
     #[test]
     fn test_filter_block_new_with_policy_and_addkey() {
-        let policy = Box::new(TestHashFilter::new());
-        let mut filter_block_builder: FilterBlockBuilder<TestHashFilter> = FilterBlockBuilder::new_with_policy(
+        let policy: Arc<Box<dyn FilterPolicy>> = Arc::new(Box::new(TestHashFilter::new()));
+        let mut filter_block_builder: FilterBlockBuilder = FilterBlockBuilder::new_with_policy_capacity(
             policy, 10);
 
         filter_block_builder.start_block(100);

@@ -60,9 +60,9 @@ impl BuildTable {
                 return Err(fileRS.err().unwrap());
             }
 
-            let writableFile = Arc::new(fileRS.unwrap());
+            let writable_file = Arc::new(fileRS.unwrap());
             // 生成一个 TableBuilder
-            let builder: TableBuilder = TableBuilder::new_with_writable_file(options, writableFile);
+            let builder: TableBuilder = TableBuilder::new_with_writable_file(options, writable_file.clone());
 
             meta.get_smallest().decode_from(&iter.key());
 
@@ -86,7 +86,7 @@ impl BuildTable {
             // Finish and check for file errors
             // 将文件刷新到磁盘
             if s.is_ok() {
-                let rs:io::Result<()> = writableFile.sync_data();
+                let rs:io::Result<()> = writable_file.sync_data();
                 if rs.is_ok() {
                     s = Status::default();
                 }else{

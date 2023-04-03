@@ -5,7 +5,7 @@ use crate::table::block_builder::BlockBuilder;
 use crate::table::filter_block::{FilterBlock, FilterBlockBuilder};
 use crate::table::format::BlockHandle;
 use crate::traits::filter_policy_trait::FilterPolicy;
-use crate::util::options::{CompressionType, Options};
+use crate::util::options::{CompressionType, OptionRef, Options};
 use crate::util::slice::Slice;
 use crate::util::status::Status;
 use crate::util::unsafe_slice::UnsafeSlice;
@@ -47,8 +47,8 @@ struct Rep<> {
 }
 
 impl TableBuilder {
-    pub fn new_with_writable_file(options: &Options, writableFile: Arc<File>) -> Self {
-        let rep = Rep::new(options, writableFile);
+    pub fn new_with_writable_file(options: &Options, writable_file: Arc<File>) -> Self {
+        let rep = Rep::new(options, writable_file);
 
         // Self {
         //     rep
@@ -95,16 +95,15 @@ impl TableBuilder {
 }
 
 impl Rep {
-    pub fn new(opt: &Options, writableFile: Arc<File>) -> Self {
-        // todo  如何赋值？ Box::new(opt)
-        let options = Box::new(Default::default());
-        let index_block_options = Box::new(Default::default());
+    pub fn new(opt: OptionRef, writableFile: Arc<File>) -> Self {
+        let options = Box::new(opt.clone());
+        let index_block_options = Box::new(opt.clone());
 
         let mut filter_block: Option<FilterBlockBuilder>;
         if opt.filter_policy.is_none() {
             filter_block = None;
         }else {
-            filter_block = Some(FilterBlockBuilder::new_with_policy(opt.filter_policy.unwrap()));
+            filter_block = Some(FilterBlockBuilder::new_with_policy(opt.filter_policy.unwrap().clone()));
         }
 
         Self {
