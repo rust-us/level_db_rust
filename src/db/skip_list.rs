@@ -286,31 +286,31 @@ impl<Cmp: Comparator> ToString for SkipList<Cmp> {
 impl Node {
     #[inline]
     fn create(src: UnsafeSlice, level: usize, arena: ArenaRef) -> RawNode {
-        let node = box Self {
+        let node = Box::new(Self {
             key: Some(src),
             next_elems: allocate_next_elems(arena),
             level,
-        };
+        });
         Box::into_raw(node)
     }
 
     #[inline]
     fn create_head(arena: ArenaRef) -> RawNode {
-        let node = box Self {
+        let node = Box::new(Self {
             key: None,
             next_elems: allocate_next_elems(arena),
             level: MAX_LEVEL,
-        };
+        });
         Box::into_raw(node)
     }
 
     #[inline]
     fn create_tail() -> RawNode {
-        let node = box Self {
+        let node = Box::new(Self {
             key: None,
             next_elems: null_mut(),
             level: 0,
-        };
+        });
         Box::into_raw(node)
     }
 
