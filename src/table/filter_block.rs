@@ -14,7 +14,9 @@ const FILTER_BASE: usize = 1 << FILTER_BASE_LG;
 ///
 /// meta block 构建器
 ///
-pub trait FilterBlock<FP: FilterPolicy> {
+pub trait FilterBlock {
+    #[inline]
+    fn new_with_policy(policy: Box<dyn FilterPolicy>) -> Self;
 
     ///
     /// 构造一个  FilterBlockBuilder
@@ -29,14 +31,10 @@ pub trait FilterBlock<FP: FilterPolicy> {
     /// # Examples
     ///
     /// ```
-    /// use std::sync::Arc;
-    /// use level_db_rust::util::filter_policy::BloomFilterPolicy;
     ///
-    /// let policy = Arc::new(BloomFilterPolicy::new(2));
-    /// let filter_block: FilterBlockBuilder<BloomFilterPolicy> = FilterBlockBuilder::new_with_policy(policy);
     /// ```
     #[inline]
-    fn new_with_policy(policy: Arc<FP>, capacity: usize) -> Self;
+    fn new_with_policy_capacity(policy: Box<dyn FilterPolicy>, capacity: usize) -> Self;
 
     /// 设置block的起始位置
     ///
@@ -80,7 +78,7 @@ pub trait FilterBlock<FP: FilterPolicy> {
     /// ```
     fn finish(&mut self) -> Result<Slice>;
 
-    fn get_policy(&self) -> Box<&FP>;
+    fn get_policy(&self) -> Box<&dyn FilterPolicy>;
 
     fn get_keys(&self) -> Vec<u8>;
 
@@ -94,8 +92,8 @@ pub trait FilterBlock<FP: FilterPolicy> {
 }
 
 /// SSTable 文件里面的 meta block 构建器, 按内存里面指定的格式整理在内存中
-pub struct FilterBlockBuilder<FP: FilterPolicy> {
-    policy: Arc<FP>,
+pub struct FilterBlockBuilder {
+    policy: Box<dyn FilterPolicy>,
     // Flattened key contents
     keys: Vec<u8>,
     // Starting index in keys_ of each key
@@ -107,8 +105,8 @@ pub struct FilterBlockBuilder<FP: FilterPolicy> {
     filter_offsets: Vec<u32>,
 }
 
-pub struct FilterBlockReader<FP: FilterPolicy> {
-    policy: Arc<FP>,
+pub struct FilterBlockReader {
+    policy: Box<dyn FilterPolicy>,
     // Pointer to filter data (at block-start)
     data: Vec<u32>,
     // Pointer to beginning of offset array (at block-end)
@@ -119,8 +117,12 @@ pub struct FilterBlockReader<FP: FilterPolicy> {
     base_lg: usize
 }
 
-impl <FP: FilterPolicy> FilterBlock<FP> for FilterBlockBuilder<FP> {
-    fn new_with_policy(policy: Arc<FP>, capacity: usize) -> Self {
+impl FilterBlock for FilterBlockBuilder {
+    fn new_with_policy(policy: Box<dyn FilterPolicy>) -> Self {
+        FilterBlock::new_with_policy_capacity(policy, 64)
+    }
+
+    fn new_with_policy_capacity(policy: Box<dyn FilterPolicy>, capacity: usize) -> Self {
         let keys:Vec<u8> = Vec::with_capacity(capacity);
         let start:Vec<usize> =  Vec::with_capacity(capacity);
         let result:Vec<u8> =  Vec::with_capacity(capacity);
@@ -185,7 +187,7 @@ impl <FP: FilterPolicy> FilterBlock<FP> for FilterBlockBuilder<FP> {
         Ok(Slice::from_buf(&self.result))
     }
 
-    fn get_policy(&self) -> Box<&FP> {
+    fn get_policy(&self) -> Box<&dyn FilterPolicy> {
         Box::new(self.policy.as_ref())
     }
 
@@ -210,7 +212,7 @@ impl <FP: FilterPolicy> FilterBlock<FP> for FilterBlockBuilder<FP> {
     }
 }
 
-impl <FP: FilterPolicy> FilterBlockBuilder<FP> {
+impl FilterBlockBuilder {
     fn generate_filter(&mut self) {
         let num_keys = self.start.len();
 
@@ -254,8 +256,8 @@ impl <FP: FilterPolicy> FilterBlockBuilder<FP> {
     }
 }
 
-impl <FP: FilterPolicy> FilterBlockReader<FP> {
-    pub fn new_with_policy(policy: Arc<FP>, contents: Slice) -> Self {
+impl FilterBlockReader {
+    pub fn new_with_policy(policy: Box<dyn FilterPolicy>, contents: Slice) -> Self {
         let data = Vec::new();
         let offset = Vec::new();
 
@@ -290,7 +292,7 @@ impl <FP: FilterPolicy> FilterBlockReader<FP> {
         todo!()
     }
 
-    pub fn get_policy(&self) -> Box<&FP> {
+    pub fn get_policy(&self) -> Box<&dyn FilterPolicy> {
         Box::new(self.policy.as_ref())
     }
 

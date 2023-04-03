@@ -1,4 +1,5 @@
 use crate::util::slice::Slice;
+use crate::util::status::Status;
 use crate::util::unsafe_slice::UnsafeSlice;
 
 ///
@@ -71,9 +72,6 @@ pub trait DataIterator {
     /// ```
     fn next(&mut self);
 
-    /// 是否存在下一个元素
-    fn has_next(&self) -> bool;
-
     /// 定位到上一个元素
     ///
     /// # Arguments
@@ -116,5 +114,7 @@ pub trait DataIterator {
     ///
     /// ```
     fn value(&self) -> UnsafeSlice;
+
+    fn status(&self) -> Status;
 
 }

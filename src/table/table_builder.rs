@@ -2,7 +2,7 @@ use std::borrow::Borrow;
 use std::fs::File;
 use std::sync::Arc;
 use crate::table::block_builder::BlockBuilder;
-use crate::table::filter_block::FilterBlockBuilder;
+use crate::table::filter_block::{FilterBlock, FilterBlockBuilder};
 use crate::table::format::BlockHandle;
 use crate::traits::filter_policy_trait::FilterPolicy;
 use crate::util::options::{CompressionType, Options};
@@ -11,21 +11,39 @@ use crate::util::status::Status;
 use crate::util::unsafe_slice::UnsafeSlice;
 
 pub struct TableBuilder {
-    rep: Rep
+    rep: Box<Rep>
 }
 
-struct Rep {
-    // options: Box<Options>,
-    // index_block_options: Options,
+/// TableBuilder Rep 结构体， 内部使用
+struct Rep<> {
+    options: Box<Options>,
+    index_block_options: Box<Options>,
+
+    // SSTable 生成后的文件
     file: Arc<File>,
+
     offset: u64,
     status: Status,
-    // data_block: BlockBuilder,
-    // index_block: BlockBuilder,
+
+    // 生成 SSTable 中的数据区域
+    data_block: BlockBuilder,
+    // 生成 SSTable 中的数据索引区域
+    index_block: BlockBuilder,
+
     last_key: Slice,
     num_entries: u64,
     // Either Finish() or Abandon() has been called.
     closed: bool,
+
+    // 生成 SSTable 中的元数据区域
+    filter_block: Option<FilterBlockBuilder>,
+    // 判断是否需要生成 SSTable中的数据索引， SSTable中每次生成一个完整的块之后，需要将该值置为 true， 说明需要为该块添加索引
+    pending_index_entry: bool,
+    // Handle to add to index block
+    // pending_handle 记录需要生成数据索引的数据块在 SSTable 中的偏移量和大小
+    pending_handle: BlockHandle,
+
+    compressed_output: Slice,
 }
 
 impl TableBuilder {
@@ -78,16 +96,33 @@ impl TableBuilder {
 
 impl Rep {
     pub fn new(opt: &Options, writableFile: Arc<File>) -> Self {
+        // todo  如何赋值？ Box::new(opt)
+        let options = Box::new(Default::default());
+        let index_block_options = Box::new(Default::default());
+
+        let mut filter_block: Option<FilterBlockBuilder>;
+        if opt.filter_policy.is_none() {
+            filter_block = None;
+        }else {
+            filter_block = Some(FilterBlockBuilder::new_with_policy(opt.filter_policy.unwrap()));
+        }
+
         Self {
-            // options: Box::new(*opt),
+            options,
+            index_block_options,
             file: writableFile,
             offset: 0,
-            // todo default  Status::OK
+            // default  Status::OK
             status: Status::default(),
-            // data_block: BlockBuilder::new(&opt),
+            data_block: BlockBuilder::new(&options.as_ref()),
+            index_block: BlockBuilder::new(&index_block_options.as_ref()),
             last_key: Default::default(),
             num_entries: 0,
             closed: false,
+            filter_block,
+            pending_index_entry: false,
+            pending_handle: Default::default(),
+            compressed_output: Default::default(),
         }
     }
 }

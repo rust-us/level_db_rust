@@ -87,9 +87,11 @@ RUSTFLAGS='--cfg CORE_DEBUG="false"' cargo build --release
 | table.Iterator(Block::Iter)                                                      | fengyang             | 0%   |
 | IteratorWrapper                                                                  | kazeseiriou          | 0%   |
 | db.MemTable(MemTable, MemTableIterator)                                          | wangboo,tzcyujunyong | 20%  | 
-| db.Builder                                                                       | fengyang             | 20%  |
+| db.Builder                                                                       | fengyang             | 85%  |
+| table.table_builder                                                              | fengyang             | 30%  |
 | table.Block                                                                      | fengyang             | 30%  |
-| table.BlockBuilder, table.FilterBlockBuilder                                     |                      |      |
+| table.BlockBuilder                                                               | fengyang             | 30%  |
+| table.FilterBlockBuilder                                                         | fengyang             | 30%  |
 | FilterBlock, FilterBlockReader                                                   | fengyang             | 80%  |
 | SSTable                                                                          | fengyang             | 0%   |
 | table.Table                                                                      | peach,tzcyujunyong   |      |
@@ -102,7 +104,7 @@ RUSTFLAGS='--cfg CORE_DEBUG="false"' cargo build --release
 | db.VersionEdit(Tag, VersionEdit, FileMetaData)                                   | fengyang             | 20%  |
 | db.VersionSet(Version, LevelFileNumIterator, SaverState)                         | fengyang             | 20%  |
 | WriteBatch                                                                       | tzcyujunyong,wangboo | 50%  |
-| table.table_builder                                                              |                      | 30%  |
+| table.table                                                                      |                      | 30%  |
 | db.filename                                                                      |                      |      |
 | <website>                                                                        | 半支烟                  | 40%  |
 
