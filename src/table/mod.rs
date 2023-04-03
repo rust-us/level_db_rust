@@ -9,3 +9,5 @@ mod ss_table_test;
 pub mod iterator_wrapper;
 pub mod table_builder;
 mod table_builder_test;
+pub mod table;
+mod table_test;

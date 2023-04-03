@@ -484,4 +484,8 @@ impl<Cmp: Comparator> DataIterator for Iter<Cmp> {
     fn value(&self) -> UnsafeSlice {
         todo!()
     }
+
+    fn status(&self) -> Status {
+        todo!()
+    }
 }

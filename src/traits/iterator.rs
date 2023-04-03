@@ -1,4 +1,5 @@
 use crate::util::slice::Slice;
+use crate::util::status::Status;
 use crate::util::unsafe_slice::UnsafeSlice;
 
 ///
@@ -113,5 +114,7 @@ pub trait DataIterator {
     ///
     /// ```
     fn value(&self) -> UnsafeSlice;
+
+    fn status(&self) -> Status;
 
 }

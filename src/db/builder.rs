@@ -6,10 +6,11 @@ use std::sync::Arc;
 use crate::db::file_meta_data::FileMetaData;
 use crate::db::filename::FileName;
 use crate::db::table_cache::TableCache;
+use crate::table::table::Table;
 use crate::table::table_builder::TableBuilder;
 use crate::traits::DataIterator;
 use crate::util::env::Env;
-use crate::util::options::{Options};
+use crate::util::options::{Options, ReadOptions};
 use crate::util::Result;
 use crate::util::slice::Slice;
 use crate::util::status::{LevelError, Status};
@@ -51,6 +52,8 @@ impl BuildTable {
         // 生成一个 SSTable 文件名
         let file_name = FileName::table_file_name(dbname, meta.get_number());
 
+        let mut s : Status = Status::default();
+
         if iter.valid() {
             let fileRS: Result<File> = env.new_writable_file(&file_name);
             if(!fileRS.is_ok()){
@@ -62,7 +65,7 @@ impl BuildTable {
             let builder: TableBuilder = TableBuilder::new_with_writable_file(options, writableFile);
 
             meta.get_smallest().decode_from(&iter.key());
-            // todo 逻辑 check
+
             // 调用迭代器，依次将每个键-值对加入 TableBuilder
             while iter.valid() {
                 iter.next();
@@ -74,7 +77,7 @@ impl BuildTable {
 
             // Finish and check for builder errors
             // 调用 TableBuilder 的 Finish 函数生成 SSTable 文件
-            let mut s : Status = builder.finish();
+            s = builder.finish();
             if s.is_ok() {
                 meta.set_file_size(builder.get_file_size());
                 assert!(meta.get_file_size() > 0);
@@ -96,26 +99,35 @@ impl BuildTable {
             // }
 
             if s.is_ok() {
-//                 // Verify that the table is usable
-//                 Iterator* it = table_cache->NewIterator(ReadOptions(),
-//                                                         meta->number,
-//                                                         meta->file_size);
-//                 s = it->status();
-//                 delete it;
+                let readOptions = ReadOptions::default();
+                // Verify that the table is usable
+                let it: Box<dyn DataIterator> = table_cache.new_iterator(&readOptions,
+                                         meta.get_number(),
+                                         meta.get_file_size() as usize,
+                                         &Table::new())
+                    .expect("table_cache.new_iterator error");
+                s = it.status();
             }
         } // if end
 
-//         // Check for input iterator errors
-//         if (!iter->status().ok()) {
-//             s = iter->status();
-//         }
-//
-//         if (s.ok() && meta->file_size > 0) {
-//             // Keep it
-//         } else {
-//             env->DeleteFile(fname);
-//         }
-//         return s;
-        Err(Status::wrapper_str(LevelError::KBadRecord, "a"))
+        // Check for input iterator errors
+        if !iter.status().is_ok() {
+            s = iter.status();
+        }
+
+        if s.is_ok() && meta.get_file_size() > 0 {
+            // Keep it
+        } else {
+            // DeleteFile fname
+            // todo
+        }
+
+        if s.is_ok() {
+            // todo
+            // return Ok(meta);
+            return Ok(FileMetaData::default());
+        }else{
+            return Err(s);
+        }
     }
 }

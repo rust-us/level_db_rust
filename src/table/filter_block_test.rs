@@ -113,7 +113,7 @@ mod test {
 
     #[test]
     fn test_filter_block_new_with_policy() {
-        let policy = Arc::new(TestHashFilter::new());
+        let policy = Box::new(TestHashFilter::new());
 
         let filter_block: FilterBlockBuilder<TestHashFilter> = FilterBlockBuilder::new_with_policy(policy, 10);
 
@@ -129,7 +129,7 @@ mod test {
 
     #[test]
     fn test_filter_block_reader_new_with_policy_empty_content() {
-        let policy = Arc::new(TestHashFilter::new());
+        let policy = Box::new(TestHashFilter::new());
         let contents = Slice::default();
 
         let filter_block_reader: FilterBlockReader<TestHashFilter> = FilterBlockReader::new_with_policy(policy, contents);
@@ -145,7 +145,7 @@ mod test {
 
     #[test]
     fn test_filter_block_new_with_policy_and_addkey() {
-        let policy = Arc::new(TestHashFilter::new());
+        let policy = Box::new(TestHashFilter::new());
         let mut filter_block_builder: FilterBlockBuilder<TestHashFilter> = FilterBlockBuilder::new_with_policy(
             policy, 10);
 
