@@ -79,11 +79,15 @@ impl FromPolicy for BloomFilterPolicy {
 impl FilterPolicy for BloomFilterPolicy {
 
     fn name(&self) -> String {
-        String::from("leveldb.BuiltinBloomFilter2")
+        String::from("leveldb.BuiltinBloomFilter")
     }
 
-    fn create_filter(&self, keys: Vec<Slice>) -> Slice {
-        let n: usize = keys.len();
+    fn create_filter(&self, keys: Vec<&Slice>) -> Slice {
+        self.create_filter_with_len(keys.len(), keys)
+    }
+
+    fn create_filter_with_len(&self, len: usize, keys: Vec<&Slice>) -> Slice {
+        let n: usize = len;
 
         let mut bits: usize = n * self.bits_per_key;
 
@@ -100,7 +104,7 @@ impl FilterPolicy for BloomFilterPolicy {
         dst_chars[bytes] = self.k as u8;
 
         for i in 0..n {
-            let slice = keys.get(i).unwrap();
+            let slice = keys[i];
 
             let mut h : u32 = slice.bloom_hash();
             let delta : u32 = (h >> 17) | (h << 15);
@@ -173,7 +177,11 @@ impl FilterPolicy for InternalFilterPolicy {
         todo!()
     }
 
-    fn create_filter(&self, keys: Vec<Slice>) -> Slice {
+    fn create_filter(&self, keys: Vec<&Slice>) -> Slice {
+        self.create_filter_with_len(keys.len(), keys)
+    }
+
+    fn create_filter_with_len(&self, len: usize, keys: Vec<&Slice>) -> Slice {
         // 根据指定的参数创建过滤器，并返回结果， 结果为dst的原始内容 + append结果。
         // 参数keys[0,n-1]包含依据用户提供的comparator排序的key列表--可重复，
         // 并把根据这些key创建的filter追加到 dst中。

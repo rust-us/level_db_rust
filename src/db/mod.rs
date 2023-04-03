@@ -19,6 +19,10 @@ pub mod version_set;
 mod version_set_test;
 pub mod version_edit;
 mod version_edit_test;
+pub mod builder;
+mod builder_test;
+pub mod filename;
+mod filename_test;
 
 /// 默认调表
 pub type DefaultSkipList = SkipList<BytewiseComparatorImpl>;

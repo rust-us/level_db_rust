@@ -1,16 +1,19 @@
+use crate::table::table::Table;
 use crate::traits::DataIterator;
+use crate::util::options::ReadOptions;
 use crate::util::slice::Slice;
 use crate::util::Result;
 
 struct Saver {}
 
-struct ReadOptions {}
-
-struct Table {}
-
 pub struct TableCache {}
 
 impl TableCache {
+    pub fn new() -> Self {
+        Self {
+
+        }
+    }
     /// 从缓存中获取Table
     ///
     /// # Arguments
@@ -28,7 +31,7 @@ impl TableCache {
     /// ```
     ///
     /// ```
-    fn get<F>(&self, _options: &ReadOptions, _file_number: u64, _file_size: usize, _k: &Slice, _arg: &mut Saver, _handle_result: F)
+    pub fn get<F>(&self, _options: &ReadOptions, _file_number: u64, _file_size: usize, _k: &Slice, _arg: &mut Saver, _handle_result: F)
         where F: FnMut(&mut Saver, &Slice, &Slice) -> Result<()> {
         ()
     }
@@ -45,7 +48,7 @@ impl TableCache {
     /// ```
     ///
     /// ```
-    fn evict(&mut self, _file_number: u64) {
+    pub fn evict(&mut self, _file_number: u64) {
         todo!()
     }
 
@@ -65,7 +68,7 @@ impl TableCache {
     /// ```
     ///
     /// ```
-    fn new_iterator(&self, _options: &ReadOptions, _file_number: u64, _file_size: usize, _table: &Table) -> Result<Box<dyn DataIterator>> {
+    pub fn new_iterator(&self, _options: &ReadOptions, _file_number: u64, _file_size: usize, _table: &Table) -> Result<Box<dyn DataIterator>> {
         todo!()
     }
 }
