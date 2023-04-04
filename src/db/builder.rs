@@ -10,7 +10,7 @@ use crate::table::table::Table;
 use crate::table::table_builder::TableBuilder;
 use crate::traits::DataIterator;
 use crate::util::env::Env;
-use crate::util::options::{Options, ReadOptions};
+use crate::util::options::{Options, OptionsPtr, ReadOptions};
 use crate::util::Result;
 use crate::util::slice::Slice;
 use crate::util::status::{LevelError, Status};
@@ -43,7 +43,7 @@ impl BuildTable {
     /// ```
     ///
     /// ```
-    pub fn build_table(dbname: &Slice, env: &Env, options: &Options,
+    pub fn build_table(dbname: &Slice, env: &Env, options: OptionsPtr,
                        table_cache: &TableCache, mut iter: Box<dyn DataIterator>,
                        meta: &mut FileMetaData) -> Result<FileMetaData> {
         meta.set_file_size(0);

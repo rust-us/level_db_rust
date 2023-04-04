@@ -1,7 +1,7 @@
 use std::io::Write;
 use std::sync::Arc;
 use crate::traits::coding_trait::CodingTrait;
-use crate::traits::filter_policy_trait::FilterPolicy;
+use crate::traits::filter_policy_trait::{FilterPolicy, FilterPolicyPtr};
 use crate::util::coding::Coding;
 use crate::util::slice::Slice;
 
@@ -11,13 +11,11 @@ use crate::util::Result;
 const FILTER_BASE_LG: usize = 11;
 const FILTER_BASE: usize = 1 << FILTER_BASE_LG;
 
-pub type FilterPolicyRef = Arc<Box<dyn FilterPolicy>>;
-
 ///
 /// meta block 构建器
 ///
 pub trait FilterBlock {
-    fn new_with_policy(policy: FilterPolicyRef) -> Self;
+    fn new_with_policy(policy: FilterPolicyPtr) -> Self;
 
     ///
     /// 构造一个  FilterBlockBuilder
@@ -34,7 +32,7 @@ pub trait FilterBlock {
     /// ```
     ///
     /// ```
-    fn new_with_policy_capacity(policy: FilterPolicyRef, capacity: usize) -> Self;
+    fn new_with_policy_capacity(policy: FilterPolicyPtr, capacity: usize) -> Self;
 
     /// 设置block的起始位置
     ///
@@ -77,7 +75,7 @@ pub trait FilterBlock {
     /// ```
     fn finish(&mut self) -> Result<Slice>;
 
-    fn get_policy(&self) -> FilterPolicyRef;
+    fn get_policy(&self) -> FilterPolicyPtr;
 
     fn get_keys(&self) -> Vec<u8>;
 
@@ -92,7 +90,7 @@ pub trait FilterBlock {
 
 /// SSTable 文件里面的 meta block 构建器, 按内存里面指定的格式整理在内存中
 pub struct FilterBlockBuilder {
-    policy: FilterPolicyRef,
+    policy: FilterPolicyPtr,
     // Flattened key contents
     keys: Vec<u8>,
     // Starting index in keys_ of each key
@@ -105,7 +103,7 @@ pub struct FilterBlockBuilder {
 }
 
 pub struct FilterBlockReader {
-    policy: FilterPolicyRef,
+    policy: FilterPolicyPtr,
     // Pointer to filter data (at block-start)
     data: Vec<u32>,
     // Pointer to beginning of offset array (at block-end)
@@ -117,11 +115,11 @@ pub struct FilterBlockReader {
 }
 
 impl FilterBlock for FilterBlockBuilder {
-    fn new_with_policy(policy: FilterPolicyRef) -> Self {
+    fn new_with_policy(policy: FilterPolicyPtr) -> Self {
         FilterBlock::new_with_policy_capacity(policy, 64)
     }
 
-    fn new_with_policy_capacity(policy: FilterPolicyRef, capacity: usize) -> Self {
+    fn new_with_policy_capacity(policy: FilterPolicyPtr, capacity: usize) -> Self {
         let keys:Vec<u8> = Vec::with_capacity(capacity);
         let start:Vec<usize> =  Vec::with_capacity(capacity);
         let result:Vec<u8> =  Vec::with_capacity(capacity);
@@ -186,7 +184,7 @@ impl FilterBlock for FilterBlockBuilder {
         Ok(Slice::from_buf(&self.result))
     }
 
-    fn get_policy(&self) -> FilterPolicyRef {
+    fn get_policy(&self) -> FilterPolicyPtr {
         self.policy.clone()
     }
 
@@ -256,7 +254,7 @@ impl FilterBlockBuilder {
 }
 
 impl FilterBlockReader {
-    pub fn new_with_policy(policy: FilterPolicyRef, contents: Slice) -> Self {
+    pub fn new_with_policy(policy: FilterPolicyPtr, contents: Slice) -> Self {
         let data = Vec::new();
         let offset = Vec::new();
 
@@ -291,7 +289,7 @@ impl FilterBlockReader {
         todo!()
     }
 
-    pub fn get_policy(&self) -> FilterPolicyRef {
+    pub fn get_policy(&self) -> FilterPolicyPtr {
         self.policy.clone()
     }
 
