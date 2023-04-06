@@ -26,7 +26,6 @@ impl Default for Slice {
 }
 
 impl Slice {
-
     /// 从 &mut [u8] 转到 Slice, 这里存在内存拷贝开销
     #[inline]
     pub fn from_buf(buf: &[u8]) -> Self {
@@ -62,7 +61,7 @@ impl Slice {
 
     #[inline]
     pub fn as_sub_ref(&self, start: usize, length: usize) -> &[u8] {
-        &(**self)[start..(start+length)]
+        &(**self)[start..(start + length)]
     }
 
     /// 移除头部 n 个元素
@@ -145,7 +144,7 @@ impl From<Slice> for Vec<u8> {
     }
 }
 
-impl <R: AsRef<str>> From<R> for Slice {
+impl<R: AsRef<str>> From<R> for Slice {
     #[inline]
     fn from(r: R) -> Self {
         Self {
@@ -207,13 +206,25 @@ impl core::ops::Index<usize> for Slice {
     }
 }
 
+impl core::ops::Index<core::ops::Range<usize>> for Slice {
+    type Output = [u8];
+
+    /// 获取指定下标范围的数据
+    #[inline]
+    fn index(&self, range: core::ops::Range<usize>) -> &Self::Output {
+        assert!(range.end <= self.size());
+        assert!(range.start >= 0);
+        &(**self)[range.start..range.end]
+    }
+}
+
 impl Deref for Slice {
     type Target = [u8];
 
     /// Slice 解引用到 &[u8]
     #[inline]
     fn deref(&self) -> &Self::Target {
-            &*self.data
+        &*self.data
     }
 }
 

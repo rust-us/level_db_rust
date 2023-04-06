@@ -81,7 +81,7 @@ impl VersionEdit {
     #[inline]
     pub fn new() -> Self {
         Self {
-            comparator_ : String::new(),
+            comparator_: String::new(),
             log_number_: 0,
             prev_log_number_: 0,
             next_file_number_: 0,

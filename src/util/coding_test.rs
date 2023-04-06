@@ -1,59 +1,160 @@
 mod test {
     use crate::traits::coding_trait::{Coding32, Coding64, CodingTrait};
     use crate::util::coding::{Coding};
+    use crate::util::slice::Slice;
 
     #[test]
     fn test_put_fixed32() {
         let mut dst = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         let value = 65535;
-        Coding::put_fixed32(&mut dst, 2, value);
+        let mut offset = 2;
+        println!("offset:{:?}", offset);
+        println!("dst:{:?}", dst);
+
+        offset = Coding::put_fixed32(&mut dst, offset, value);
         assert_eq!([0, 0, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0] as [u8; 12], dst);
+        println!("offset:{:?}", offset);
+        println!("dst:{:?}", dst);
+
+        offset = Coding::put_fixed32(&mut dst, offset, value);
+        assert_eq!([0, 0, 255, 255, 0, 0, 255, 255, 0, 0, 0, 0] as [u8; 12], dst);
+        println!("offset:{:?}", offset);
+        println!("dst:{:?}", dst);
     }
 
     #[test]
     fn test_put_fixed64() {
-        let mut dst = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        let mut dst = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
         let value = 65535;
-        Coding::put_fixed64(&mut dst, 2, value);
-        assert_eq!([0, 0, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0] as [u8; 12], dst);
+
+        let mut offset = 2;
+        println!("offset:{:?}", offset);
+        println!("dst:{:?}", dst);
+        offset = Coding::put_fixed64(&mut dst, offset, value);
+        assert_eq!([0, 0, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] as [u8; 20], dst);
+
+        println!("offset:{:?}", offset);
+        println!("dst:{:?}", dst);
+
+        offset = Coding::put_fixed64(&mut dst, offset, value);
+
+        assert_eq!([0, 0, 255, 255, 0, 0, 0, 0, 0, 0, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0] as [u8; 20], dst);
+        println!("offset:{:?}", offset);
+        println!("dst:{:?}", dst);
     }
 
     #[test]
     fn test_put_varint32() {
-        let mut value = 65535;
-        let mut dst = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        let offset = Coding::put_varint32(&mut dst, 2, value);
+        let mut value = 255;
+        let mut value1 = 512;
+        let mut value2 = 65534;
+        let mut value3 = 65535;
+        let mut dst = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        let mut offset = 2;
+
+        offset = Coding::put_varint32(&mut dst, offset, value);
+        println!("dst:{:?}", dst);
+        assert_eq!([0, 0, 255, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] as [u8; 20], dst);
         println!("offset:{:?}", offset);
         assert_eq!(offset, 4);
+
+        offset = Coding::put_varint32(&mut dst, offset, value1);
         println!("dst:{:?}", dst);
-        assert_eq!([0, 0, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0] as [u8; 12], dst);
+        assert_eq!([0, 0, 255, 1, 128, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] as [u8; 20], dst);
+        println!("offset:{:?}", offset);
+        assert_eq!(offset, 6);
+
+        offset = Coding::put_varint32(&mut dst, offset, value2);
+        println!("dst:{:?}", dst);
+        assert_eq!([0, 0, 255, 1, 128, 4, 254, 255, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] as [u8; 20], dst);
+        println!("offset:{:?}", offset);
+        assert_eq!(offset, 9);
+
+        offset = Coding::put_varint32(&mut dst, offset, value3);
+        println!("dst:{:?}", dst);
+        assert_eq!([0, 0, 255, 1, 128, 4, 254, 255, 3, 255, 255, 3, 0, 0, 0, 0, 0, 0, 0, 0] as [u8; 20], dst);
+        println!("offset:{:?}", offset);
+        assert_eq!(offset, 12);
     }
 
     #[test]
     fn test_put_varint64() {
-        let mut value = 65535;
-        let mut dst = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-        let offset = Coding::put_varint64(&mut dst, 2, value);
+        let mut value = 255;
+        let mut value1 = 512;
+        let mut value2 = 65534;
+        let mut value3 = 65535;
+        let mut dst = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        let mut offset = 2;
+
+        offset = Coding::put_varint64(&mut dst, offset, value);
+        println!("dst:{:?}", dst);
+        assert_eq!([0, 0, 255, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] as [u8; 20], dst);
         println!("offset:{:?}", offset);
         assert_eq!(offset, 4);
+
+        offset = Coding::put_varint64(&mut dst, offset, value1);
         println!("dst:{:?}", dst);
-        assert_eq!([0, 0, 255, 255, 0, 0, 0, 0, 0, 0, 0, 0] as [u8; 12], dst);
+        assert_eq!([0, 0, 255, 1, 128, 4, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] as [u8; 20], dst);
+        println!("offset:{:?}", offset);
+        assert_eq!(offset, 6);
+
+        offset = Coding::put_varint64(&mut dst, offset, value2);
+        println!("dst:{:?}", dst);
+        assert_eq!([0, 0, 255, 1, 128, 4, 254, 255, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] as [u8; 20], dst);
+        println!("offset:{:?}", offset);
+        assert_eq!(offset, 9);
+
+        offset = Coding::put_varint64(&mut dst, offset, value3);
+        println!("dst:{:?}", dst);
+        assert_eq!([0, 0, 255, 1, 128, 4, 254, 255, 3, 255, 255, 3, 0, 0, 0, 0, 0, 0, 0, 0] as [u8; 20], dst);
+        println!("offset:{:?}", offset);
+        assert_eq!(offset, 12);
     }
 
     #[test]
-    fn test_get_varint32(){
-        let mut value = 65535;
+    fn test_get_varint32() {
+        let value = [255, 512];
+        let data = [0, 0, 255, 1, 128, 4, 254, 255, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+        let mut slice = Slice::from_buf(&data);
+        let mut offset = 2;
+
+        let mut i = 0;
+        while offset < slice.len() {
+            let got = Coding::get_varint32(&mut slice, offset);
+            match got {
+                Some(v) => {
+                    offset = v.1;
+                    println!("value:{:?}", v.0);
+                    assert_eq!(value[i], v.0);
+                    i += 1;
+                }
+                None => {
+                    println!("value is none");
+                }
+            }
+        }
     }
 
     #[test]
     fn test_encode_varint32() {
         let mut buf: [u8; 4] = [0, 0, 0, 0];
-        let mut value: u32 = 65534;
+        let mut value: u32 = 65535;
+        let offset = Coding::encode_varint32(value, &mut buf, 0);
+        println!("offset:{:?}", offset);
+        assert_eq!(offset, 3);
+        println!("buf:{:?}", buf);
+        assert_eq!(buf, [255, 255, 3, 0]);
+    }
+
+    #[test]
+    fn test_decode_varint32() {
+        let mut buf: [u8; 4] = [255, 255, 3, 0];
+        let mut value: u32 = 65535;
         let offset = Coding::encode_varint32(value, &mut buf, 0);
         println!("offset:{:?}", offset);
         assert_eq!(offset, 2);
         println!("buf:{:?}", buf);
-        assert_eq!(buf, [254, 255, 3, 0]);
+        assert_eq!(buf, [255, 255, 3, 0]);
     }
 
     #[test]
@@ -62,7 +163,7 @@ mod test {
         let mut value: u64 = 65535;
         let offset = Coding::encode_varint64(value, &mut buf, 0);
         println!("offset:{:?}", offset);
-        assert_eq!(offset, 2);
+        assert_eq!(offset, 3);
         println!("buf:{:?}", buf);
         assert_eq!(buf, [255, 255, 3, 0]);
     }

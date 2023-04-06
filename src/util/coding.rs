@@ -1,68 +1,48 @@
+use std::io::Read;
 use crate::traits::coding_trait::CodingTrait;
 use crate::traits::coding_trait::Coding32;
 use crate::traits::coding_trait::Coding64;
 use crate::util::slice::Slice;
 
-macro_rules! varint {
-    ($TYPE: ty, $NAME: ident, $SNAME: expr) => {
-         fn $NAME(mut value: $TYPE, buf: &mut [u8], mut offset: usize) -> usize {
-            while value >= 128 {
-                buf[offset] = (value | 128) as u8;
-                offset += 1;
-                value >>= 7;
-            }
-            buf[offset] = value as u8;
-
-            offset
-        }
-    };
-
-    ($TYPE: ty, $NAME: ident) => {
-        varint!( $TYPE, $NAME, stringify!($NAME));
-    }
-}
-
 pub struct Coding {}
 
 impl CodingTrait for Coding {
     fn put_fixed32(dst: &mut [u8], mut offset: usize, value: u32) -> usize {
-        let mut buf: [u8; 4] = [0, 0, 0, 0];
-        Self::encode_fixed32(value, &mut buf, 0);
-        dst[0] = buf[0];
-        dst[1] = buf[1];
-        dst[2] = buf[2];
-        dst[3] = buf[3];
+        Self::encode_fixed32(value, dst, offset);
         offset += 4;
         offset
     }
 
     fn put_fixed64(dst: &mut [u8], mut offset: usize, value: u64) -> usize {
-        let mut buf: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
-        Self::encode_fixed64(value, &mut buf, 0);
-        dst[0] = buf[0];
-        dst[1] = buf[1];
-        dst[2] = buf[2];
-        dst[3] = buf[3];
-        dst[4] = buf[4];
-        dst[5] = buf[5];
-        dst[6] = buf[6];
-        dst[7] = buf[7];
+        Self::encode_fixed64(value, dst, offset);
         offset += 8;
         offset
     }
 
-    varint!(u32,encode_varint32);
-
-    varint!(u64,encode_varint64);
-
-    fn put_varint32(dst: &mut [u8], mut offset: usize, value: u32) -> usize {
-        let mut buf: [u8; 4] = [0, 0, 0, 0];
-        let var_offset = Self::encode_varint32(value, &mut buf, 0);
-        for i in 0..var_offset {
-            dst[offset] = buf[i];
+    fn encode_varint32(mut value: u32, buf: &mut [u8], mut offset: usize) -> usize {
+        while value >= 128 {
+            buf[offset] = (value | 128) as u8;
+            value >>= 7;
             offset += 1;
         }
+        buf[offset] = value as u8;
+        offset += 1;
         offset
+    }
+
+    fn encode_varint64(mut value: u64, buf: &mut [u8], mut offset: usize) -> usize {
+        while value >= 128 {
+            buf[offset] = (value | 128) as u8;
+            value >>= 7;
+            offset += 1;
+        }
+        buf[offset] = value as u8;
+        offset += 1;
+        offset
+    }
+
+    fn put_varint32(dst: &mut [u8], mut offset: usize, value: u32) -> usize {
+        Self::encode_varint32(value, dst, offset)
     }
 
     fn put_varint64(dst: &mut [u8], mut offset: usize, value: u64) -> usize {
@@ -81,28 +61,30 @@ impl CodingTrait for Coding {
         offset
     }
 
-    fn get_varint32(input: & Slice) -> Option<u32> {
-        let cow = input.borrow_data();
-        let bytes = cow.as_bytes();
-        let mut result: Option<u32> = None;
+    fn get_varint32(input: &Slice, mut offset: usize) -> Option<(u32, usize)> {
+        let bytes = &input[offset..input.size()];
         let mut shift = 0_u32;
         let limit = input.size();
         let mut i = 0;
         let mut value = 0_u32;
         while shift <= 28 && i < limit {
-            let b = bytes[i];
+            let byte = bytes[i];
             i += 1;
-            if (b & 128) != 0 {
-                value |= ((b & 127) << shift) as u32;
+            if (byte & 128) != 0 {
+                value |= ((byte & 127) << shift) as u32;
+                offset += 1;
             } else {
-                value |= (b << shift) as u32;
+                // 溢出左移
+                value |= (byte as u32) << shift;
+                offset += 1;
+                return Some((value, offset));
             }
             shift += 7;
         }
-        Some(value)
+        None
     }
 
-    fn get_varint64(input: &Slice) -> u64 {
+    fn get_varint64(input: &Slice, mut offset: usize) -> Option<(u64, usize)> {
         let cow = input.borrow_data();
         let bytes = cow.as_bytes();
         let mut result = 0_u64;
@@ -119,17 +101,17 @@ impl CodingTrait for Coding {
             }
             shift += 7;
         }
-        result
+        None
     }
 
     fn get_length_prefixed_slice(input: &mut Slice) -> Option<Slice> {
-        let decode = Coding::get_varint32(input);
+        let decode = Coding::get_varint32(input, 0);
         match decode {
             None => {
                 None
             }
             Some(v) => {
-                Some(Slice::from_buf(v.to_le_bytes().as_mut_slice()))
+                Some(Slice::from_buf(v.0.to_le_bytes().as_mut_slice()))
             }
         }
     }
