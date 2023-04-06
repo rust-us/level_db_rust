@@ -6,7 +6,8 @@ use crate::db::table_cache::TableCache;
 use crate::db::version_edit::VersionEdit;
 use crate::traits::comparator_trait::Comparator;
 use crate::util::cache::Cache;
-use crate::util::options::{Env, Options, ReadOptions};
+use crate::util::env::Env;
+use crate::util::options::{Options, ReadOptions};
 use crate::util::slice::Slice;
 use crate::util::Result;
 
@@ -42,7 +43,7 @@ pub struct VersionSet {
     dbname_: Slice,
     options_: Options,
     table_cache_: TableCache,
-    icmp_: Box<InternalKeyComparator>,
+    icmp_: InternalKeyComparator,
     next_file_number_: u64,
     manifest_file_number_: u64,
     last_sequence_: u64,
@@ -93,7 +94,9 @@ pub struct Compaction {
     // size_t level_ptrs_[config::kNumLevels];
 }
 
-// .h   line 68 - 71
+/// Lookup the value for key.  If found, store it in *val and
+/// return OK.  Else return a non-OK status.  Fills *stats.
+/// REQUIRES: lock is not held
 struct GetStats {
     seek_file: Rc<FileMetaData>,
     seek_file_level: i32
@@ -101,7 +104,7 @@ struct GetStats {
 
 // ,cc line 163
 struct LevelFileNumIterator {
-    icmp_: Rc<InternalKeyComparator>,
+    icmp_: InternalKeyComparator,
     flist_: Vec<FileMetaData>,
     index_: u32,
 
@@ -329,7 +332,7 @@ impl VersionSet {
     /// ```
     ///
     /// ```
-    fn find_file(icmp: &InternalKeyComparator, files:&Vec<FileMetaData>, key:&Slice) -> u32 {
+    fn find_file(icmp: InternalKeyComparator, files:&Vec<FileMetaData>, key:&Slice) -> u32 {
         todo!()
     }
 
@@ -359,7 +362,7 @@ impl VersionSet {
     /// ```
     ///
     /// ```
-    fn some_file_overlaps_range(icmp: &InternalKeyComparator, disjoint_sorted_files:bool,
+    fn some_file_overlaps_range(icmp: InternalKeyComparator, disjoint_sorted_files:bool,
                                 files:&Vec<FileMetaData>, smallest_user_key:&Slice,largest_user_key:&Slice) -> bool {
         todo!()
     }

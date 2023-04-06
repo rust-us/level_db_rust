@@ -1,9 +1,20 @@
+use std::slice;
 use std::alloc::{alloc, dealloc, Layout};
 use std::ptr::NonNull;
-use std::slice;
+use std::sync::{Arc, Mutex};
+
+use crate::util::slice::Slice;
 
 // Arena block size
 const ARENA_BLOCK_SIZE: usize = 4096;
+
+pub type ArenaRef = Arc<Mutex<Arena>>;
+
+
+///
+pub trait ArenaAllocLike {
+    fn copy_with_arena(&self, arena: ArenaRef) -> Self;
+}
 
 pub struct Arena {
     alloc_ptr: Option<NonNull<u8>>,
@@ -24,7 +35,6 @@ impl Default for Arena {
 }
 
 impl Arena {
-
     /// 申请一块内存
     ///
     /// # Arguments
@@ -100,6 +110,18 @@ impl Drop for Arena {
             unsafe {
                 dealloc(block.as_ptr(), *layout)
             }
+        }
+    }
+}
+
+impl ArenaAllocLike for Slice {
+    fn copy_with_arena(&self, arena: ArenaRef) -> Self {
+        unsafe {
+            let mut lock_guard = arena.lock().unwrap();
+            let dst = lock_guard.allocate(self.len());
+            let src = &**self;
+            dst.copy_from_slice(src);
+            Slice::from_raw_parts(dst.as_mut_ptr(), self.len())
         }
     }
 }

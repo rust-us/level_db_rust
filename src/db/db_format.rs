@@ -1,16 +1,20 @@
 use std::cmp::Ordering;
-use std::ops::Deref;
-use crate::db::db_format::ValueType::{K_TYPE_DELETION, K_TYPE_VALUE};
+use std::io::Write;
+use std::sync::Arc;
+use crate::db::db_format::ValueType::{KTypeDeletion, KTypeValue};
 use crate::db::file_meta_data::FileMetaData;
+use crate::traits::coding_trait::CodingTrait;
 use crate::traits::comparator_trait::Comparator;
+use crate::util::coding::Coding;
 use crate::util::slice::Slice;
+use crate::util::unsafe_slice::UnsafeSlice;
 
 pub enum ValueType {
     /// 0x0
-    K_TYPE_DELETION,
+    KTypeDeletion,
 
     /// 0x1
-    K_TYPE_VALUE,
+    KTypeValue,
 }
 
 pub struct ParsedInternalKey {
@@ -26,33 +30,23 @@ pub struct InternalKey {
 
 /// InternalKeyComparator
 pub struct InternalKeyComparator {
-    user_comparator_: dyn Comparator
+    user_comparator_: Arc<dyn Comparator>
 }
 
 /// 查找键
 // todo   add clone trait
 pub struct LookupKey {
-    // We construct a char array of the form:
-    //    klength  varint32               <-- start_
-    //    userkey  char[klength]          <-- kstart_
-    //    tag      uint64
-    //                                    <-- end_
-    // The array is a suitable MemTable key.
-    // The suffix starting with "userkey" can be used as an InternalKey.
-
-    start_: Slice,
-    kstart_: Slice,
-    end_: Slice,
-
-    // Avoid allocation for short keys
-    space_: [u8; 200],
+    /// |klength(varint32)|user key(string)|sequence number(7 bytes)|value type(1 byte)|
+    data: Slice,
+    /// start index at user key
+    user_key_start: usize,
 }
 
 impl ValueType {
-    pub fn get_value(&self) -> i32 {
+    pub fn get_value(&self) -> usize {
         let le = match self {
-            K_TYPE_DELETION => 0,
-            K_TYPE_VALUE => 1
+            KTypeDeletion => 0,
+            KTypeValue => 1
         };
 
         le
@@ -79,8 +73,8 @@ impl TryFrom<i32> for ValueType {
     #[inline]
     fn try_from(value: i32) -> Result<Self, Self::Error> {
         match value {
-            0 => Ok(K_TYPE_DELETION),
-            1 => Ok(K_TYPE_VALUE),
+            0 => Ok(KTypeDeletion),
+            1 => Ok(KTypeValue),
             // all other numbers
             _ => Err(String::from(format!("Unknown code: {}", value)))
         }
@@ -93,28 +87,28 @@ impl Default for ParsedInternalKey {
         ParsedInternalKey {
             user_key: Default::default(),
             sequence: 0,
-            value_type: K_TYPE_DELETION,
+            value_type: KTypeDeletion,
         }
     }
 }
 
 impl ParsedInternalKey {
 
-    fn debug_string(&self) -> Slice {
+    pub fn debug_string(&self) -> Slice {
         Slice::default()
     }
 
     /// Return the length of the encoding of "key".
-    fn internal_key_encoding_length(&self, key: ParsedInternalKey) -> usize {
+    pub fn internal_key_encoding_length(&self, key: ParsedInternalKey) -> usize {
         key.user_key.size() + 8
     }
 
     // 将 self 的数据追加到 result 中
-    fn append_internal_key(&self, result: Slice) {
+    pub fn append_internal_key(&self, result: Slice) {
         todo!()
     }
 
-    fn new(user_key: Slice, sequence: u64, value_type: ValueType) -> Self {
+    pub fn new(user_key: Slice, sequence: u64, value_type: ValueType) -> Self {
         Self {
             user_key,
             sequence,
@@ -125,13 +119,13 @@ impl ParsedInternalKey {
     /// Attempt to parse an internal key from "internal_key".  On success,
     /// stores the parsed data in "*result", and returns true.
     /// On error, returns false, leaves "*result" in an undefined state.
-    fn parse_internal_key(internal_key : Slice, target: ParsedInternalKey) -> bool {
+    pub fn parse_internal_key(internal_key : Slice, target: ParsedInternalKey) -> bool {
         // line 173
         todo!()
     }
 
     /// Returns the user key portion of an internal key.
-    fn extract_user_key(internal_key : Slice) -> Slice {
+    pub fn extract_user_key(internal_key : Slice) -> Slice {
         todo!()
     }
 }
@@ -154,7 +148,7 @@ impl PartialEq for InternalKey {
 }
 
 impl InternalKey {
-    fn new(user_key: Slice, sequence: u64, value_type: ValueType) -> Self {
+    pub fn new(user_key: Slice, sequence: u64, value_type: ValueType) -> Self {
         // line 145
         let result: Slice = Slice::default();
         ParsedInternalKey::new(user_key, sequence, value_type)
@@ -178,7 +172,7 @@ impl InternalKey {
     /// ```
     ///
     /// ```
-    fn decode_from(&self, input: Slice) {
+    pub fn decode_from(&self, input: &UnsafeSlice) {
         todo!()
 
         // wangbo
@@ -186,31 +180,42 @@ impl InternalKey {
     }
 
     /// 输出 InternalKey 调试信息
-    fn debug_string(&self) -> Slice {
+    pub fn debug_string(&self) -> Slice {
         // line 164
         todo!()
     }
 
-    fn encode(self) -> Slice {
+    pub fn encode(self) -> Slice {
         self.rep_
     }
 
-    fn user_key(self) -> Slice {
+    /// 取得  Slice的长度
+    pub fn encode_len(&self) -> usize {
+        self.rep_.size()
+    }
+
+    pub fn user_key(self) -> Slice {
         ParsedInternalKey::extract_user_key(self.rep_)
     }
 
-    fn set_from(self, p: ParsedInternalKey) {
+    pub fn set_from(self, p: ParsedInternalKey) {
         // self.rep_.clear();
         p.append_internal_key(self.rep_);
     }
 
-    fn clear(self) {
+    pub fn clear(self) {
         // self.rep_.clear();
     }
 }
 
+impl Default for InternalKeyComparator {
+    fn default() -> Self {
+        todo!()
+    }
+}
+
 impl InternalKeyComparator {
-    pub fn create(c: Box<dyn Comparator>) -> Box<Self> {
+    pub fn create(_cmp: Box<dyn Comparator>) -> Box<Self> {
         todo!()
     }
 
@@ -231,7 +236,7 @@ impl Comparator for InternalKeyComparator {
     //     todo!()
     // }
 
-    fn compare(&self, _a: &Slice, _b: &Slice) -> Option<Ordering> {
+    fn compare(&self, _a: &[u8], _b: &[u8]) -> Option<Ordering> {
         todo!()
     }
 
@@ -251,24 +256,43 @@ impl Comparator for InternalKeyComparator {
 impl LookupKey {
     /// Initialize *this for looking up user_key at a snapshot with
     /// the specified sequence number.
-    fn new(user_key: Slice, sequence: u64) -> Self {
-        // todo
-        todo!()
+    pub fn new(user_key: Slice, sequence: usize) -> Self {
+        let user_key_size = user_key.size();
+        let need = user_key_size + 13; // A conservative estimate
+        let mut data = Vec::with_capacity(need);
+        let buf = data.as_mut_slice();
+        let klength = Coding::varint_length(user_key_size + 8);
+        let mut offset = 0;
+        // write key size
+        offset = Coding::encode_varint32(klength as u32, buf, offset);
+        // write key slice
+        offset += (&mut buf[offset..]).write(user_key.as_ref()).expect("write user_key");
+        // write sequence number and value type
+        Coding::encode_fixed64(
+            pack_sequence_and_type(sequence, ValueType::KTypeValue),
+                buf, offset);
+
+        LookupKey {
+            data: Slice::from_vec(data),
+            user_key_start: klength
+        }
     }
 
     /// Return a key suitable for lookup in a MemTable.
-    fn mem_table_key(&self) -> Slice {
-        todo!()
+    pub fn mem_table_key(&self) -> Slice {
+        self.data.clone()
     }
 
     /// Return an internal key (suitable for passing to an internal iterator)
-    fn internal_key(&self) -> Slice {
+    pub fn internal_key(&self) -> Slice {
         // line 204
-        todo!()
+        let buf = self.data.as_ref();
+        let internal_key_buf = &buf[self.user_key_start..];
+        Slice::from_buf(internal_key_buf.clone())
     }
 
     /// Return the user key
-    fn user_key(&self) -> Slice {
+    pub fn user_key(&self) -> Slice {
         // line 207
         todo!()
     }
@@ -293,6 +317,14 @@ impl LookupKey {
 //     }
 // }
 
+const K_MAX_SEQUENCE_NUMBER: usize = (1 << 56) - 1;
+
+#[inline]
+pub fn pack_sequence_and_type(seq_no: usize, v_type: ValueType) -> u64 {
+    debug_assert!(seq_no <= K_MAX_SEQUENCE_NUMBER);
+    debug_assert!(v_type.get_value() <= 1);
+    ((seq_no << 8) | v_type.get_value()) as u64
+}
 
 pub struct Config {}
 impl Config {
@@ -325,5 +357,5 @@ impl Config {
 // and the value type is embedded as the low 8 bits in the sequence
 // number in internal keys, we need to use the highest-numbered
 // ValueType, not the lowest).
-    pub const K_VALUE_TYPE_FOR_SEEK: ValueType = ValueType::K_TYPE_VALUE;
+    pub const K_VALUE_TYPE_FOR_SEEK: ValueType = ValueType::KTypeValue;
 }

@@ -1,9 +1,10 @@
 use std::fmt::{Display, Formatter};
 use std::io;
 use std::ops::Deref;
+use std::sync::PoisonError;
 use crate::util::r#const::COLON_WHITE_SPACE;
 use crate::util::slice::Slice;
-use crate::util::status::LevelError::{KCorruption, KIOError, KInvalidArgument, KNotSupported, KNotFound, KOk, KBadRecord};
+use crate::util::status::LevelError::{KCorruption, KIOError, KInvalidArgument, KNotSupported, KNotFound, KOk, KBadRecord, KRepeatedRecord};
 
 /// db 中的返回状态，将错误号和错误信息封装成Status类，统一进行处理。
 /// 在 leveldb的实现里， 为了节省空间Status将返回码(code), 错误信息message及长度打包存储于一个字符串数组中， 来存储错误信息。
@@ -102,10 +103,13 @@ impl Status {
         self.err.is_invalid_argument()
     }
 
-    pub fn get_error_string(&self) -> String {
-        self.err.to_string()
+    pub fn get_msg(&self) -> String {
+        let msg = &self.msg;
+
+        String::from(msg.as_str())
     }
 
+    /// 得到 LevelError
     /// 请注意， err 的所有权会发生转移！！！
     pub fn get_error(self) -> LevelError {
         self.err
@@ -158,6 +162,7 @@ impl Status {
             KInvalidArgument  => "Invalid argument: ",
             KIOError  => "IO error: ",
             KBadRecord=> "wal bad record",
+            KRepeatedRecord => "repeated record"
         };
 
         if self.err.is_ok() {
@@ -204,6 +209,7 @@ pub enum LevelError {
     KInvalidArgument,
     KIOError,
     KBadRecord,
+    KRepeatedRecord,
 }
 
 impl LevelError {
@@ -229,6 +235,10 @@ impl LevelError {
 
     pub fn is_invalid_argument(&self) -> bool {
         matches!(*self, KInvalidArgument)
+    }
+
+    pub fn is_repeated_record(&self) -> bool {
+        matches!(self, KRepeatedRecord)
     }
 
     pub fn ok() -> Status {
@@ -270,6 +280,10 @@ impl LevelError {
         }
     }
 
+    pub fn corruption_string(msg: &str, msg2: &str) -> Status {
+        LevelError::corruption(Slice::from(msg), Slice::from(msg2))
+    }
+
     pub fn not_supported(mut msg: Slice, msg2: Slice) -> Status {
         let _ = &msg.merge(msg2, Some(String::from(COLON_WHITE_SPACE)));
 
@@ -284,6 +298,14 @@ impl LevelError {
 
         Status{
             err: KInvalidArgument,
+            msg
+        }
+    }
+
+    #[inline]
+    pub fn repeated_record(msg: Slice) -> Status {
+        Status {
+            err: KRepeatedRecord,
             msg
         }
     }
@@ -320,7 +342,8 @@ impl LevelError {
             KNotSupported => 3,
             KInvalidArgument => 4,
             KIOError => 5,
-            KBadRecord => 6
+            KBadRecord => 6,
+            KRepeatedRecord => 7
         };
 
         le
@@ -361,6 +384,7 @@ impl TryFrom<i32> for LevelError {
             4 => Ok(KInvalidArgument),
             5 => Ok(KIOError),
             6 => Ok(KBadRecord),
+            7 => Ok(KRepeatedRecord),
             // all other numbers
             _ => Err(String::from(format!("Unknown code: {}", value)))
         }
@@ -370,6 +394,12 @@ impl TryFrom<i32> for LevelError {
 impl From<io::Error> for Status {
     fn from(e: io::Error) -> Self {
         LevelError::io_error(e.to_string().into(), "".into())
+    }
+}
+
+impl <T> From<PoisonError<T>> for Status {
+    fn from(_value: PoisonError<T>) -> Self {
+        Status::wrapper(KCorruption, "PoisonError".into())
     }
 }
 
@@ -386,6 +416,7 @@ impl Display for LevelError {
             KInvalidArgument  => "Invalid argument: ",
             KIOError  => "IO error: ",
             KBadRecord => "wal bad record: ",
+            KRepeatedRecord => "repeated record: ",
         };
         print.push_str(msg_type);
 

@@ -1,18 +1,21 @@
+use std::sync::Arc;
 use crate::db::db::Snapshot;
+use crate::db::db_format::InternalKeyComparator;
 use crate::traits::comparator_trait::Comparator;
+use crate::traits::filter_policy_trait::FilterPolicy;
 use crate::util::comparator::BytewiseComparatorImpl;
+use crate::util::env::Env;
 
 pub enum CompressionType {
     NoCompression,
     SnappyCompression
 }
 
-/// TODO temp
-pub struct  Env {}
-
 pub struct Cache {}
 
-pub struct FilterPolicy {}
+// 使用如下定义（后续路径会重构）
+// use crate::traits::filter_policy_trait::FilterPolicy;
+// pub struct FilterPolicy {}
 
 pub struct Options {
 
@@ -95,7 +98,7 @@ pub struct Options {
     /// If non-null, use the specified filter policy to reduce disk reads.
     /// Many applications will benefit from passing the result of
     /// NewBloomFilterPolicy() here.
-    pub filter_policy: Option<FilterPolicy>,
+    pub filter_policy: Option<Box<dyn FilterPolicy>>,
 }
 /// Options that control read operations
 pub struct ReadOptions {
@@ -132,7 +135,7 @@ pub struct WriteOptions {
 impl Default for Options {
     fn default() -> Self {
         Self {
-            cmp: Box::new(BytewiseComparatorImpl::default()),
+            cmp: Box::new(InternalKeyComparator::default()),
             create_if_missing: false,
             error_if_exists: false,
             paranoid_checks: false,

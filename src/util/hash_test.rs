@@ -1,7 +1,6 @@
 use crate::util::hash::{Hash, ToHash};
 use crate::util::r#const::HASH_DEFAULT_SEED;
 use crate::util::slice::Slice;
-use std::slice;
 
 #[test]
 fn test_hash() {
