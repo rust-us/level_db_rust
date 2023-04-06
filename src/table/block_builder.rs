@@ -39,7 +39,7 @@ impl BlockBuilder {
         todo!()
     }
 
-    /// 添加数据到block
+    /// 向datablock增加entry
     ///
     /// # Arguments
     ///
@@ -68,7 +68,7 @@ impl BlockBuilder {
         todo!()
     }
 
-    /// 构造block
+    /// 追加Restart points
     ///
     ///
     /// # Examples
@@ -91,7 +91,7 @@ impl BlockBuilder {
         todo!()
     }
 
-    /// 估算当前的block大小
+    /// 估算当前的block大小, 超过一定大小后，写入文件
     ///
     /// # Examples
     ///
