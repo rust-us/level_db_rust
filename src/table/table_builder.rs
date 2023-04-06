@@ -5,7 +5,7 @@ use crate::table::block_builder::BlockBuilder;
 use crate::table::filter_block::{FilterBlock, FilterBlockBuilder};
 use crate::table::format::BlockHandle;
 use crate::traits::filter_policy_trait::FilterPolicy;
-use crate::util::options::{CompressionType, Options};
+use crate::util::options::{CompressionType, OptionsPtr, Options};
 use crate::util::slice::Slice;
 use crate::util::status::Status;
 use crate::util::unsafe_slice::UnsafeSlice;
@@ -16,8 +16,8 @@ pub struct TableBuilder {
 
 /// TableBuilder Rep 结构体， 内部使用
 struct Rep<> {
-    options: Box<Options>,
-    index_block_options: Box<Options>,
+    options: OptionsPtr,
+    index_block_options: OptionsPtr,
 
     // SSTable 生成后的文件
     file: Arc<File>,
@@ -47,8 +47,8 @@ struct Rep<> {
 }
 
 impl TableBuilder {
-    pub fn new_with_writable_file(options: &Options, writableFile: Arc<File>) -> Self {
-        let rep = Rep::new(options, writableFile);
+    pub fn new_with_writable_file(options: OptionsPtr, writable_file: Arc<File>) -> Self {
+        let rep = Rep::new(options, writable_file);
 
         // Self {
         //     rep
@@ -95,34 +95,30 @@ impl TableBuilder {
 }
 
 impl Rep {
-    pub fn new(opt: &Options, writableFile: Arc<File>) -> Self {
-        // todo  如何赋值？ Box::new(opt)
-        let options = Box::new(Default::default());
-        let index_block_options = Box::new(Default::default());
-
+    pub fn new(opt: OptionsPtr, writableFile: Arc<File>) -> Self {
         let mut filter_block: Option<FilterBlockBuilder>;
         if opt.filter_policy.is_none() {
             filter_block = None;
         }else {
-            filter_block = Some(FilterBlockBuilder::new_with_policy(opt.filter_policy.unwrap()));
+            filter_block = Some(FilterBlockBuilder::new_with_policy(opt.filter_policy.clone().unwrap()));
         }
 
         Self {
-            options,
-            index_block_options,
+            options: opt.clone(),
+            index_block_options: opt.clone(),
             file: writableFile,
             offset: 0,
             // default  Status::OK
             status: Status::default(),
-            data_block: BlockBuilder::new(&options.as_ref()),
-            index_block: BlockBuilder::new(&index_block_options.as_ref()),
-            last_key: Default::default(),
+            data_block: BlockBuilder::new(opt.clone()),
+            index_block: BlockBuilder::new(opt.clone()),
+            last_key: Slice::default(),
             num_entries: 0,
             closed: false,
             filter_block,
             pending_index_entry: false,
-            pending_handle: Default::default(),
-            compressed_output: Default::default(),
+            pending_handle: BlockHandle::default(),
+            compressed_output: Slice::default(),
         }
     }
 }

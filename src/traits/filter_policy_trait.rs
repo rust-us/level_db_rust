@@ -1,4 +1,9 @@
+use std::sync::Arc;
 use crate::util::slice::Slice;
+
+
+/// FilterPolicy 的 `Arc<Box<dyn FilterPolicy>>` 别名
+pub type FilterPolicyPtr = Arc<Box<dyn FilterPolicy>>;
 
 /// 用于key过滤，可以快速的排除不存在的key
 pub trait FilterPolicy {
