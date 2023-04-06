@@ -70,7 +70,7 @@ pub trait CodingTrait {
     /// # Arguments
     ///
     /// * `dst`: 目标字符串
-    /// * `value`: Slice类型的编码值
+    /// * `value_len`: Slice类型的编码值长度
     ///
     /// returns: ()
     ///
@@ -79,7 +79,8 @@ pub trait CodingTrait {
     /// ```
     ///
     /// ```
-    fn put_length_prefixed_slice(dst: &mut [u8], offset: usize, value: Slice) -> usize;
+    // fn put_length_prefixed_slice(dst: &mut [u8], offset: usize, value: &Slice) -> usize;
+    fn put_length_prefixed_slice(dst: &mut [u8], offset: usize, value_len: usize) -> usize;
     /// 从slice的开头解码一个32位的变长整数, 并将slice的索引置于解码后的位置
     ///
     /// # Arguments
@@ -93,7 +94,7 @@ pub trait CodingTrait {
     /// ```
     ///
     /// ```
-    fn get_varint32(input: &mut Slice) -> Option<u32>;
+    fn get_varint32(input: & Slice) -> Option<u32>;
     /// 从slice的开头解码一个64位的变长整数, 并将slice的索引置于解码后的位置
     ///
     /// # Arguments
@@ -107,7 +108,7 @@ pub trait CodingTrait {
     /// ```
     ///
     /// ```
-    fn get_varint64(input: &mut Slice) -> u64;
+    fn get_varint64(input: &Slice) -> u64;
     /// 从slice数据中读取长度 返回长度的Slice
     ///
     /// # Arguments
@@ -172,7 +173,7 @@ pub trait CodingTrait {
     ///
     /// ```
     /// 从slice的开头解码一个32位的变长整数, 并将slice的索引置于解码后的位置
-    fn varint_length(value: u64) -> i32;
+    fn varint_length(value: usize) -> usize;
     /// 32位定长正整数编码
     ///
     /// # Arguments

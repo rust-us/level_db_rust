@@ -68,12 +68,27 @@ impl FileMetaData {
         }
     }
 
+    pub fn get_number(&self) -> u64 {
+        self.number
+    }
+
+    /// File size in bytes
+    pub fn get_file_size(&self) -> u64 {
+        self.file_size
+    }
+
+    pub fn set_file_size(&mut self, file_size: u64) {
+        self.file_size = file_size;
+    }
+
+    /// Smallest internal key served by table
     pub fn get_smallest(&self) -> &InternalKey {
         &self.smallest
     }
 
-    pub fn get_number(&self) -> u64 {
-        self.number
+    /// Largest internal key served by table
+    pub fn get_largest(&self) -> &InternalKey {
+        &self.largest
     }
 
     pub fn get_refs(&self) -> i32 {

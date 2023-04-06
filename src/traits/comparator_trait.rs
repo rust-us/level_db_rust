@@ -17,16 +17,17 @@ pub trait Comparator {
     ///
     /// ```
     /// use std::cmp::Ordering;
+    /// use crate::util::slice::Slice;
     ///
     ///  let comp = BytewiseComparatorImpl::default();
-    ///  optionVal = comp.compare(&Slice::from("a"), &Slice::from("ab"));
+    ///  optionVal = comp.compare("a", "ab");
     ///  assert_eq!(optionVal.unwrap(), Ordering::Less);
     ///
     ///  let comp = BytewiseComparatorImpl::default();
     ///  let optionVal = comp.compare(&Slice::from("b"), &Slice::from("abcd"));
     ///  assert_eq!(optionVal.unwrap(), Ordering::Greater);
     /// ```
-    fn compare(&self, a: &Slice, b: &Slice) -> Option<Ordering>;
+    fn compare(&self, a: &[u8], b: &[u8]) -> Option<Ordering>;
 
     /// 返回comparator的名字
     fn get_name(&self) -> String;

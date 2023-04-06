@@ -132,7 +132,7 @@ mod test {
 
     #[test]
     fn test_varint_length() {
-        let len = Coding::varint_length( 65535 as u64);
+        let len = Coding::varint_length(65535 as u64 as usize);
         println!("len: {:?}", len);
         assert_eq!(len, 3);
     }

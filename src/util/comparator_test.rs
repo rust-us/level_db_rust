@@ -20,12 +20,9 @@ mod test {
         let option_val = comp.compare(&Slice::from("a"), &Slice::from("ab"));
         assert_eq!(option_val.unwrap(), Ordering::Less);
 
-        // // todo  Slice 存在 bug 未修复
-        // let comp = BytewiseComparatorImpl::default();
-        // let option_val = comp.compare(&Slice::from("b"), &Slice::from("abcd"));
-        // assert_eq!(option_val.unwrap(), Ordering::Greater);
+        let option_val = comp.compare(&Slice::from("b"), &Slice::from("abcd"));
+        assert_eq!(option_val.unwrap(), Ordering::Greater);
 
-        let comp = BytewiseComparatorImpl::default();
         let option_val = comp.compare(&Slice::from("abcd"), &Slice::from("abcd"));
         assert_eq!(option_val.unwrap(), Ordering::Equal);
     }
@@ -96,7 +93,7 @@ mod test {
 
         // u8max 结尾
         let mut u8_vec: Vec<u8> = vec![];
-        u8_vec.write(&String::from("helloWorld").as_bytes().to_vec());
+        u8_vec.write(&String::from("helloWorld").as_bytes().to_vec()).unwrap();
         u8_vec.push(u8::MAX);
 
         let u8_array_str = String::from(Slice::from_buf(u8_vec.as_slice()));
@@ -109,7 +106,7 @@ mod test {
         // u8max 开头
         let mut u8_vec: Vec<u8> = vec![];
         u8_vec.push(u8::MAX);
-        u8_vec.write(&String::from("helloWorld").as_bytes().to_vec());
+        u8_vec.write(&String::from("helloWorld").as_bytes().to_vec()).unwrap();
         let u8_max_str = String::from(Slice::from_buf(u8_vec.as_slice()));
 
         let comp = BytewiseComparatorImpl::default();

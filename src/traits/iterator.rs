@@ -1,5 +1,9 @@
 use crate::util::slice::Slice;
+use crate::util::status::Status;
+use crate::util::unsafe_slice::UnsafeSlice;
 
+///
+/// Iterator 迭代器定义
 pub trait DataIterator {
     /// 检查当前位置是否有效
     ///
@@ -67,6 +71,7 @@ pub trait DataIterator {
     ///
     /// ```
     fn next(&mut self);
+
     /// 定位到上一个元素
     ///
     /// # Arguments
@@ -80,6 +85,7 @@ pub trait DataIterator {
     ///
     /// ```
     fn pre(&mut self);
+
     /// 获取key值
     ///
     /// # Arguments
@@ -92,7 +98,9 @@ pub trait DataIterator {
     /// ```
     ///
     /// ```
-    fn key(&self) -> &Slice;
+    /// todo UnsafeSlice 与 Slice 应该存在一个共同traits或者struct 便于API操作
+    fn key(&self) -> UnsafeSlice;
+
     /// 获取value值
     ///
     /// # Arguments
@@ -105,6 +113,8 @@ pub trait DataIterator {
     /// ```
     ///
     /// ```
-    fn value(&self) -> &Slice;
+    fn value(&self) -> UnsafeSlice;
+
+    fn status(&self) -> Status;
 
 }
