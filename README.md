@@ -84,7 +84,7 @@ RUSTFLAGS='--cfg CORE_DEBUG="false"' cargo build --release
 | table.Iterator(TwoLevelIterator)                                                 | kazeseiriou          | 0%   |
 | table.Iterator(tabletest.KeyConvertingIterator)                                  | kazeseiriou          | 0%   |
 | table.Iterator(dbtest.ModelIter)                                                 | kazeseiriou          | 0%   |
-| table.Iterator(Block::Iter)                                                      | fengyang             | 0%   |
+| table.Iterator(Block::Iter)                                                      | wangboo              | 0%   |
 | IteratorWrapper                                                                  | kazeseiriou          | 0%   |
 | db.MemTable(MemTable, MemTableIterator)                                          | wangboo,tzcyujunyong | 20%  | 
 | db.Builder                                                                       | fengyang             | 85%  |
@@ -94,7 +94,7 @@ RUSTFLAGS='--cfg CORE_DEBUG="false"' cargo build --release
 | table.FilterBlockBuilder                                                         | fengyang             | 30%  |
 | FilterBlock, FilterBlockReader                                                   | fengyang             | 80%  |
 | SSTable                                                                          | fengyang             | 0%   |
-| table.Table                                                                      | peach,tzcyujunyong   |      |
+| table.Table                                                                      | peach,tzcyujunyong   | 30%  |
 | db.leveldb_util                                                                  | wangboo              | 0%   |
 | db.log_format                                                                    | wangboo              | 90%  |
 | db.LogReader                                                                     | wangboo              | 90%  |
@@ -104,7 +104,6 @@ RUSTFLAGS='--cfg CORE_DEBUG="false"' cargo build --release
 | db.VersionEdit(Tag, VersionEdit, FileMetaData)                                   | fengyang             | 20%  |
 | db.VersionSet(Version, LevelFileNumIterator, SaverState)                         | fengyang             | 20%  |
 | WriteBatch                                                                       | tzcyujunyong,wangboo | 50%  |
-| table.table                                                                      |                      | 30%  |
 | db.filename                                                                      |                      |      |
 | <website>                                                                        | 半支烟                  | 40%  |
 

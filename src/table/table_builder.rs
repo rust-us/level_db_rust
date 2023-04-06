@@ -102,6 +102,8 @@ impl Rep {
         }else {
             filter_block = Some(FilterBlockBuilder::new_with_policy(opt.filter_policy.clone().unwrap()));
         }
+        // TODo if let sytax
+        // let filter_block = opt.filter_policy.map(|e|FilterBlockBuilder::new_with_policy(e.clone().unwrap()));
 
         Self {
             options: opt.clone(),
