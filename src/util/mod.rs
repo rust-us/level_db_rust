@@ -23,10 +23,14 @@ pub mod comparator;
 mod comparator_test;
 pub mod crc;
 mod crc_test;
-pub mod bloom_filter;
-mod bloom_filter_test;
+// pub mod bloom_filter;
+// mod bloom_filter_test;
 pub mod filter_policy;
 mod filter_policy_test;
+pub mod filter_policy_bloom;
+mod filter_policy_bloom_test;
+pub mod filter_policy_internal;
+mod filter_policy_internal_test;
 
 pub mod histogram;
 mod histogram_test;
