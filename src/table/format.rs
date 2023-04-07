@@ -47,7 +47,7 @@ pub struct BlockContents {
     heap_allocated:bool,
 }
 
-trait BlockTrait {
+trait BlockHandleTrait {
     ///
     /// The offset of the block in the file.
     ///
@@ -153,7 +153,7 @@ trait BlockContent {
 
 }
 
-impl BlockTrait for BlockHandle {
+impl BlockHandleTrait for BlockHandle {
     fn offset(&self) -> u64 {
         self.offset
     }
@@ -199,6 +199,7 @@ impl Default for BlockHandle {
 }
 
 impl FootTrait for Footer {
+    /// The block handle for the metaindex block of the table
     fn meta_index_handle(&self) -> BlockHandle {
         todo!()
     }
