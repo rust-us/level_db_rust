@@ -12,9 +12,9 @@ use crate::util::unsafe_slice::UnsafeSlice;
 
 /// 在一个 SSTable 中，文件末尾的 Footer 是定长的，
 /// 其他数据都被划分成一个个变长的 block：
-/// index block(@see Footer#index_handle)、
-/// meta_index block(@see Footer#meta_index_handle)、
-/// meta blocks、
+/// index block(@see format.BlockHandle、Footer#index_handle)、
+/// meta_index block(@see format.BlockHandle、Footer#meta_index_handle)、
+/// meta blocks(@see table.FilterBlock)、
 /// data blocks。
 pub struct TableBuilder {
     rep: Box<Rep>
