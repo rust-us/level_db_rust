@@ -36,7 +36,7 @@ impl CodingTrait for Coding {
         dst[offset] = buf[2];
         offset += 1;
         dst[offset] = buf[3];
-        offset
+        offset + 1
     }
 
     fn put_fixed64(dst: &mut [u8], mut offset: usize, value: u64) -> usize {
@@ -57,7 +57,7 @@ impl CodingTrait for Coding {
         dst[offset] = buf[6];
         offset += 1;
         dst[offset] = buf[7];
-        offset
+        offset + 1
     }
 
     varint!(u32,encode_varint32);
