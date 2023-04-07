@@ -1,4 +1,9 @@
+use std::sync::Arc;
 use crate::util::slice::Slice;
+
+
+/// FilterPolicy 的 `Arc<Box<dyn FilterPolicy>>` 别名
+pub type FilterPolicyPtr = Arc<Box<dyn FilterPolicy>>;
 
 /// 用于key过滤，可以快速的排除不存在的key
 pub trait FilterPolicy {
@@ -23,6 +28,8 @@ pub trait FilterPolicy {
     /// # Examples
     ///
     /// ```
+    ///    use crate::util::slice::Slice;
+    ///
     ///    let mut keys : Vec<Slice>  = Vec::new();
     ///     keys.push(Slice::try_from(String::from("hello")).unwrap());
     ///     keys.push(Slice::try_from(String::from("world")).unwrap());
@@ -30,7 +37,9 @@ pub trait FilterPolicy {
     ///     let policy = BloomFilterPolicy::new(800);
     ///     let bloom_filter: Slice = policy.create_filter(keys);
     /// ```
-    fn create_filter(&self, keys: Vec<Slice>) -> Slice;
+    fn create_filter(&self, keys: Vec<&Slice>) -> Slice;
+
+    fn create_filter_with_len(&self, len: usize, keys: Vec<&Slice>) -> Slice;
 
     ///
     ///

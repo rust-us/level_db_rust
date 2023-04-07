@@ -37,6 +37,9 @@ mod test {
                                                    String::from(msg2).into());
         assert!(&err.is_corruption());
 
+        let err1: Status = LevelError::corruption_string("AAaaa", "bbhugy");
+        assert!(&err1.is_corruption());
+
         let err: Status = LevelError::not_found(String::from(msg1).into(),
                                                    String::from(msg2).into());
         assert!(&err.is_not_found());
@@ -97,7 +100,7 @@ mod test {
     }
 
     #[test]
-    fn test_level_error_toString() {
+    fn test_level_error_to_string() {
         // ok
         let status: Status = LevelError::ok();
         assert_eq!("OK", status.to_string());
