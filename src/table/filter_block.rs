@@ -13,6 +13,7 @@ const FILTER_BASE: usize = 1 << FILTER_BASE_LG;
 
 ///
 /// meta block 构建器
+/// FilterBlock，实质上就是SST文件里面的 meta block
 ///
 pub trait FilterBlock {
     fn new_with_policy(policy: FilterPolicyPtr) -> Self;

@@ -10,6 +10,12 @@ use crate::util::slice::Slice;
 use crate::util::status::Status;
 use crate::util::unsafe_slice::UnsafeSlice;
 
+/// 在一个 SSTable 中，文件末尾的 Footer 是定长的，
+/// 其他数据都被划分成一个个变长的 block：
+/// index block(@see format.BlockHandle、Footer#index_handle)、
+/// meta_index block(@see format.BlockHandle、Footer#meta_index_handle)、
+/// meta blocks(@see table.FilterBlock)、
+/// data blocks。
 pub struct TableBuilder {
     rep: Box<Rep>
 }
@@ -41,6 +47,7 @@ struct Rep<> {
     pending_index_entry: bool,
     // Handle to add to index block
     // pending_handle 记录需要生成数据索引的数据块在 SSTable 中的偏移量和大小
+    // 也就是说， pending_handle 主要用于表示当前块的offset及size。
     pending_handle: BlockHandle,
 
     compressed_output: Slice,
@@ -57,18 +64,22 @@ impl TableBuilder {
         todo!()
     }
 
+    /// 写入 entry
     pub fn add(&self, key: &UnsafeSlice, value: &UnsafeSlice) {
         todo!()
     }
 
+    /// flush到文件
     pub fn flush(&self) {
         todo!()
     }
 
+    /// block->Finish、压缩
     pub fn write_block(&self, block: &BlockBuilder, handler: &BlockHandle) {
         todo!()
     }
 
+    /// datablock写入文件，添加压缩方式、crc。
     pub fn write_raw_block(&self, block_contents: &UnsafeSlice, compression_type: CompressionType, handler: &BlockHandle) {
         todo!()
     }
@@ -77,6 +88,7 @@ impl TableBuilder {
         todo!()
     }
 
+    /// 剩余datablock写入文件，并生成管理区。
     pub fn finish(&self) -> Status {
         todo!()
     }
