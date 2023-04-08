@@ -12,26 +12,28 @@ pub const k_max_encoded_length: u32 = 10 + 10;
 /// of two block handles and a magic number.
 pub const k_encoded_length: u32 = 2 * k_max_encoded_length + 8;
 
-// // kTableMagicNumber was picked by running
-// //    echo http://code.google.com/p/leveldb/ | sha1sum
-// // and taking the leading 64 bits.
-// pub const k_table_magic_number: &str = 0xdb4775248b80fb57ull;
+/// Footer 的大小为 48 字节，内容是一个 8 字节的 magic number 和两个 BlockHandle 构成
+/// 在  Footer::EncodeTo 和 Footer::DecodeFrom 中起作用
+/// kTableMagicNumber was picked by running
+///    echo http://code.google.com/p/leveldb/ | sha1sum
+/// and taking the leading 64 bits.
+pub const k_table_magic_number: u64 = 0xdb4775248b80fb57;
 
 /// 1-byte type + 32-bit crc
 pub const k_block_trailer_size: usize = 5;
 
 pub struct BlockHandle {
     // 偏移量
-    offset_: u64,
+    offset: u64,
     //
-    size_: u64
+    size: u64
 }
 
 /// Footer encapsulates the fixed information stored at the tail
 /// end of every table file.
 pub struct Footer {
-    metaindex_handle_: BlockHandle,
-    index_handle_: BlockHandle
+    meta_index_handle: BlockHandle,
+    index_handle: BlockHandle
 }
 
 pub struct BlockContents {
@@ -45,7 +47,7 @@ pub struct BlockContents {
     heap_allocated:bool,
 }
 
-trait BlockTrait {
+trait BlockHandleTrait {
     ///
     /// The offset of the block in the file.
     ///
@@ -102,7 +104,7 @@ trait BlockTrait {
 
 trait FootTrait {
     // The block handle for the metaindex block of the table
-    fn metaindex_handle(&self) -> BlockHandle;
+    fn meta_index_handle(&self) -> BlockHandle;
 
     fn set_metaindex_handle(&mut self, h: BlockHandle);
 
@@ -151,21 +153,21 @@ trait BlockContent {
 
 }
 
-impl BlockTrait for BlockHandle {
+impl BlockHandleTrait for BlockHandle {
     fn offset(&self) -> u64 {
-        self.offset_
+        self.offset
     }
 
     fn set_offset(&mut self, offset: u64) {
-        self.offset_ = offset;
+        self.offset = offset;
     }
 
     fn size(&self) -> u64 {
-        self.size_
+        self.size
     }
 
     fn set_size(&mut self, size: u64) {
-        self.size_ = size;
+        self.size = size;
     }
 
     fn encode_to(&self) -> Result<Slice> {
@@ -190,14 +192,15 @@ impl Default for BlockHandle {
     #[inline]
     fn default() -> Self {
         BlockHandle {
-            offset_: 0,
-            size_: 0,
+            offset: 0,
+            size: 0,
         }
     }
 }
 
 impl FootTrait for Footer {
-    fn metaindex_handle(&self) -> BlockHandle {
+    /// The block handle for the metaindex block of the table
+    fn meta_index_handle(&self) -> BlockHandle {
         todo!()
     }
 

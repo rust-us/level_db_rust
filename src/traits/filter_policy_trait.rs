@@ -1,4 +1,9 @@
+use std::sync::Arc;
 use crate::util::slice::Slice;
+
+
+/// FilterPolicy 的 `Arc<Box<dyn FilterPolicy>>` 别名
+pub type FilterPolicyPtr = Arc<Box<dyn FilterPolicy>>;
 
 /// 用于key过滤，可以快速的排除不存在的key
 pub trait FilterPolicy {
@@ -12,29 +17,34 @@ pub trait FilterPolicy {
     ///
     fn name(&self) -> String;
 
-    /// 根据 keys 创建过滤器，并返回 bloom_filter Slice
+    fn create_filter(&self, keys: Vec<&Slice>) -> Slice;
+
+    ///
+    /// 使用一系列key来创建一个 bloom filter，并返回 bloom filter
+    ///
+    /// 有n个整数set，以及一个m位的bit数组，以及k个哈希函数。m[i]表示访问第i个bit位。
     ///
     /// # Arguments
     ///
-    /// * `keys`:  创建过滤器的数据清单
+    /// * `capacity`: 构造的 BloomFilter 的长度
+    /// * `keys`: 创建过滤器的数据清单
     ///
-    /// returns: bloom_filter Slice
+    /// returns: bloom filter Slice
     ///
     /// # Examples
     ///
     /// ```
-    ///    use crate::util::slice::Slice;
+    ///     use level_db_rust::util::filter_policy_bloom::BloomFilterPolicy;
+    ///     use level_db_rust::util::slice::Slice;
     ///
-    ///    let mut keys : Vec<Slice>  = Vec::new();
+    ///     let mut keys : Vec<Slice>  = Vec::new();
     ///     keys.push(Slice::try_from(String::from("hello")).unwrap());
     ///     keys.push(Slice::try_from(String::from("world")).unwrap());
     ///
     ///     let policy = BloomFilterPolicy::new(800);
     ///     let bloom_filter: Slice = policy.create_filter(keys);
     /// ```
-    fn create_filter(&self, keys: Vec<&Slice>) -> Slice;
-
-    fn create_filter_with_len(&self, len: usize, keys: Vec<&Slice>) -> Slice;
+    fn create_filter_with_len(&self, capacity: usize, keys: Vec<&Slice>) -> Slice;
 
     ///
     ///
