@@ -107,9 +107,9 @@ pub struct FilterBlockBuilder {
     // result_变量就是表示的是一个filter计算之后的输出。
     // 比如 BloomFilter 经过各种key计算之后，可能会得到一个 filter_str。这个 filter_str 就是放到result里面。
     result: Vec<u8>,
+
     // policy_->CreateFilter() argument
     tmp_keys: Vec<Slice>,
-
     // 里面的每个元素就是用来记录每个filter内容的offset
     filter_offsets: Vec<u32>,
 }
