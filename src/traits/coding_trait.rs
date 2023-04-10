@@ -6,9 +6,10 @@ pub trait CodingTrait {
     /// # Arguments
     ///
     /// * `dst`:  目标字符串
+    /// * `offset`: 偏移量
     /// * `value`: 编码值
     ///
-    /// returns: ()
+    /// returns: usize  返回的最新的偏移量
     ///
     /// # Examples
     ///
@@ -17,6 +18,7 @@ pub trait CodingTrait {
     ///    put_fixed32(&mut string, 65535);
     /// ```
     fn put_fixed32(dst: &mut [u8], offset: usize, value: u32) -> usize;
+
     ///64位定长编码写入字符串
     ///
     /// # Arguments
