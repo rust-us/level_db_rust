@@ -37,11 +37,11 @@ pub trait FilterPolicy {
     ///     use level_db_rust::util::filter_policy_bloom::BloomFilterPolicy;
     ///     use level_db_rust::util::slice::Slice;
     ///
-    ///     let mut keys : Vec<Slice>  = Vec::new();
-    ///     keys.push(Slice::try_from(String::from("hello")).unwrap());
-    ///     keys.push(Slice::try_from(String::from("world")).unwrap());
+    ///     let mut keys : Vec<&Slice>  = Vec::new();
+    ///     keys.push(&Slice::try_from(String::from("hello")).unwrap());
+    ///     keys.push(&Slice::try_from(String::from("world")).unwrap());
     ///
-    ///     let policy = BloomFilterPolicy::new(800);
+    ///     let policy = BloomFilterPolicy::new();
     ///     let bloom_filter: Slice = policy.create_filter(keys);
     /// ```
     fn create_filter_with_len(&self, capacity: usize, keys: Vec<&Slice>) -> Slice;

@@ -7,15 +7,18 @@ use crate::util::slice::Slice;
 
 // #########################  BloomFilterPolicy
 pub struct BloomFilterPolicy {
-    // 布隆过滤器或哈希表的slot数
+    // 每个key消耗的内存， 单位 bit
     bits_per_key: usize,
 
-    // k为布隆过滤器重hash function数
+    // k为布隆过滤器重hash function数(hash个数)
     k: usize
 }
 
 impl BloomFilterPolicy {
     ///
+    ///
+    /// Return a new filter policy that uses a bloom filter with approximately the specified number of bits per key.
+    /// A good value for bits_per_key is 10, which yields a filter with ~ 1% false positive rate.
     ///
     /// # Arguments
     ///
@@ -28,7 +31,11 @@ impl BloomFilterPolicy {
     /// ```
     ///
     /// ```
-    pub fn new(bits_per_key: usize) -> Self {
+    pub fn new() -> Self {
+        BloomFilterPolicy::new_with_bits_per_key(10)
+    }
+
+    pub fn new_with_bits_per_key(bits_per_key: usize) -> Self {
         // We intentionally round down to reduce probing cost a little bit
         // 最优的 k_ 是 ln2 * (m/n) -> factor * bits_per_key
 

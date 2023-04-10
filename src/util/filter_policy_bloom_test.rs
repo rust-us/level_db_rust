@@ -18,19 +18,19 @@ fn test_bloom_hash() {
 
 #[test]
 fn test_new() {
-    let bloom_filter: BloomFilterPolicy = BloomFilterPolicy::new(8);
+    let bloom_filter: BloomFilterPolicy = BloomFilterPolicy::new_with_bits_per_key(8);
     assert_eq!(bloom_filter.from_bits_per_key(), 8);
     assert_eq!(bloom_filter.from_k(), 6);
 
-    let bloom_filter = BloomFilterPolicy::new(800);
-    assert_eq!(bloom_filter.from_bits_per_key(), 800);
-    assert_eq!(bloom_filter.from_k(), 30);
+    let bloom_filter = BloomFilterPolicy::new();
+    assert_eq!(bloom_filter.from_bits_per_key(), 10);
+    assert_eq!(bloom_filter.from_k(), 7);
 }
 
 // ####################  FilterPolicy test
 #[test]
 fn test_create_filter() {
-    let policy = BloomFilterPolicy::new(800);
+    let policy = BloomFilterPolicy::new_with_bits_per_key(800);
 
     // 如下三个值， 存放在 BloomFilter 中
     let s1 = Slice::try_from(String::from("hello")).unwrap();
@@ -85,7 +85,7 @@ fn test_create_filter() {
 /// 指定超长长度。可以超过放置的值
 #[test]
 fn test_create_filter_with_long_len(){
-    let policy = BloomFilterPolicy::new(800);
+    let policy = BloomFilterPolicy::new_with_bits_per_key(800);
 
     // 如下三个值， 存放在 BloomFilter 中
     let s1 = Slice::try_from(String::from("hello")).unwrap();
@@ -140,7 +140,7 @@ fn test_create_filter_with_long_len(){
 /// 指定端长度。放不开放置的值。 此时对于 BloomFilterPolicy 来讲不需要扩容
 #[test]
 fn test_create_filter_with_short_len(){
-    let policy = BloomFilterPolicy::new(800);
+    let policy = BloomFilterPolicy::new_with_bits_per_key(800);
 
     // 如下三个值， 存放在 BloomFilter 中
     let s1 = Slice::try_from(String::from("hello")).unwrap();
