@@ -179,21 +179,18 @@ impl FilterBlock for FilterBlockBuilder {
         // Append array of per-filter offsets
         let array_offset = self.result.len() as u32;
 
-        // todo 判断 dst_append 是否需要扩容
-        let result_total_capacity = self.result.capacity();
-
         // 当前需要写入的位置。result 中可能存在数据，因此为 offset ==> self.result.len()  的位置
         let mut offset: usize = self.result.len();
-        let mut dst_append = self.result.as_mut_slice();
+        let dst: &mut Vec<u8> = &mut self.result;
+        // let mut dst_append = self.result.as_mut_slice();
         for i in 0..self.filter_offsets.len() {
-            offset = Coding::put_fixed32(dst_append, offset, self.filter_offsets[i]);
+            offset = Coding::put_fixed32_with_vex(dst, self.filter_offsets[i]);
         }
 
-        offset = Coding::put_fixed32(dst_append, offset, array_offset);
+        offset = Coding::put_fixed32_with_vex(dst, array_offset);
 
         // Save encoding parameter in result
-        // todo 判断是否需要扩容
-        Coding::put_varint64(self.result.as_mut_slice(), offset, FILTER_BASE_LG as u64);
+        Coding::put_varint64_with_vex(dst, FILTER_BASE_LG as u64);
 
         Ok(Slice::from_buf(&self.result))
     }

@@ -1,6 +1,16 @@
 use crate::util::slice::Slice;
 
 pub trait CodingTrait {
+
+    ///32位定长编码写入字符串
+    /// 自动扩容， 后续@王旭 调整
+    ///
+    /// * `dst`:  目标字符串
+    /// * `value`: 编码值
+    ///
+    /// returns: usize  返回的最新的偏移量
+    fn put_fixed32_with_vex(dst: &mut Vec<u8>, value: u32) -> usize;
+
     ///32位定长编码写入字符串
     ///
     /// # Arguments
@@ -51,6 +61,16 @@ pub trait CodingTrait {
     ///    put_varint32(&mut string, 65535);
     /// ```
     fn put_varint32(dst: &mut [u8], offset: usize, value: u32) -> usize;
+
+    /// 64位变长编码写入字符串
+    /// 自动扩容， 后续@王旭 调整
+    ///
+    /// * `dst`:  目标字符串
+    /// * `value`: 编码值
+    ///
+    /// returns: usize  返回的最新的偏移量
+    fn put_varint64_with_vex(dst: &mut Vec<u8>, value: u64) -> usize;
+
     /// 64位变长编码写入字符串
     ///
     /// # Arguments
