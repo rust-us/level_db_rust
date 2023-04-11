@@ -7,15 +7,18 @@ use crate::util::slice::Slice;
 
 // #########################  BloomFilterPolicy
 pub struct BloomFilterPolicy {
-    // 布隆过滤器或哈希表的slot数
+    // 每个key需要多少bit来存储表示
     bits_per_key: usize,
 
-    // k为布隆过滤器重hash function数
+    // k为布隆过滤器重hash function数(hash个数)
     k: usize
 }
 
 impl BloomFilterPolicy {
     ///
+    ///
+    /// Return a new filter policy that uses a bloom filter with approximately the specified number of bits per key.
+    /// A good value for bits_per_key is 10, which yields a filter with ~ 1% false positive rate.
     ///
     /// # Arguments
     ///
@@ -28,7 +31,11 @@ impl BloomFilterPolicy {
     /// ```
     ///
     /// ```
-    pub fn new(bits_per_key: usize) -> Self {
+    pub fn new() -> Self {
+        BloomFilterPolicy::new_with_bits_per_key(10)
+    }
+
+    pub fn new_with_bits_per_key(bits_per_key: usize) -> Self {
         // We intentionally round down to reduce probing cost a little bit
         // 最优的 k_ 是 ln2 * (m/n) -> factor * bits_per_key
 
@@ -36,7 +43,7 @@ impl BloomFilterPolicy {
         let factor: f64 = 0.69;
         let mut k_: usize = factor.mul(bits_per_key as f64).round() as usize;
 
-        // 把k_放到[1, 30]这个区间
+        // 计算哈希函数个数，控制在 1~30个范围。
         if k_ < 1 {
             k_ = 1;
         }
@@ -68,7 +75,6 @@ impl FromPolicy for BloomFilterPolicy {
     }
 }
 
-// dyn FilterPolicy + FromPolicy
 impl FilterPolicy for BloomFilterPolicy {
 
     fn name(&self) -> String {
@@ -85,32 +91,47 @@ impl FilterPolicy for BloomFilterPolicy {
         let n: usize = capacity;
 
         // Compute bloom filter size (in both bits and bytes)
-        // 计算总共需要的位数, n * bits_per_key, 也就是说，对于每一个key需要这么多bit
+        // 计算出中的需要的bits个数, n * bits_per_key, 也就是说，对于每一个key需要这么多bit
         // 因为bits_per_key_表示 m／n，所以bits = bits_per_key_ * n = m(m 的意思是： m位的bit数组)
         let mut bits: usize = n * self.bits_per_key;
 
-        // For small n, we can see a very high false positive rate.
-        // Fix it by enforcing a minimum bloom filter length.
-        // 对于一个key，最小的bits数目设置为64.
+        // For small n, we can see a very high false positive rate. Fix it by enforcing a minimum bloom filter length.
+        // bits太小的话会导致很高的查询错误率， 这里强制bits个数不能小于64
         if bits < 64 {
             bits = 64;
         }
 
-        // 取为8的倍数
+        //向上按8bit，一个Byte对齐
         let bytes: usize = (bits + 7) / 8;
         // 根据 bytes 算出bits数
         bits = bytes * 8;
 
-        // 相当于是 append 了bytes个0
-        let mut dst_chars: Vec<u8> = vec![0; bytes + 1];
+        // 扩展下要存储BloomFilter的内存空间， 并在尾部一个Byte存哈希函数的个数。
+        let mut dst_chars: Vec<u8> = vec![0; bytes + 1]; // 相当于是 append 了bytes个0
         // 在filter的最后压入哈希函数的个数。 在最后一位， 记录k 值。 这个k是位于bytes之后。
         dst_chars[bytes] = self.k as u8;
 
-        // 依次处理每个key
+        // 开始依次存储每个key值。
         // 对于每个key采用double hash的方式生成k_个bitpos，然后在 dst_chars 的相应位置设置1。
         for i in 0..keys.len() {
             let slice = keys[i];
 
+            /* 计算哈希值 */
+            // BloomFilter理论是通过多个hash计算来减少冲突，
+            // 但leveldb实际上并未真正去计算多个hash，而是通过double-hashing的方式来达到同样的效果。
+            // double-hashing的理论如下：
+            //      h(i,k) = (h1(k) + i*h2(k)) % T.size
+            //      h1(k) = h, h2(k) = delta, h(i,k) = bitpos
+            //
+            // 1、计算hash值；
+            // 2、hash值的高15位，低17位对调
+            // 3、按k_个数来存储当前hash值。
+            //      3-1、计算存储位置；
+            //      3-2、按bit存；
+            //      3-3、累加hash值用于下次计算
+            //
+            // Use double-hashing to generate a sequence of hash values.
+            // See analysis in [Kirsch,Mitzenmacher 2006].
             let mut h : u32 = slice.bloom_hash();
             // Rotate right 17 bits
             let delta : u32 = (h >> 17) | (h << 15);
@@ -138,13 +159,24 @@ impl FilterPolicy for BloomFilterPolicy {
         Slice::from_buf(&dst_chars)
     }
 
+    // fn create_filter_u8(&self, keys: Vec<u8>) -> Slice {
+    //     self.create_filter_u8_with_len(keys.len(), keys)
+    // }
+    //
+    // fn create_filter_u8_with_len(&self, capacity: usize, keys: Vec<u8>) -> Slice {
+    //     todo!()
+    // }
+
     fn key_may_match(&self, key: &Slice, bloom_filter: &Slice) -> bool {
+        // 1、插入时按1Byte对齐；
+        // 2、尾部插入了一个Byte的hash个数
+        // 所以大小不能小于2个字节
         let len: usize = bloom_filter.size();
         if len < 2 {
             return false;
         }
 
-        // 获得相应的内存区域的数据
+        // 获得相应的内存区域的数据: 除去尾部的1Byte对应的hash个数，就是当前位数组容器的大小
         let bloom_filter_array:Vec<u8>  = bloom_filter.to_vec();
         // 总共的bits数目
         let bits: usize = (len - 1) * 8;
@@ -158,6 +190,10 @@ impl FilterPolicy for BloomFilterPolicy {
             return true;
         }
 
+        // 1、计算查询key对应的hash值
+        // 2、按插入规则去 &，只要有1bit不相同，那就不存在。
+
+        // 计算哈希值
         let mut h : u32 = key.bloom_hash();
         // Rotate right 17 bits
         let delta = (h >> 17) | (h << 15);

@@ -12,42 +12,20 @@ pub const k_max_encoded_length: u32 = 10 + 10;
 /// of two block handles and a magic number.
 pub const k_encoded_length: u32 = 2 * k_max_encoded_length + 8;
 
-/// Footer 的大小为 48 字节，内容是一个 8 字节的 magic number 和两个 BlockHandle 构成
-/// 在  Footer::EncodeTo 和 Footer::DecodeFrom 中起作用
-/// kTableMagicNumber was picked by running
-///    echo http://code.google.com/p/leveldb/ | sha1sum
-/// and taking the leading 64 bits.
+/// kTableMagicNumber was picked by running echo http://code.google.com/p/leveldb/ | sha1sum and taking the leading 64 bits.
 pub const k_table_magic_number: u64 = 0xdb4775248b80fb57;
 
 /// 1-byte type + 32-bit crc
 pub const k_block_trailer_size: usize = 5;
 
 pub struct BlockHandle {
-    // 偏移量
+    // 偏移量， 编码为可变长度的64位整列，最多占用10个字节
     offset: u64,
-    //
+    // 大小， 编码为可变长度的64位整列，最多占用10个字节
     size: u64
 }
 
-/// Footer encapsulates the fixed information stored at the tail
-/// end of every table file.
-pub struct Footer {
-    meta_index_handle: BlockHandle,
-    index_handle: BlockHandle
-}
-
-pub struct BlockContents {
-    // Actual contents of data
-    data: Slice,
-
-    // True if data can be cached
-    cachable: bool,
-
-    // True if caller should delete[] data.data()
-    heap_allocated:bool,
-}
-
-trait BlockHandleTrait {
+trait ToBlockHandle {
     ///
     /// The offset of the block in the file.
     ///
@@ -102,7 +80,20 @@ trait BlockHandleTrait {
     fn decode_from(&mut self, input: Slice) -> Result<()>;
 }
 
-trait FootTrait {
+/// Footer 的大小为 48 字节，最后8个字节为 magic number， 通过魔术对比，可以判断一个文件是否为 SST 文件。
+/// 其余40个字节由三部分构成：
+///     1、前两个部分是两个 BlockHandle。BlockHandle 中主要包括两个变量：偏移量offset，大小size。
+///     通过这两个 BlockHandle 可以分别定位到数据索引区域（data block index）以及元数据索引区域（meta block index）.
+///     2、 由于 BlockHandle 的成员变量使用可变长度编码，每个 BlockHandle 最大占用20字节，
+///     因此如果前两部分不足40字节，则需要padding结构补充，这也构成了第三部分。
+///  PS: 可变长度编码 变长的64位整型。
+///
+pub struct Footer {
+    meta_index_handle: BlockHandle,
+    index_handle: BlockHandle
+}
+
+trait ToFoot {
     // The block handle for the metaindex block of the table
     fn meta_index_handle(&self) -> BlockHandle;
 
@@ -142,18 +133,7 @@ trait FootTrait {
     fn decode_from(&mut self, input: Slice) -> Result<()>;
 }
 
-trait BlockContent {
-    /// Read the block identified by "handle" from "file".  On failure
-    /// return non-OK.  On success fill *result and return OK.
-    fn read_block(&self,
-        // todo RandomAccessFile, ReadOptions 未提供
-        // file: RandomAccessFile, options: ReadOptions,
-        handle: BlockHandle
-    ) -> Result<BlockContents>;
-
-}
-
-impl BlockHandleTrait for BlockHandle {
+impl ToBlockHandle for BlockHandle {
     fn offset(&self) -> u64 {
         self.offset
     }
@@ -198,7 +178,7 @@ impl Default for BlockHandle {
     }
 }
 
-impl FootTrait for Footer {
+impl ToFoot for Footer {
     /// The block handle for the metaindex block of the table
     fn meta_index_handle(&self) -> BlockHandle {
         todo!()
@@ -225,8 +205,31 @@ impl FootTrait for Footer {
     }
 }
 
-impl BlockContent for BlockContents {
-    fn read_block(&self, handle: BlockHandle) -> Result<BlockContents> {
+/// ############################# BlockContent
+pub struct BlockContent {
+    // Actual contents of data
+    data: Slice,
+
+    // True if data can be cached
+    cachable: bool,
+
+    // True if caller should delete[] data.data()
+    heap_allocated:bool,
+}
+
+trait ToBlockContent {
+    /// Read the block identified by "handle" from "file".  On failure
+    /// return non-OK.  On success fill *result and return OK.
+    fn read_block(&self,
+                  // todo RandomAccessFile, ReadOptions 未提供
+                  // file: RandomAccessFile, options: ReadOptions,
+                  handle: BlockHandle
+    ) -> Result<BlockContent>;
+
+}
+
+impl ToBlockContent for BlockContent {
+    fn read_block(&self, handle: BlockHandle) -> Result<BlockContent> {
         todo!()
     }
 }
