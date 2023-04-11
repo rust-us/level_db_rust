@@ -1,25 +1,29 @@
 use std::io::Write;
 use std::sync::Arc;
+use crate::debug;
 use crate::traits::coding_trait::CodingTrait;
-use crate::traits::filter_policy_trait::FilterPolicy;
+use crate::traits::filter_policy_trait::{FilterPolicy, FilterPolicyPtr};
 use crate::util::coding::Coding;
 use crate::util::slice::Slice;
 
 use crate::util::Result;
 
-// Generate new filter every 2KB of data
+// 对2K取2的对数，也就是得到11
 const FILTER_BASE_LG: usize = 11;
+
+// 在每当data block的大小2K的时候(FILTER_BASE的值)，开始创建一个filter
+// Generate new filter every 2KB of data
 const FILTER_BASE: usize = 1 << FILTER_BASE_LG;
 
 ///
 /// meta block 构建器
+/// FilterBlock，实质上就是SST文件里面的 meta block
 ///
 pub trait FilterBlock {
-    #[inline]
-    fn new_with_policy(policy: Box<dyn FilterPolicy>) -> Self;
+    fn new_with_policy(policy: FilterPolicyPtr) -> Self;
 
     ///
-    /// 构造一个  FilterBlockBuilder
+    /// 构造一个  FilterBlockBuilder， 分配初始化容量大小
     ///
     /// # Arguments
     ///
@@ -33,14 +37,13 @@ pub trait FilterBlock {
     /// ```
     ///
     /// ```
-    #[inline]
-    fn new_with_policy_capacity(policy: Box<dyn FilterPolicy>, capacity: usize) -> Self;
+    fn new_with_policy_capacity(policy: FilterPolicyPtr, capacity: usize) -> Self;
 
     /// 设置block的起始位置
     ///
     /// # Arguments
     ///
-    /// * `_block_offset`: 偏移量
+    /// * `_block_offset`: filter block的 偏移量. 当给定block_offset的时候。需要创建的filter的数目也就确定了。
     ///
     /// returns: ()
     ///
@@ -49,7 +52,6 @@ pub trait FilterBlock {
     /// ```
     /// filter_block_builder.start_block(1024_u64);
     /// ```
-    #[inline]
     fn start_block(&mut self, block_offset: u64);
 
     fn add_key_from_str(&mut self, key: &str);
@@ -78,7 +80,7 @@ pub trait FilterBlock {
     /// ```
     fn finish(&mut self) -> Result<Slice>;
 
-    fn get_policy(&self) -> Box<&dyn FilterPolicy>;
+    fn get_policy(&self) -> FilterPolicyPtr;
 
     fn get_keys(&self) -> Vec<u8>;
 
@@ -93,20 +95,28 @@ pub trait FilterBlock {
 
 /// SSTable 文件里面的 meta block 构建器, 按内存里面指定的格式整理在内存中
 pub struct FilterBlockBuilder {
-    policy: Box<dyn FilterPolicy>,
-    // Flattened key contents
+    // 指向一个具体的filter_policy
+    policy: FilterPolicyPtr,
+
+    // 包含了所有展开的keys。并且这些所有的keys都是存放在一起的。(通过 AddKey 达到这个目的)
     keys: Vec<u8>,
-    // Starting index in keys_ of each key
+    // 记录当前这个key在keys_里面的offset
     start: Vec<usize>,
+
     // Filter data computed so far
+    // 用result_来记录所有的输入.
+    // result_变量就是表示的是一个filter计算之后的输出。
+    // 比如 BloomFilter 经过各种key计算之后，可能会得到一个 filter_str。这个 filter_str 就是放到result里面。
     result: Vec<u8>,
+
     // policy_->CreateFilter() argument
     tmp_keys: Vec<Slice>,
+    // 里面的每个元素就是用来记录每个filter内容的offset
     filter_offsets: Vec<u32>,
 }
 
 pub struct FilterBlockReader {
-    policy: Box<dyn FilterPolicy>,
+    policy: FilterPolicyPtr,
     // Pointer to filter data (at block-start)
     data: Vec<u32>,
     // Pointer to beginning of offset array (at block-end)
@@ -118,11 +128,11 @@ pub struct FilterBlockReader {
 }
 
 impl FilterBlock for FilterBlockBuilder {
-    fn new_with_policy(policy: Box<dyn FilterPolicy>) -> Self {
+    fn new_with_policy(policy: FilterPolicyPtr) -> Self {
         FilterBlock::new_with_policy_capacity(policy, 64)
     }
 
-    fn new_with_policy_capacity(policy: Box<dyn FilterPolicy>, capacity: usize) -> Self {
+    fn new_with_policy_capacity(policy: FilterPolicyPtr, capacity: usize) -> Self {
         let keys:Vec<u8> = Vec::with_capacity(capacity);
         let start:Vec<usize> =  Vec::with_capacity(capacity);
         let result:Vec<u8> =  Vec::with_capacity(capacity);
@@ -140,11 +150,15 @@ impl FilterBlock for FilterBlockBuilder {
     }
 
     fn start_block(&mut self, block_offset: u64) {
-        let filter_index = block_offset / (FILTER_BASE as u64);
-        assert!(filter_index >= self.filter_offsets.len() as u64);
+        // 计算出需要创建的filter的总数目. filters_number ==> filter_index
+        let filters_number = block_offset / (FILTER_BASE as u64);
 
-        while filter_index > self.filter_offsets.len() as u64 {
-            self.generate_filter();
+        let len = self.filter_offsets.len() as u64;
+        assert!(filters_number >=  len);
+
+        // 当已经生成的filter的数目小于需要生成的filter的总数时，那么就继续创建filter。
+        while filters_number > len {
+            self.generate_new_filter();
         }
     }
 
@@ -153,42 +167,36 @@ impl FilterBlock for FilterBlockBuilder {
     }
 
     fn add_key(&mut self, key: &Slice) {
-        self.start.push(key.len());
+        self.start.push(self.keys.len());
         self.keys.write(key.as_str().as_bytes()).expect("add_key error!");
     }
 
     fn finish(&mut self) -> Result<Slice> {
         if self.start.len() != 0 {
-            self.generate_filter();
+            self.generate_new_filter();
         }
 
         // Append array of per-filter offsets
         let array_offset = self.result.len() as u32;
-        // 当前需要写入的位置。result 中可能存在数据，因此为 self.result.len()  的位置
-        let mut pos: usize = self.result.len();
 
-        // todo 判断是否需要扩容
-        let result_total_capacity = self.result.capacity();
-
-        let dst_append = self.result.as_mut_slice();
-
+        // 当前需要写入的位置。result 中可能存在数据，因此为 offset ==> self.result.len()  的位置
+        let mut offset: usize = self.result.len();
+        let dst: &mut Vec<u8> = &mut self.result;
+        // let mut dst_append = self.result.as_mut_slice();
         for i in 0..self.filter_offsets.len() {
-            // 判断当前 pos + len 4
-            let filter_offset_val = self.filter_offsets[i];
-            pos = Coding::put_fixed32(dst_append, pos, filter_offset_val);
+            offset = Coding::put_fixed32_with_vex(dst, self.filter_offsets[i]);
         }
 
-        pos = Coding::put_fixed32(dst_append, pos, array_offset);
+        offset = Coding::put_fixed32_with_vex(dst, array_offset);
 
         // Save encoding parameter in result
-        // todo 判断是否需要扩容
-        Coding::put_varint64(self.result.as_mut_slice(), pos, FILTER_BASE_LG as u64);
+        Coding::put_varint64_with_vex(dst, FILTER_BASE_LG as u64);
 
         Ok(Slice::from_buf(&self.result))
     }
 
-    fn get_policy(&self) -> Box<&dyn FilterPolicy> {
-        Box::new(self.policy.as_ref())
+    fn get_policy(&self) -> FilterPolicyPtr {
+        self.policy.clone()
     }
 
     fn get_keys(&self) -> Vec<u8> {
@@ -213,43 +221,56 @@ impl FilterBlock for FilterBlockBuilder {
 }
 
 impl FilterBlockBuilder {
-    fn generate_filter(&mut self) {
+    /// 创建新的 filter
+    fn generate_new_filter(&mut self) {
+        // 拿到key的数目
         let num_keys = self.start.len();
 
+        // 如果当前key数目还是0
         if num_keys == 0 {
+            // 如果key数目为0，这里应该是表示要新生成一个filter.  这时应该是重新记录下offset了
             // Fast path if there are no keys for this filter
             self.filter_offsets.push(self.result.len() as u32);
             return;
         }
 
         /* Make list of keys from flattened key structure */
-        // Simplify length computation
+        // start_里面记录下offset
         self.start.push(self.keys.len());
-        // 如果 new_len 大于 len ，则 Vec 由差异扩展，每个额外的插槽都用 value 填充。如果 new_len 小于 len ，则 Vec 将被截断。
+        // 需要多少个key
+        // 如果 new_len 大于 len ，则 Vec 由差异扩展，每个额外的插槽都用 value 填充。
+        // 如果 new_len 小于 len ，则 Vec 将被截断。
         self.tmp_keys.resize(num_keys, Slice::default());
 
+        // 依次拿到每个key
         for i in 0..num_keys {
-            let base = &self.keys[self.start[i]..];
+            // 拿到key的长度
             let length = self.start[i+1] - self.start[i];
+            // 这里拿到每个key的数据
+            let base = &self.keys[self.start[i]..(self.start[i]+length)];
 
+            // 生成相应的key，并且放到tmp_keys里面
             let mut tmp_key = Vec::with_capacity(length);
             tmp_key.write(&base);
             self.tmp_keys[i] = Slice::from_vec(tmp_key);
         }
 
         // Generate filter for current set of keys and append to result_.
+        // 记录下offset
         self.filter_offsets.push(self.result.len() as u32);
 
+        // 利用tmp_keys生成输出，并且放到result里面。
         let mut keys: Vec<&Slice> = Vec::new();
-        keys.push(&self.tmp_keys[0]);
-        let create_filter:Slice = self.policy.create_filter_with_len(num_keys, keys);
+        for tmp_key in &self.tmp_keys {
+            keys.push(&tmp_key);
+        }
+        // let create_filter:Slice = self.policy.create_filter_with_len(num_keys, keys);
+        let create_filter:Slice = self.policy.create_filter(keys);
+        debug!("create_filter:{:?}.", create_filter);
 
-        // let result_len = self.result.len();
-        // let result_total_capacity = self.result.capacity();
         self.result.write(create_filter.as_ref());
-        // let result_len = self.result.len();
-        // let result_total_capacity = self.result.capacity();
 
+        // 清空keys/start变量
         self.tmp_keys.clear();
         self.keys.clear();
         self.start.clear();
@@ -257,7 +278,7 @@ impl FilterBlockBuilder {
 }
 
 impl FilterBlockReader {
-    pub fn new_with_policy(policy: Box<dyn FilterPolicy>, contents: Slice) -> Self {
+    pub fn new_with_policy(policy: FilterPolicyPtr, contents: &Slice) -> Self {
         let data = Vec::new();
         let offset = Vec::new();
 
@@ -292,8 +313,8 @@ impl FilterBlockReader {
         todo!()
     }
 
-    pub fn get_policy(&self) -> Box<&dyn FilterPolicy> {
-        Box::new(self.policy.as_ref())
+    pub fn get_policy(&self) -> FilterPolicyPtr {
+        self.policy.clone()
     }
 
     pub fn get_data(&self) -> Vec<u32> {

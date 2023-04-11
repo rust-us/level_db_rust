@@ -14,7 +14,7 @@ macro_rules! varint {
             }
             buf[offset] = value as u8;
 
-            offset
+            offset + 1
         }
     };
 
@@ -26,6 +26,18 @@ macro_rules! varint {
 pub struct Coding {}
 
 impl CodingTrait for Coding {
+    fn put_fixed32_with_vex(dst: &mut Vec<u8>, value: u32) -> usize {
+        let mut buf: [u8; 4] = [0, 0, 0, 0];
+        Self::encode_fixed32(value, &mut buf, 0);
+
+        dst.push(buf[0]);
+        dst.push(buf[1]);
+        dst.push(buf[2]);
+        dst.push(buf[3]);
+
+        dst.len()
+    }
+
     fn put_fixed32(dst: &mut [u8], mut offset: usize, value: u32) -> usize {
         let mut buf: [u8; 4] = [0, 0, 0, 0];
         Self::encode_fixed32(value, &mut buf, 0);
@@ -36,7 +48,7 @@ impl CodingTrait for Coding {
         dst[offset] = buf[2];
         offset += 1;
         dst[offset] = buf[3];
-        offset
+        offset + 1
     }
 
     fn put_fixed64(dst: &mut [u8], mut offset: usize, value: u64) -> usize {
@@ -57,7 +69,7 @@ impl CodingTrait for Coding {
         dst[offset] = buf[6];
         offset += 1;
         dst[offset] = buf[7];
-        offset
+        offset + 1
     }
 
     varint!(u32,encode_varint32);
@@ -72,6 +84,17 @@ impl CodingTrait for Coding {
             offset += 1;
         }
         offset
+    }
+
+    fn put_varint64_with_vex(dst: &mut Vec<u8>, value: u64) -> usize {
+        let mut buf: [u8; 8] = [0, 0, 0, 0, 0, 0, 0, 0];
+        let var_offset = Self::encode_varint64(value, &mut buf, 0);
+
+        for i in 0..var_offset {
+            dst.push(buf[i]);
+        }
+
+        dst.len()
     }
 
     fn put_varint64(dst: &mut [u8], mut offset: usize, value: u64) -> usize {

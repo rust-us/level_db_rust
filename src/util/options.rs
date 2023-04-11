@@ -2,9 +2,12 @@ use std::sync::Arc;
 use crate::db::db::Snapshot;
 use crate::db::db_format::InternalKeyComparator;
 use crate::traits::comparator_trait::Comparator;
-use crate::traits::filter_policy_trait::FilterPolicy;
+use crate::traits::filter_policy_trait::{FilterPolicy, FilterPolicyPtr};
 use crate::util::comparator::BytewiseComparatorImpl;
 use crate::util::env::Env;
+
+/// Options 的 `Arc<Box<Options>>` 别名
+pub type OptionsPtr = Arc<Box<Options>>;
 
 pub enum CompressionType {
     NoCompression,
@@ -17,6 +20,9 @@ pub struct Cache {}
 // use crate::traits::filter_policy_trait::FilterPolicy;
 // pub struct FilterPolicy {}
 
+// pub cmp: Box<dyn Comparator>,
+//    |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Clone` is not implemented for `dyn Comparator`
+// #[derive(Clone)]
 pub struct Options {
 
     /// Comparator used to define the order of keys in the table.
@@ -98,7 +104,7 @@ pub struct Options {
     /// If non-null, use the specified filter policy to reduce disk reads.
     /// Many applications will benefit from passing the result of
     /// NewBloomFilterPolicy() here.
-    pub filter_policy: Option<Box<dyn FilterPolicy>>,
+    pub filter_policy: Option<FilterPolicyPtr>,
 }
 /// Options that control read operations
 pub struct ReadOptions {
