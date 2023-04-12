@@ -105,7 +105,7 @@ impl ParsedInternalKey {
 
     // 将 self 的数据追加到 result 中
     pub fn append_internal_key(&self, result: Slice) {
-        todo!()
+        self.user_key.merge(result, None)
     }
 
     pub fn new(user_key: Slice, sequence: u64, value_type: ValueType) -> Self {
