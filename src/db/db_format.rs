@@ -161,28 +161,16 @@ impl InternalKey {
         }
     }
 
-    ///
-    /// xxx
-    ///
-    /// # Arguments
-    /// * `input`:
-    ///
-    /// # Examples
-    ///
-    /// ```
-    ///
-    /// ```
     pub fn decode_from(&self, input: &UnsafeSlice) {
-        todo!()
-
-        // wangbo
-        // self.rep_.assign(input.borrow_data().bytes());
+        // xiaohui
+        self.rep_.merge(input, None);
+        return !self.rep_.empty()
     }
 
     /// 输出 InternalKey 调试信息
     pub fn debug_string(&self) -> Slice {
         // line 164
-        todo!()
+        return self::Default();
     }
 
     pub fn encode(self) -> Slice {
@@ -203,8 +191,8 @@ impl InternalKey {
         p.append_internal_key(self.rep_);
     }
 
-    pub fn clear(self) {
-        // self.rep_.clear();
+    pub fn clear(&self) {
+        self.rep_.remove_prefix(self.rep_.size());
     }
 }
 
