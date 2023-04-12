@@ -128,7 +128,7 @@ impl ParsedInternalKey {
     pub fn extract_user_key(internal_key : Slice) -> Slice {
         let len : usize = internal_key.size();
         if len>= 8 {
-            return internal_key[len-8..len];
+            return &internal_key[len-8..len];
         }
     }
 }
