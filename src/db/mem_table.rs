@@ -93,7 +93,44 @@ impl <Cmp: Comparator> MemTable<Cmp> {
 
     /// 通过 key 查找结果
     pub fn get(&self, _key: &LookupKey) -> Result<Option<Slice>> {
-        todo!()
+        let memkey = _key.mem_table_key();
+        let mut iter = self.list.iter();
+        iter.seek(&memkey); // seek需要完成
+        if iter.valid() {
+            // entry format is:
+            //    klength  varint32
+            //    userkey  char[klength]
+            //    tag      uint64
+            //    vlength  varint32
+            //    value    char[vlength]
+            // Check that it belongs to same user key.  We do not check the
+            // sequence number since the Seek() call above should have skipped
+            // all entries with overly large sequence numbers.
+            let entry = iter.key();
+            unsafe {
+                let klength = entry.sub_slice(0, 5).to_slice();
+                let key_length = Coding::get_varint32(&klength) as usize;
+                let var_klength = Coding::varint_length(key_length);
+                let user_key = entry.sub_slice(var_klength, key_length - 8);
+                if self.cmp.compare(user_key.as_ref(), _key.user_key().as_ref()).unwrap().is_eq() {
+                    let tag = Coding::decode_fixed64(entry.sub_slice(var_klength + key_length - 8, 8).as_ref());
+                    let value_type = ValueType::try_from((tag & 0xff) as i32);
+                    match value_type {
+                        Ok(ValueType::KTypeValue) => return Ok(Some(self.get_length_prefixed_slice(entry.sub_slice(var_klength + key_length, entry.len() - var_klength + key_length).as_ref()))),
+                        Ok(ValueType::KTypeDeletion) => return Ok(None),
+                        _ => return Ok(None)
+                    }
+                }
+                return Ok(None)
+            }
+        }
+        return Ok(None)
+    }
+
+    fn get_length_prefixed_slice(&self, data: &[u8]) -> Slice {
+        let vlength = Slice::from_buf(&data[..5]);
+        let key_length = Coding::get_varint32(&vlength) as usize;
+        Slice::from_buf(&data[key_length..])
     }
 
 }
