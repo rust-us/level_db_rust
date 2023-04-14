@@ -3,8 +3,7 @@ use std::iter::Map;
 use crate::db::db_format::InternalKey;
 use crate::db::file_meta_data::FileMetaData;
 use crate::db::version_edit;
-use crate::traits::coding_trait::CodingTrait;
-use crate::util::coding::Coding;
+use crate::util::coding::Encoder;
 use crate::util::slice::Slice;
 use crate::util::Result;
 use crate::util::status::{LevelError, Status};
@@ -37,7 +36,7 @@ pub enum Tag {
     kDeletedFile = 6,
     kNewFile = 7,
     // 8 was used for large value refs
-    kPrevLogNumber = 9
+    kPrevLogNumber = 9,
 }
 
 impl Tag {
@@ -93,7 +92,7 @@ impl VersionEdit {
             has_last_sequence_: false,
             compact_pointers_: vec![],
             deleted_files_: vec![],
-            new_files_: vec![]
+            new_files_: vec![],
         }
     }
 
@@ -131,27 +130,27 @@ impl VersionEdit {
         // compact_pointers_ don't clear
     }
 
-    pub fn set_comparator_name(&mut self, name: Slice){
+    pub fn set_comparator_name(&mut self, name: Slice) {
         self.has_comparator_ = true;
         self.comparator_ = name.into();
     }
 
-    pub fn set_log_number(&mut self, num: u64){
+    pub fn set_log_number(&mut self, num: u64) {
         self.has_log_number_ = true;
         self.log_number_ = num;
     }
 
-    pub fn set_prev_log_number(&mut self, num: u64){
+    pub fn set_prev_log_number(&mut self, num: u64) {
         self.has_prev_log_number_ = true;
         self.prev_log_number_ = num;
     }
 
-    pub fn set_next_file(&mut self, num: u64){
+    pub fn set_next_file(&mut self, num: u64) {
         self.has_next_file_number_ = true;
         self.next_file_number_ = num;
     }
 
-    pub fn set_last_sequence(&mut self, seq: u64){
+    pub fn set_last_sequence(&mut self, seq: u64) {
         self.has_last_sequence_ = true;
         self.last_sequence_ = seq;
     }
@@ -202,59 +201,59 @@ impl VersionEdit {
     /// ```
     ///
     /// ```
-    pub fn encode_to(&self, target: &mut Vec<u8>) {
-        let mut position: usize = 0;
+    pub fn encode_to(&self, target: &mut Vec<u8>) -> Result<()> {
+        let mut encoder = Encoder::with_vec(target);
         if self.has_comparator_ {
-            position += Coding::put_varint32(target, position, Tag::k_comparator.get_value() as u32);
-            position += Coding::put_length_prefixed_slice(target, position, self.comparator_.len());
+            encoder.put_varint32(Tag::k_comparator.get_value() as u32)?;
+            encoder.put_varint32(self.comparator_.len() as u32)?;
+            // fixme 需要正确使用 put_length_prefixed_slice  将slice长度及slice内容编码到target
+            // encoder.put_length_prefixed_slice(self.comparator_.len())?;
         }
-
         if self.has_log_number_ {
-            let mut offset = Coding::put_varint32(target, position, Tag::kLogNumber.get_value() as u32);
-            position = position + offset;
-
-            offset = Coding::put_varint64(target, position, self.log_number_);
-            position = position + offset;
+            encoder.put_varint32(Tag::kLogNumber.get_value() as u32)?;
+            encoder.put_varint64(self.log_number_)?;
         }
 
         if self.has_prev_log_number_ {
-            position += Coding::put_varint32(target, position, Tag::kPrevLogNumber.get_value() as u32);
-            position += Coding::put_varint64(target, position, self.prev_log_number_);
+            encoder.put_varint32(Tag::kPrevLogNumber.get_value() as u32)?;
+            encoder.put_varint64(self.prev_log_number_)?;
         }
 
         if self.has_next_file_number_ {
-            position += Coding::put_varint32(target, position, Tag::kNextFileNumber.get_value() as u32);
-            position += Coding::put_varint64(target, position, self.next_file_number_);
+            encoder.put_varint32(Tag::kNextFileNumber.get_value() as u32)?;
+            encoder.put_varint64(self.next_file_number_)?;
         }
 
         if self.has_last_sequence_ {
-            position += Coding::put_varint32(target, position, Tag::kLastSequence.get_value() as u32);
-            position += Coding::put_varint64(target, position, self.last_sequence_);
+            encoder.put_varint32(Tag::kLastSequence.get_value() as u32)?;
+            encoder.put_varint64(self.last_sequence_)?;
         }
 
         for i in 0..self.compact_pointers_.len() {
-            position += Coding::put_varint32(target, position, Tag::kCompactPointer.get_value() as u32);
-            position += Coding::put_varint32(target, position, self.compact_pointers_[i].0);
-            position += Coding::put_length_prefixed_slice(target, position,
-                                      self.compact_pointers_[i].1.encode_len());
+            encoder.put_varint32(Tag::kCompactPointer.get_value() as u32)?;
+            encoder.put_varint32(self.compact_pointers_[i].0)?;
+            // fixme 需要正确使用put_length_prefixed_slice
+            // encoder.put_length_prefixed_slice( self.compact_pointers_[i].1.encode_len())?;
         }
 
         for i in 0..self.deleted_files_.len() {
-            position += Coding::put_varint32(target, position, Tag::kDeletedFile.get_value() as u32);
-            position += Coding::put_varint32(target, position, self.deleted_files_[i].0);
-            position += Coding::put_varint64(target, position, self.deleted_files_[i].1);
+            encoder.put_varint32(Tag::kDeletedFile.get_value() as u32)?;
+            encoder.put_varint32(self.deleted_files_[i].0)?;
+            encoder.put_varint64(self.deleted_files_[i].1)?;
         }
 
         for i in 0..self.new_files_.len() {
             let f: &FileMetaData = &self.new_files_[i].1;
-            position += Coding::put_varint32(target, position, Tag::kNewFile.get_value() as u32);
+            encoder.put_varint32(Tag::kNewFile.get_value() as u32)?;
             // level
-            position += Coding::put_varint32(target, position, self.new_files_[i].0);
-            position += Coding::put_varint64(target, position, f.get_number());
-            position += Coding::put_varint64(target, position, f.get_file_size());
-            position += Coding::put_length_prefixed_slice(target, position, f.get_smallest().encode_len());
-            position += Coding::put_length_prefixed_slice(target, position, f.get_largest().encode_len());
+            encoder.put_varint32(self.new_files_[i].0)?;
+            encoder.put_varint64(f.get_number())?;
+            encoder.put_varint64(f.get_file_size())?;
+            // fixme 需要正确使用put_length_prefixed_slice
+            // encoder.put_length_prefixed_slice( f.get_smallest().encode_len())?;
+            // encoder.put_length_prefixed_slice( f.get_largest().encode_len())?;
         }
+        Ok(())
     }
 
     /// 将 source 中的数据解码至 self VersionEdit 中
@@ -275,18 +274,18 @@ impl VersionEdit {
 
         let version_edit = VersionEdit::new();
 
-        let msg : Option<Tag> = Option::None;
+        let msg: Option<Tag> = Option::None;
 
         // todo Coding::get_varint32 存在问题。开发暂停
-        while msg.is_none() && Coding::get_varint32(source) != 0_u32 {
-            let tag_value = Coding::get_varint32(source);
-            let tag = Tag::from_value(tag_value);
-
-            if tag.is_none() {
-                return LevelError::corruption_string("VersionEdit", "unknown tag");
-            }
-
-        }
+        // while msg.is_none() && Coding::get_varint32(source) != 0_u32 {
+        //     let tag_value = Coding::get_varint32(source);
+        //     let tag = Tag::from_value(tag_value);
+        //
+        //     if tag.is_none() {
+        //         return LevelError::corruption_string("VersionEdit", "unknown tag");
+        //     }
+        //
+        // }
         todo!()
     }
 
@@ -295,13 +294,13 @@ impl VersionEdit {
         let debug_str = String::from("VersionEdit {");
 
         let mut has_comparator_str = String::default();
-        if(self.has_comparator_){
+        if (self.has_comparator_) {
             has_comparator_str.push_str(format!("\n Comparator: {}", self.comparator_.as_str()).as_str());
         }
 
         let mut has_log_number__str = String::default();
         // if(self.has_log_number_){
-            // todo
+        // todo
         //     // let append_log_number = logging.AppendNumberTo(&r, self.log_number_);
         //     let append_log_number = self.log_number_ + "".as_ref();
         //     has_log_number__str.push_str(format!("\n LogNumber: {}", append_log_number).as_str());
@@ -316,7 +315,7 @@ impl VersionEdit {
 /// 静态方法
 impl<'a> VersionEdit {
     pub fn get_internal_key(input: Slice) -> Result<InternalKey> {
-        let key= InternalKey::default();
+        let key = InternalKey::default();
 
         todo!()
 

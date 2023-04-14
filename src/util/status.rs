@@ -35,6 +35,7 @@ impl Status {
     /// # Examples
     ///
     /// ```
+    /// use level_db_rust::util::status::{LevelError, Status};
     /// Status::wrapper_str(LevelError::KInvalidArgument, "IndexOutOfRange");
     /// ```
     #[inline]

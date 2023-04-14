@@ -1,9 +1,10 @@
+use core::ops::{Range, RangeFrom};
 use std::mem;
 use std::borrow::Cow;
 use std::cmp::Ordering;
 use std::fmt::{Display, Formatter};
 use std::mem::ManuallyDrop;
-use std::ops::Deref;
+use std::ops::{Deref, DerefMut, RangeTo};
 
 #[derive(Debug)]
 pub struct Slice {
@@ -206,17 +207,58 @@ impl core::ops::Index<usize> for Slice {
     }
 }
 
-impl core::ops::Index<core::ops::Range<usize>> for Slice {
+impl core::ops::Index<Range<usize>> for Slice {
     type Output = [u8];
 
     /// 获取指定下标范围的数据
-    #[inline]
-    fn index(&self, range: core::ops::Range<usize>) -> &Self::Output {
+    fn index(&self, range: Range<usize>) -> &Self::Output {
         assert!(range.end <= self.size());
-        assert!(range.start >= 0);
         &(**self)[range.start..range.end]
     }
 }
+
+impl core::ops::Index<RangeFrom<usize>> for Slice {
+    type Output = [u8];
+
+    /// 获取指定下标范围的数据
+    fn index(&self, range: RangeFrom<usize>) -> &Self::Output {
+        &(**self)[range.start..]
+    }
+}
+
+impl core::ops::Index<RangeTo<usize>> for Slice {
+    type Output = [u8];
+
+    /// 获取指定下标范围的数据
+    fn index(&self, range: RangeTo<usize>) -> &Self::Output {
+        assert!(range.end <= self.size());
+        &(**self)[..range.end]
+    }
+}
+
+impl core::ops::IndexMut<Range<usize>> for Slice {
+    /// 获取指定下标范围的数据
+    fn index_mut(&mut self, index: Range<usize>) -> &mut Self::Output {
+        assert!(index.end <= self.size());
+        &mut (**self)[..index.end]
+    }
+}
+
+impl core::ops::IndexMut<RangeFrom<usize>> for Slice {
+    /// 获取指定下标范围的数据
+    fn index_mut(&mut self, index: RangeFrom<usize>) -> &mut Self::Output {
+        &mut (**self)[index.start..]
+    }
+}
+
+impl core::ops::IndexMut<RangeTo<usize>> for Slice {
+    /// 获取指定下标范围的数据
+    fn index_mut(&mut self, index: RangeTo<usize>) -> &mut Self::Output {
+        assert!(index.end <= self.size());
+        &mut (**self)[..index.end]
+    }
+}
+
 
 impl Deref for Slice {
     type Target = [u8];
@@ -225,6 +267,12 @@ impl Deref for Slice {
     #[inline]
     fn deref(&self) -> &Self::Target {
         &*self.data
+    }
+}
+
+impl DerefMut for Slice {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut *self.data
     }
 }
 

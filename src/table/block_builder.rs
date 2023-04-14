@@ -17,10 +17,13 @@ use crate::util::status::Status;
 /// BlockBuilder 的 `Arc<BlockBuilder>` 别名
 pub type BlockBuilderPtr = Arc<BlockBuilder>;
 
+/// 生成块
 pub struct BlockBuilder {
     // 在 BlockBuilder 初始化时，指定的配置项
     options: OptionsPtr,
-    index_block_options: OptionsPtr,
+
+    // 目标缓冲区，也就是按照输出格式处理好的内存区域
+    buffer: Slice,
 
     // SSTable 生成后的文件
     file: Arc<File>,
