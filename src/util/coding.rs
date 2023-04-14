@@ -459,14 +459,53 @@ pub struct Decoder<'a> {
 /// 实现put_fixed
 macro_rules! put_fixed {
     ($name:ident, $var_name:ident, $type:ty, $capacity: ident, uncheck) => {
+        /// 编码定长整数 不检查长度
+        ///
+        /// # Safety
+        /// * offset + type_size < data.len() , 否则溢出
+        ///
+        /// # Arguments
+        ///
+        /// * `value`: 待编码的数据
+        ///
+        /// # Examples
+        ///
+        /// ```
+        ///     use level_db_rust::util::coding::Encoder;
+        ///     let mut vec = vec![];
+        ///     let mut encoder = Encoder::with_vec(&mut vec);
+        ///     unsafe {
+        ///         // [0, 0, 255, 255]
+        ///         encoder.uncheck_put_fixed32(65535);
+        ///         // [0, 0, 255, 255, 0, 0, 255, 255]
+        ///         encoder.uncheck_put_fixed32(65535);
+        ///     }
+        /// ```
         pub unsafe fn $name(&mut self, value: $type) {
             $var_name(&mut self.data, self.offset, value);
             self.offset += type_capacity!($capacity);
         }
     };
     ($name:ident, $var_name:ident, $type:ty, $capacity: ident, check) => {
+        /// 编码定长整数 会检查长度
+        ///
+        /// # Arguments
+        ///
+        /// * `value`: 待编码的数据
+        ///
+        /// returns: Result<()>
+        ///
+        /// # Examples
+        ///
+        /// ```
+        ///     use level_db_rust::util::coding::Encoder;
+        ///     let mut vec = vec![];
+        ///     let mut encoder = Encoder::with_vec(&mut vec);
+        ///     // [0, 0, 255, 255]
+        ///     encoder.put_fixed32(65535)?;
+        /// ```
         pub fn $name(&mut self, value: $type) -> Result<()> {
-            // vec类型自动扩容 buf 和 slice类型检查长度
+            // vec类型自动扩容, buf 和 slice类型检查长度
             if let MutVector(_) = self.data {} else { check_length!(self.offset, type_capacity!($capacity), self.len()) };
             unsafe {$var_name(&mut self.data, self.offset, value);}
             self.offset += type_capacity!($capacity);
@@ -478,13 +517,52 @@ macro_rules! put_fixed {
 /// 实现put_varint
 macro_rules! put_varint {
     ($name:ident, $var_name:ident, $type:ty, uncheck) => {
+        /// 编码变长整数 不检查长度
+        ///
+        /// # Safety
+        /// * offset + varint_length < data.len() , 否则溢出
+        ///
+        /// # Arguments
+        ///
+        /// * `value`: 待编码的数据
+        ///
+        /// # Examples
+        ///
+        /// ```
+        ///     use level_db_rust::util::coding::Encoder;
+        ///     let mut vec = vec![];
+        ///     let mut encoder = Encoder::with_vec(&mut vec);
+        ///     unsafe {
+        ///         // [255, 255, 3]
+        ///         encoder.uncheck_put_varint32(65535);
+        ///         // [255, 255, 3, 255, 255, 3]
+        ///         encoder.uncheck_put_varint64(65535);
+        ///     }
+        /// ```
         pub unsafe fn $name(&mut self, value: $type) {
             self.offset = $var_name(&mut self.data, self.offset, value);
         }
     };
     ($name:ident, $var_name:ident, $type:ty, check) => {
+        /// 编码变长整数 会检查长度
+        ///
+        /// # Arguments
+        ///
+        /// * `value`: 待编码的数据
+        ///
+        /// # Examples
+        ///
+        /// ```
+        ///     use level_db_rust::util::coding::Encoder;
+        ///     let mut vec = vec![];
+        ///     let mut encoder = Encoder::with_vec(&mut vec);
+        ///     // [255, 255, 3]
+        ///     encoder.put_varint32(65535)?;
+        ///     // [255, 255, 3, 255, 255, 3]
+        ///     encoder.put_varint64(65535)?;
+        /// ```
         pub fn $name(&mut self, value: $type) -> Result<()> {
-            // vec类型自动扩容 buf 和 slice类型检查长度
+            // vec类型自动扩容, buf 和 slice类型检查长度
             if let MutVector(_) = self.data {} else { check_length!(self.offset, varint_length(value as u64), self.len()) };
             unsafe { self.offset = $var_name(&mut self.data, self.offset, value) }
             Ok(())
@@ -530,7 +608,11 @@ impl<'a> Encoder<'a> {
     /// # Examples
     ///
     /// ```
-    ///
+    ///  use level_db_rust::util::coding::Encoder;
+    ///  let mut buf = [0; 20];
+    ///  unsafe {
+    ///     let mut encoder = Encoder::with_buf(&mut buf);
+    ///  }
     /// ```
     pub fn with_buf(buf: &'a mut [u8]) -> Self {
         Self {
@@ -551,7 +633,12 @@ impl<'a> Encoder<'a> {
     /// # Examples
     ///
     /// ```
-    ///
+    ///  use level_db_rust::util::coding::Encoder;
+    ///  use level_db_rust::util::slice::Slice;
+    ///  let mut slice = Slice::from_vec(vec![0; 20]);
+    ///  unsafe {
+    ///     let mut encoder = Encoder::with_slice(&mut slice);
+    ///  }
     /// ```
     pub fn with_slice(slice: &'a mut Slice) -> Self {
         Self {
@@ -567,7 +654,10 @@ impl<'a> Encoder<'a> {
     /// # Examples
     ///
     /// ```
-    ///
+    ///     use level_db_rust::util::coding::Encoder;
+    ///     let mut data = vec![1, 2, 3];
+    ///     let encoder = Encoder::with_vec(&mut data);
+    ///     let decoder = encoder.create_decoder();
     /// ```
     pub fn create_decoder(&'a self) -> Decoder<'a> {
         Decoder::from_encoder(self)
@@ -597,7 +687,12 @@ impl<'a> Encoder<'a> {
     /// # Examples
     ///
     /// ```
-    ///
+    ///     use level_db_rust::util::coding::Encoder;
+    ///     let mut vec = vec![];
+    ///     let mut encoder = Encoder::with_vec(&mut vec);
+    ///     let buf = [1, 2, 3];
+    ///     // vec: [1, 2, 3]
+    ///     unsafe { encoder.uncheck_put_buf(&buf) }
     /// ```
     pub unsafe fn uncheck_put_buf(&mut self, buf: &[u8]) {
         uncheck_write_buf(&mut self.data, self.offset, buf);
@@ -617,7 +712,12 @@ impl<'a> Encoder<'a> {
     /// # Examples
     ///
     /// ```
-    ///
+    ///     use level_db_rust::util::coding::Encoder;
+    ///     let mut vec = vec![];
+    ///     let mut encoder = Encoder::with_vec(&mut vec);
+    ///     let buf = [1, 2, 3];
+    ///     // vec: [1, 2, 3]
+    ///     encoder.put_buf(&buf)?
     /// ```
     pub fn put_buf(&mut self, buf: &[u8]) -> Result<()> {
         // vec类型自动扩容 buf 和 slice类型检查长度
@@ -635,20 +735,49 @@ impl<'a> Encoder<'a> {
     ///
     /// # Arguments
     ///
-    /// * `slice`: slice
+    /// * `slice`: 待写入的slice
     ///
     /// returns: ()
     ///
     /// # Examples
     ///
     /// ```
-    ///
+    ///  use level_db_rust::util::coding::Encoder;
+    ///  use level_db_rust::util::slice::Slice;
+    ///  let mut vec = vec![];
+    ///  let mut encoder = Encoder::with_vec(&mut vec);
+    ///  let slice = Slice::from_vec(vec![1, 2, 3]);
+    ///  // vec: [3, 1, 2, 3]
+    ///  // The first '3' of the vec is the length of the slice,
+    ///  // and the following '1,2,3' is the data of the slice
+    ///  unsafe { encoder.uncheck_put_length_prefixed_slice(&slice); }
     /// ```
     pub unsafe fn uncheck_put_length_prefixed_slice(&mut self, slice: &Slice) {
         self.uncheck_put_varint32(slice.size() as u32);
         self.uncheck_put_buf(slice);
     }
 
+    /// 写入slice时先写入slice的长度做为前缀
+    ///
+    /// # Arguments
+    ///
+    /// * `slice`: 待写入的slice
+    ///
+    /// returns: Result<(), Status>
+    ///
+    /// # Examples
+    ///
+    /// ```
+    ///  use level_db_rust::util::coding::Encoder;
+    ///  use level_db_rust::util::slice::Slice;
+    ///  let mut vec = vec![];
+    ///  let mut encoder = Encoder::with_vec(&mut vec);
+    ///  let slice = Slice::from_vec(vec![1, 2, 3]);
+    ///  // vec: [3, 1, 2, 3]
+    ///  // The first '3' of the vec is the length of the slice,
+    ///  // and the following '1,2,3' is the data of the slice
+    ///  encoder.put_length_prefixed_slice(&slice)?;
+    /// ```
     pub fn put_length_prefixed_slice(&mut self, slice: &Slice) -> Result<()> {
         self.put_varint32(slice.size() as u32)?;
         self.put_buf(slice)?;
@@ -662,8 +791,16 @@ impl<'a> Encoder<'a> {
     /// # Examples
     ///
     /// ```
-    ///
+    /// use level_db_rust::util::coding::Encoder;
+    /// let mut  vec = vec![];
+    /// let mut encoder = Encoder::with_vec(&mut vec);
+    /// // offset: 0
+    /// let offset = encoder.offset();
+    /// encoder.put_varint32(65535)?;
+    /// // offset: 3
+    /// let offset = encoder.offset();
     /// ```
+    #[inline]
     pub fn offset(&self) -> usize {
         self.offset
     }
@@ -675,9 +812,15 @@ impl<'a> Encoder<'a> {
     /// # Examples
     ///
     /// ```
-    ///
+    /// use level_db_rust::util::coding::Encoder;
+    /// let mut  vec = vec![];
+    /// let mut encoder = Encoder::with_vec(&mut vec);
+    /// // len: 0
+    /// let len = encoder.len();
+    /// encoder.put_varint32(65535)?;
+    /// // len: 3
+    /// let len = encoder.len();
     /// ```
-    #[inline]
     pub fn len(&self) -> usize {
         match self.data {
             MutVector(ref vec) => {
@@ -704,7 +847,11 @@ macro_rules! get_fixed {
         /// # Examples
         ///
         /// ```
-        ///
+        /// use level_db_rust::util::coding::Decoder;
+        /// let mut vec = vec![0, 0, 255, 255];
+        /// let mut decoder = Decoder::with_vec(&mut vec);
+        /// // 65535
+        /// let value = unsafe { decoder.uncheck_get_fixed32() };
         /// ```
         #[inline]
         pub unsafe fn $name(&mut self) -> $type {
@@ -723,7 +870,11 @@ macro_rules! get_fixed {
         /// # Examples
         ///
         /// ```
-        ///
+        /// use level_db_rust::util::coding::Decoder;
+        /// let mut vec = vec![0, 0, 255, 255];
+        /// let mut decoder = Decoder::with_vec(&mut vec);
+        /// // 65535
+        /// let value = decoder.get_fixed32()?;
         /// ```
         #[inline]
         pub fn $name(&mut self) -> Result<$type> {
@@ -744,7 +895,11 @@ macro_rules! get_varint {
         /// # Examples
         ///
         /// ```
-        ///
+        /// use level_db_rust::util::coding::Decoder;
+        /// let mut vec = vec![255, 255, 3];
+        /// let mut decoder = Decoder::with_vec(&mut vec);
+        /// // 65535
+        /// let value = unsafe { decoder.uncheck_get_varint32() };
         /// ```
         #[inline]
         pub unsafe fn $name(&mut self) -> $type {
@@ -761,7 +916,11 @@ macro_rules! get_varint {
         /// # Examples
         ///
         /// ```
-        ///
+        /// use level_db_rust::util::coding::Decoder;
+        /// let mut vec = vec![255, 255, 3];
+        /// let mut decoder = Decoder::with_vec(&mut vec);
+        /// // 65535
+        /// let value = decoder.get_varint32()?;
         /// ```
         #[inline]
         pub fn $name(&mut self) -> Result<$type> {
@@ -815,6 +974,7 @@ impl<'a> Decoder<'a> {
     }
 
     /// 判断是否有数据可以读取
+    /// 数据读取到末尾 不满足 offset < limit 时为false
     /// 如果使用了uncheck的方法 需要调用这个方法判断是否可以读取 否则可能会溢出
     ///
     /// returns: bool
@@ -822,7 +982,14 @@ impl<'a> Decoder<'a> {
     /// # Examples
     ///
     /// ```
-    ///
+    /// use level_db_rust::util::coding::Decoder;
+    /// let mut vec = vec![255, 255, 3];
+    /// let mut decoder = Decoder::with_vec(&mut vec);
+    /// // true
+    /// let can_get = decoder.can_get();
+    /// decoder.get_varint32()?;
+    /// // false
+    /// let can_get = decoder.can_get();
     /// ```
     #[inline]
     pub fn can_get(&self) -> bool {
@@ -888,7 +1055,7 @@ impl<'a> Decoder<'a> {
     /// ```
     ///
     /// ```
-    unsafe fn uncheck_get_buf(&mut self, len: usize) -> Slice {
+    pub unsafe fn uncheck_get_buf(&mut self, len: usize) -> Slice {
         let slice = uncheck_read_buf(&self.data, self.offset, len);
         self.offset += len;
         slice
@@ -908,7 +1075,7 @@ impl<'a> Decoder<'a> {
     /// ```
     ///
     /// ```
-    fn get_buf(&self, len: usize) -> Result<Slice> {
+    pub fn get_buf(&self, len: usize) -> Result<Slice> {
         check_length!(self.offset, len, self.limit);
         unsafe {
             Ok(uncheck_read_buf(&self.data, self.offset, len))
@@ -932,7 +1099,7 @@ impl<'a> Decoder<'a> {
     /// ```
     ///
     /// ```
-    unsafe fn uncheck_get_into_buf(&self, dst: &mut [u8]) {
+    pub unsafe fn uncheck_get_into_buf(&self, dst: &mut [u8]) {
         // todo 增加长度字段, 以写入到dst的任意位置
         uncheck_read_into_buf(&self.data, self.offset, dst)
     }
@@ -951,12 +1118,103 @@ impl<'a> Decoder<'a> {
     /// ```
     ///
     /// ```
-    fn get_into_buf(&self, dst: &mut [u8]) -> Result<()> {
+    pub fn get_into_buf(&self, dst: &mut [u8]) -> Result<()> {
         check_length!(self.offset, dst.len(), self.limit);
         unsafe {
             uncheck_read_into_buf(&self.data, self.offset, dst);
         }
         Ok(())
+    }
+
+    /// 跳过一段长度 偏移量会移动到跳过后的位置继续读取 未检查偏移量
+    ///
+    /// # Safety
+    /// * offset + skip < self.limit, 否则会出现未定义行为, 读取将溢出
+    ///
+    /// # Arguments
+    ///
+    /// * `skip`: 需要跳过的长度
+    ///
+    /// returns: usize
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use level_db_rust::util::coding::Decoder;
+    /// let vec = vec![255, 1, 255, 255, 3];
+    /// // offset: 0
+    /// let mut decoder = Decoder::with_vec(&vec);
+    /// // offset: 2
+    /// unsafe { decoder.uncheck_skip(2) };
+    /// // value: 65535
+    /// let value = decoder.get_varint32()?;
+    /// ```
+    pub unsafe fn uncheck_skip(&mut self, skip: usize) -> usize {
+        self.offset += skip;
+        self.offset
+    }
+
+    /// 跳过一段长度 偏移量会移动到跳过后的位置继续读取
+    ///
+    /// # Arguments
+    ///
+    /// * `skip`: 需要跳过的长度
+    ///
+    /// returns: Result<usize, Status>
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use level_db_rust::util::coding::Decoder;
+    /// let vec = vec![255, 1, 255, 255, 3];
+    /// // offset: 0
+    /// let mut decoder = Decoder::with_vec(&vec);
+    /// // offset: 2
+    /// decoder.skip(2)?;
+    /// // value: 65535
+    /// let value = decoder.get_varint32()?;
+    /// ```
+    pub fn skip(&mut self, skip: usize) -> Result<usize> {
+        check_length!(self.offset, self.limit);
+        self.offset += skip;
+        Ok(self.offset)
+    }
+
+    /// 获取当前编码到的位置
+    ///
+    /// returns: usize
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use level_db_rust::util::coding::Decoder;
+    /// let vec = vec![255, 1, 255, 255, 3];
+    /// let mut decoder = Decoder::with_vec(&vec);
+    /// // offset: 0
+    /// let value = decoder.get_varint32()?;
+    /// // offset: 2
+    /// let offset = decoder.offset();
+    /// ```
+    pub fn offset(&self) -> usize {
+        self.offset
+    }
+
+    /// 获取编码数据的可解码限制
+    /// offset < limit
+    ///
+    /// returns: usize
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use level_db_rust::util::coding::Decoder;
+    /// let vec = vec![255, 1, 255, 255, 3];
+    /// let mut decoder = Decoder::with_vec(&vec);
+    /// // limit: 5
+    /// let limit = decoder.limit();
+    /// ```
+    pub fn limit(&self) -> usize {
+        self.limit
     }
 }
 
@@ -1581,6 +1839,59 @@ fn test_mixed_put_get() {
         let slice = Slice::from_vec(vec![1, 2, 3]);
         assert_eq!(slice, decoder.uncheck_get_length_prefixed_slice())
     }
+}
+
+#[test]
+fn test_offset_len_skip() -> Result<()> {
+    let mut vec = vec![];
+    let mut encoder = Encoder::with_vec(&mut vec);
+    assert_eq!(0, encoder.offset());
+    assert_eq!(0, encoder.len());
+    encoder.put_varint32(65535)?;
+    assert_eq!(3, encoder.offset());
+    assert_eq!(3, encoder.len());
+
+    encoder.put_varint32(65535)?;
+    assert_eq!(6, encoder.offset());
+    assert_eq!(6, encoder.len());
+
+    encoder.put_varint32(65535)?;
+    assert_eq!(9, encoder.offset());
+    assert_eq!(9, encoder.len());
+
+    let mut decoder = Decoder::with_vec(&vec);
+    assert_eq!(0, decoder.offset());
+    assert_eq!(9, decoder.limit());
+
+    let value = decoder.get_varint32()?;
+    assert_eq!(3, decoder.offset());
+    assert_eq!(9, decoder.limit());
+    assert_eq!(65535, value);
+
+    decoder.skip(3)?;
+
+    let value = decoder.get_varint32()?;
+    assert_eq!(9, decoder.offset());
+    assert_eq!(9, decoder.limit());
+    assert_eq!(65535, value);
+
+    let mut decoder = Decoder::with_vec(&vec);
+    assert_eq!(0, decoder.offset());
+    assert_eq!(9, decoder.limit());
+
+    let value = decoder.get_varint32()?;
+    assert_eq!(3, decoder.offset());
+    assert_eq!(9, decoder.limit());
+    assert_eq!(65535, value);
+
+    unsafe { decoder.uncheck_skip(3); }
+
+    let value = decoder.get_varint32()?;
+    assert_eq!(9, decoder.offset());
+    assert_eq!(9, decoder.limit());
+    assert_eq!(65535, value);
+
+    Ok(())
 }
 
 #[test]
