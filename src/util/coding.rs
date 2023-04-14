@@ -20,7 +20,9 @@ use crate::util::status::LevelError;
 /// # Examples
 ///
 /// ```
-///
+/// use level_db_rust::util::coding::varint_length;
+/// // length == 2
+/// let length = varint_length(255);
 /// ```
 pub fn varint_length(mut value: u64) -> usize {
     let mut len = 1;
@@ -143,7 +145,11 @@ macro_rules! encode_fixed {
         /// # Examples
         ///
         /// ```
-        ///
+        ///  let mut vec = vec![];
+        ///  // [0, 0, 4, 210]
+        ///  unsafe {
+        ///     uncheck_encode_fixed32(&mut MutVector(&mut vec), 0, 1234);
+        ///  }
         /// ```
         #[inline]
         unsafe fn $name(data: &mut MutEncodeData, offset: usize, value: $type) {
@@ -178,7 +184,10 @@ encode_fixed!(uncheck_encode_fixed64, u64, u64);
 /// # Examples
 ///
 /// ```
-///
+///  let mut vec = vec![];
+///  let mut offset = 0;
+///  // [255, 255, 3]
+///  unsafe { offset = uncheck_encode_varint32(&mut MutVector(&mut vec), offset, 65535); }
 /// ```
 unsafe fn uncheck_encode_varint32(data: &mut MutEncodeData, offset: usize, value: u32) -> usize {
     let length = varint_length(value as u64);
@@ -236,7 +245,10 @@ unsafe fn uncheck_encode_varint32(data: &mut MutEncodeData, offset: usize, value
 /// # Examples
 ///
 /// ```
-///
+///  let mut vec = vec![];
+///  let mut offset = 0;
+///  // offset = 7, vec = [255, 255, 208, 148, 181, 244, 1]
+///  unsafe { offset = uncheck_encode_varint64(&mut MutVector(&mut vec), offset, 8_3980_4651_1103) };
 /// ```
 unsafe fn uncheck_encode_varint64(data: &mut MutEncodeData, mut offset: usize, mut value: u64) -> usize {
     let length = varint_length(value);
@@ -269,7 +281,9 @@ macro_rules! decode_fixed {
         /// # Examples
         ///
         /// ```
-        ///
+        ///  let vec = vec![0, 0, 255, 255];
+        ///  // 65535
+        ///  let result = unsafe { uncheck_decode_fixed32(&Vector(&vec), 0) };
         /// ```
         #[inline]
         unsafe fn $name(data: &EncodeData, offset: usize) -> $type {
@@ -301,7 +315,11 @@ macro_rules! decode_varint {
         /// # Examples
         ///
         /// ```
-        ///
+        ///  let vec = vec![255, 255, 3];
+        ///  println!("{:?}", vec);
+        ///  let mut offset = 0;
+        ///  // 65535
+        ///  let res = unsafe { uncheck_decode_varint32(&Vector(&vec), offset, vec.len()) };
         /// ```
         unsafe fn $name(data: &EncodeData, mut offset: usize, limit: usize) -> ($type, usize) {
             let ptr = get_ptr!(data);
@@ -347,7 +365,11 @@ decode_varint!(uncheck_decode_varint64, u64, 63);
 /// # Examples
 ///
 /// ```
+///     let mut vec = vec![];
 ///
+///     let buf = [1, 2, 3, 4, 5];
+///     // vec = [1, 2, 3, 4, 5]
+///     unsafe { uncheck_write_buf(&mut MutVector(&mut vec), 0, &buf); }
 /// ```
 unsafe fn uncheck_write_buf(data: &mut MutEncodeData, offset: usize, buf: &[u8]) {
     let mut_ptr = get_mut_ptr!(data, buf.len(), offset).add(offset);
@@ -371,7 +393,9 @@ unsafe fn uncheck_write_buf(data: &mut MutEncodeData, offset: usize, buf: &[u8])
 /// # Examples
 ///
 /// ```
-///
+///     let vec = vec![1, 2, 3, 4, 5, 1, 2, 3, 4];
+///     // [1, 2, 3, 4, 5]
+///     let buf = unsafe { uncheck_read_buf(&Vector(&vec), 0, 5) };
 /// ```
 unsafe fn uncheck_read_buf(data: &EncodeData, offset: usize, len: usize) -> Slice {
     let ptr: *const u8 = get_ptr!(data).add(offset);
@@ -395,7 +419,10 @@ unsafe fn uncheck_read_buf(data: &EncodeData, offset: usize, len: usize) -> Slic
 /// # Examples
 ///
 /// ```
-///
+///     let vec = vec![1, 2, 3, 4, 5, 1, 2, 3, 4];
+///     let mut dst = [0; 5];
+///     // dst = [1, 2, 3, 4, 5]
+///     unsafe { uncheck_read_into_buf(&Vector(&vec), 0, &mut dst) };
 /// ```
 unsafe fn uncheck_read_into_buf(data: &EncodeData, offset: usize, dst: &mut [u8]) {
     let ptr: *const u8 = get_ptr!(data).add(offset);
@@ -480,7 +507,9 @@ impl<'a> Encoder<'a> {
     /// # Examples
     ///
     /// ```
-    ///
+    ///  use level_db_rust::util::coding::Encoder;
+    ///  let mut vec = vec![];
+    ///  let mut encoder = Encoder::with_vec(&mut vec);
     /// ```
     pub fn with_vec(vec: &'a mut Vec<u8>) -> Self {
         Self {
@@ -554,34 +583,6 @@ impl<'a> Encoder<'a> {
     put_varint!(put_varint32, uncheck_encode_varint32, u32, check);
     put_varint!(put_varint64, uncheck_encode_varint64, u64, check);
 
-    /// 写入slice时先写入slice的长度做为前缀
-    /// slice(data:[1,2,3],size:3), 写入后[3,1,2,3]
-    ///
-    /// # Safety
-    /// * u32的字节数(4) + slice的字节数(slice.size()) < self.data.len(), 否则溢出(vec除外)
-    ///
-    /// # Arguments
-    ///
-    /// * `slice`: slice
-    ///
-    /// returns: ()
-    ///
-    /// # Examples
-    ///
-    /// ```
-    ///
-    /// ```
-    pub unsafe fn uncheck_put_length_prefixed_slice(&mut self, slice: &Slice) {
-        self.uncheck_put_varint32(slice.size() as u32);
-        self.uncheck_put_buf(slice);
-    }
-
-    pub fn put_length_prefixed_slice(&mut self, slice: &Slice) -> Result<()> {
-        self.put_varint32(slice.size() as u32)?;
-        self.put_buf(slice)?;
-        Ok(())
-    }
-
     /// 向encoder中直接写入数据不用进行编码
     /// 向vec中写入时会自动扩容
     /// # Safety
@@ -623,6 +624,34 @@ impl<'a> Encoder<'a> {
         if let MutVector(_) = self.data {} else { check_length!(self.offset, buf.len(), self.len()) };
         unsafe { uncheck_write_buf(&mut self.data, self.offset, buf); }
         self.offset += buf.len();
+        Ok(())
+    }
+
+    /// 写入slice时先写入slice的长度做为前缀
+    /// slice(data:[1,2,3],size:3), 写入后[3,1,2,3]
+    ///
+    /// # Safety
+    /// * u32的字节数(4) + slice的字节数(slice.size()) < self.data.len(), 否则溢出(vec除外)
+    ///
+    /// # Arguments
+    ///
+    /// * `slice`: slice
+    ///
+    /// returns: ()
+    ///
+    /// # Examples
+    ///
+    /// ```
+    ///
+    /// ```
+    pub unsafe fn uncheck_put_length_prefixed_slice(&mut self, slice: &Slice) {
+        self.uncheck_put_varint32(slice.size() as u32);
+        self.uncheck_put_buf(slice);
+    }
+
+    pub fn put_length_prefixed_slice(&mut self, slice: &Slice) -> Result<()> {
+        self.put_varint32(slice.size() as u32)?;
+        self.put_buf(slice)?;
         Ok(())
     }
 
@@ -859,8 +888,10 @@ impl<'a> Decoder<'a> {
     /// ```
     ///
     /// ```
-    unsafe fn uncheck_get_buf(&self, len: usize) -> Slice {
-        uncheck_read_buf(&self.data, self.offset, len)
+    unsafe fn uncheck_get_buf(&mut self, len: usize) -> Slice {
+        let slice = uncheck_read_buf(&self.data, self.offset, len);
+        self.offset += len;
+        slice
     }
 
     /// 读取buf
@@ -1277,10 +1308,11 @@ fn test_put_fixed() -> Result<()> {
         encoder.uncheck_put_fixed64(655535);
         encoder.uncheck_put_fixed64(8_3980_4651_1103);
         encoder.uncheck_put_fixed64(900_3372_0368_5477_5808);
-        println!("{:?}", &encoder.data);
         println!("{:?}", &encoder);
         if let MutVector(data) = encoder.data {
-            assert_eq!(&mut vec![0, 0, 0, 2, 0, 0, 0, 128, 0, 0, 0, 255, 0, 0, 255, 255, 0, 152, 150, 128, 0, 0, 0, 0, 0, 10, 0, 175, 0, 0, 7, 163, 82, 148, 63, 255, 124, 242, 103, 42, 101, 106, 0, 0],
+            assert_eq!(&mut vec![0, 0, 0, 2, 0, 0, 0, 128, 0, 0, 0, 255, 0, 0, 255, 255, 0, 152, 150,
+                                 128, 0, 0, 0, 0, 0, 10, 0, 175, 0, 0, 7, 163, 82, 148, 63, 255, 124,
+                                 242, 103, 42, 101, 106, 0, 0],
                        data);
         }
     }
@@ -1295,11 +1327,41 @@ fn test_put_fixed() -> Result<()> {
     encoder.put_fixed64(655535)?;
     encoder.put_fixed64(8_3980_4651_1103)?;
     encoder.put_fixed64(900_3372_0368_5477_5808)?;
-    println!("{:?}", &encoder.data);
     println!("{:?}", &encoder);
     if let MutVector(data) = encoder.data {
-        assert_eq!(&mut vec![0, 0, 0, 2, 0, 0, 0, 128, 0, 0, 0, 255, 0, 0, 255, 255, 0, 152, 150, 128, 0, 0, 0, 0, 0, 10, 0, 175, 0, 0, 7, 163, 82, 148, 63, 255, 124, 242, 103, 42, 101, 106, 0, 0],
+        assert_eq!(&mut vec![0, 0, 0, 2, 0, 0, 0, 128, 0, 0, 0, 255, 0, 0, 255, 255, 0, 152, 150,
+                             128, 0, 0, 0, 0, 0, 10, 0, 175, 0, 0, 7, 163, 82, 148, 63, 255, 124,
+                             242, 103, 42, 101, 106, 0, 0],
                    data);
+    }
+
+    let mut buf = [0; 20];
+    unsafe {
+        let mut encoder = Encoder::with_buf(&mut buf);
+        println!("{:?}", encoder);
+        encoder.uncheck_put_fixed32(2);
+        encoder.uncheck_put_fixed64(655535);
+        encoder.uncheck_put_fixed64(8_3980_4651_1103);
+        println!("{:?}", &encoder);
+        if let MutVector(data) = encoder.data {
+            assert_eq!(&mut vec![0, 0, 0, 2, 0, 0, 0, 0, 0, 10, 0, 175, 0, 0, 7, 163, 82, 148, 63, 255],
+                       data);
+        }
+    }
+
+
+    let mut slice = Slice::from_vec(vec![0; 20]);
+    unsafe {
+        let mut encoder = Encoder::with_slice(&mut slice);
+        println!("{:?}", encoder);
+        encoder.uncheck_put_fixed32(2);
+        encoder.uncheck_put_fixed64(655535);
+        encoder.uncheck_put_fixed64(8_3980_4651_1103);
+        println!("{:?}", &encoder);
+        if let MutVector(data) = encoder.data {
+            assert_eq!(&mut vec![0, 0, 0, 2, 0, 0, 0, 0, 0, 10, 0, 175, 0, 0, 7, 163, 82, 148, 63, 255],
+                       data);
+        }
     }
 
     Ok(())
@@ -1454,19 +1516,24 @@ fn test_get_buf() {
         println!("{:?}", buf);
         assert_eq!(&[1_u8, 2, 3], vec.clone().as_slice());
     }
-    let decoder = Decoder::with_vec(&vec);
+    let mut decoder = Decoder::with_vec(&vec);
     let buf = unsafe { decoder.uncheck_get_buf(3) };
     println!("{:?}", buf);
+    assert_eq!(Slice::from_vec(vec![1, 2, 3]), buf);
+    assert_eq!(3, decoder.offset)
 }
 
 #[test]
 fn test_put_length_prefixed_slice() {
     let mut vec = vec![];
-    let mut encoder = Encoder::with_vec(&mut vec);
-    let slice = Slice::from_vec(vec![1, 2, 3]);
-    unsafe { encoder.uncheck_put_length_prefixed_slice(&slice); }
+    {
+        let mut encoder = Encoder::with_vec(&mut vec);
+        let slice = Slice::from_vec(vec![1, 2, 3]);
+        unsafe { encoder.uncheck_put_length_prefixed_slice(&slice); }
+        assert_eq!(4, encoder.offset)
+    }
     println!("{:?}", vec);
-    assert_eq!(vec![3, 1, 2, 3], vec);
+    assert_eq!(&vec![3, 1, 2, 3], &vec);
 }
 
 #[test]
@@ -1484,6 +1551,36 @@ fn test_get_length_prefixed_slice() {
     let slice = unsafe { decoder.uncheck_get_length_prefixed_slice() };
     println!("{:?}", slice);
     assert_eq!(&[1_u8, 2, 3], &*slice);
+    assert_eq!(4, decoder.offset)
+}
+
+#[test]
+fn test_mixed_put_get() {
+    let mut vec = vec![];
+    let mut encoder = Encoder::with_vec(&mut vec);
+
+    unsafe {
+        encoder.uncheck_put_fixed32(3);
+        encoder.uncheck_put_varint32(65535);
+        encoder.uncheck_put_fixed64(7);
+        encoder.uncheck_put_varint64(8_3980_4651_1103);
+        let buf = [1, 2, 3];
+        encoder.uncheck_put_buf(&buf);
+        let slice = Slice::from_vec(vec![1, 2, 3]);
+        encoder.uncheck_put_length_prefixed_slice(&slice);
+    }
+
+    let mut decoder = Decoder::with_vec(&vec);
+    unsafe {
+        assert_eq!(3, decoder.uncheck_get_fixed32());
+        assert_eq!(65535, decoder.uncheck_get_varint32());
+        assert_eq!(7, decoder.uncheck_get_fixed64());
+        assert_eq!(8_3980_4651_1103, decoder.uncheck_get_varint64());
+        let buf = [1_u8, 2, 3];
+        assert_eq!(&buf, &*decoder.uncheck_get_buf(3));
+        let slice = Slice::from_vec(vec![1, 2, 3]);
+        assert_eq!(slice, decoder.uncheck_get_length_prefixed_slice())
+    }
 }
 
 #[test]
