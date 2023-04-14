@@ -404,31 +404,6 @@ unsafe fn uncheck_read_buf(data: &EncodeData, offset: usize, len: usize) -> Slic
     Slice::from_raw_parts(dst, len)
 }
 
-/// 读取buf 读取时需要知道需要读取的长度 传入的dst需要具有长度信息
-///
-/// # Safety
-/// * offset + dst.len() < data.len() , 否则溢出
-///
-/// # Arguments
-///
-/// * `data`: 存储编码的数据
-/// * `offset`: 解码的偏移量
-///
-/// returns: &[u8]
-///
-/// # Examples
-///
-/// ```
-///     let vec = vec![1, 2, 3, 4, 5, 1, 2, 3, 4];
-///     let mut dst = [0; 5];
-///     // dst = [1, 2, 3, 4, 5]
-///     unsafe { uncheck_read_into_buf(&Vector(&vec), 0, &mut dst) };
-/// ```
-unsafe fn uncheck_read_into_buf(data: &EncodeData, offset: usize, dst: &mut [u8]) {
-    let ptr: *const u8 = get_ptr!(data).add(offset);
-    intrinsics::copy_nonoverlapping(ptr, dst.as_mut_ptr(), dst.len());
-}
-
 #[derive(Debug)]
 enum EncodeData<'a> {
     Vector(&'a Vec<u8>),
@@ -1016,7 +991,11 @@ impl<'a> Decoder<'a> {
     /// # Examples
     ///
     /// ```
-    ///
+    ///  use level_db_rust::util::coding::Decoder;
+    ///  let vec = vec![3, 1, 2, 3];
+    ///  let mut decoder = Decoder::with_vec(&vec);
+    ///  // [1, 2, 3]
+    ///  let slice = unsafe { decoder.uncheck_get_length_prefixed_slice() };
     /// ```
     pub unsafe fn uncheck_get_length_prefixed_slice(&mut self) -> Slice {
         let size = self.uncheck_get_varint32() as usize;
@@ -1030,7 +1009,11 @@ impl<'a> Decoder<'a> {
     /// # Examples
     ///
     /// ```
-    ///
+    ///  use level_db_rust::util::coding::Decoder;
+    ///  let vec = vec![3, 1, 2, 3];
+    ///  let mut decoder = Decoder::with_vec(&vec);
+    ///  // [1, 2, 3]
+    ///  let slice = decoder.get_length_prefixed_slice()?;
     /// ```
     pub fn get_length_prefixed_slice(&mut self) -> Result<Slice> {
         check_length!(self.offset, self.limit);
@@ -1053,7 +1036,11 @@ impl<'a> Decoder<'a> {
     /// # Examples
     ///
     /// ```
-    ///
+    ///  use level_db_rust::util::coding::Decoder;
+    ///  let vec = vec![1, 2, 3];
+    ///  let mut decoder = Decoder::with_vec(&vec);
+    ///  // [1, 2, 3]
+    ///  let buf = unsafe { decoder.uncheck_get_buf(3) };
     /// ```
     pub unsafe fn uncheck_get_buf(&mut self, len: usize) -> Slice {
         let slice = uncheck_read_buf(&self.data, self.offset, len);
@@ -1073,57 +1060,17 @@ impl<'a> Decoder<'a> {
     /// # Examples
     ///
     /// ```
-    ///
+    ///  use level_db_rust::util::coding::Decoder;
+    ///  let vec = vec![1, 2, 3];
+    ///  let mut decoder = Decoder::with_vec(&vec);
+    ///  // [1, 2, 3]
+    ///  let buf = decoder.get_buf(3)?;
     /// ```
     pub fn get_buf(&self, len: usize) -> Result<Slice> {
         check_length!(self.offset, len, self.limit);
         unsafe {
             Ok(uncheck_read_buf(&self.data, self.offset, len))
         }
-    }
-
-    /// 获取buf写入到dst 不检查长度
-    ///
-    /// # Safety
-    /// * self.offset + dst.len() < self.limit, 否则溢出
-    ///
-    /// # Arguments
-    ///
-    /// * `data`: 待解码数据
-    /// * `dst`: 目标数组, 需要指定长度的
-    ///
-    /// returns: ()
-    ///
-    /// # Examples
-    ///
-    /// ```
-    ///
-    /// ```
-    pub unsafe fn uncheck_get_into_buf(&self, dst: &mut [u8]) {
-        // todo 增加长度字段, 以写入到dst的任意位置
-        uncheck_read_into_buf(&self.data, self.offset, dst)
-    }
-
-    /// 获取buf写入到dst
-    ///
-    /// # Arguments
-    ///
-    /// * `data`: 待解码数据
-    /// * `dst`: 目标数组, 需要指定长度的
-    ///
-    /// returns: Result<(), Status>
-    ///
-    /// # Examples
-    ///
-    /// ```
-    ///
-    /// ```
-    pub fn get_into_buf(&self, dst: &mut [u8]) -> Result<()> {
-        check_length!(self.offset, dst.len(), self.limit);
-        unsafe {
-            uncheck_read_into_buf(&self.data, self.offset, dst);
-        }
-        Ok(())
     }
 
     /// 跳过一段长度 偏移量会移动到跳过后的位置继续读取 未检查偏移量
@@ -1491,15 +1438,6 @@ fn test_read_buf() {
     println!("{:?}", buf);
     assert_eq!(&[1_u8, 2, 3, 4] as &[u8; 4], buf.deref());
 
-    let mut dst = [0; 5];
-    unsafe { uncheck_read_into_buf(&Vector(&vec), 0, &mut dst) };
-    println!("{:?}", dst);
-    assert_eq!(&[1_u8, 2, 3, 4, 5] as &[u8; 5], &dst);
-
-    let mut dst = [0; 4];
-    unsafe { uncheck_read_into_buf(&Vector(&vec), 5, &mut dst) };
-    println!("{:?}", dst);
-    assert_eq!(&[1_u8, 2, 3, 4] as &[u8; 4], &dst);
 }
 
 #[test]
@@ -1541,14 +1479,8 @@ fn test_mixed_encode_decode() {
     println!("{:?}", buf);
     assert_eq!(&[1_u8, 2, 3, 4] as &[u8; 4], buf.deref());
 
-    let mut dst = [0; 4];
-    unsafe { uncheck_read_into_buf(&Vector(&vec), offset, &mut dst) };
-    offset += 4;
-    println!("{:?}", dst);
-    assert_eq!(&[1_u8, 2, 3, 4] as &[u8; 4], &dst as &[u8; 4]);
-
     println!("offset: {}", offset);
-    assert_eq!(26, offset);
+    assert_eq!(22, offset);
 }
 
 #[test]
@@ -1755,17 +1687,21 @@ fn test_get_varint() -> Result<()> {
 }
 
 #[test]
-fn test_put_buf() {
+fn test_put_buf() -> Result<()> {
     let mut vec = vec![];
     let mut encoder = Encoder::with_vec(&mut vec);
     let buf = [1, 2, 3];
     unsafe { encoder.uncheck_put_buf(&buf) }
     println!("{:?}", buf);
-    assert_eq!(&[1_u8, 2, 3], vec.as_slice())
+    encoder.put_buf(&buf)?;
+    assert_eq!(&[1_u8, 2, 3, 1, 2, 3], vec.as_slice());
+    println!("{:?}", vec);
+
+    Ok(())
 }
 
 #[test]
-fn test_get_buf() {
+fn test_get_buf() -> Result<()> {
     let mut vec = vec![];
     {
         let mut encoder = Encoder::with_vec(&mut vec);
@@ -1778,7 +1714,9 @@ fn test_get_buf() {
     let buf = unsafe { decoder.uncheck_get_buf(3) };
     println!("{:?}", buf);
     assert_eq!(Slice::from_vec(vec![1, 2, 3]), buf);
-    assert_eq!(3, decoder.offset)
+    assert_eq!(3, decoder.offset);
+
+    Ok(())
 }
 
 #[test]
