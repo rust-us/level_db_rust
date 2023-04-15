@@ -1,9 +1,7 @@
 use std::ops::{BitXor, Mul};
 use std::mem::size_of;
 use std::slice as stds;
-
-use crate::traits::coding_trait::CodingTrait;
-use crate::util::coding::Coding;
+use crate::util::coding::Decoder;
 
 use crate::util::r#const::HASH_DEFAULT_SEED;
 
@@ -11,7 +9,6 @@ use crate::util::slice::Slice;
 
 /// 一种可以计算 hash 的特质
 pub trait ToHash {
-
     fn to_hash(&self) -> u32;
 
     fn to_hash_with_seed(&self, seed: u32) -> u32;
@@ -143,13 +140,15 @@ impl Hash {
         let mul_first = n.mul(murmur_hash as usize); // x = data_size * murmur_hash
         let mut h: u32 = seed.bitxor(mul_first as u32);  // h = seed ^ x
 
+        let mut decoder = Decoder::with_buf(data);
+
         // 每次按照四字节长度读取字节流中的数据 w，并使用普通的哈希函数计算哈希值。
         let mut position: usize = 0;
         while position + 4 <= limit {
             //每次解码前4个字节，直到最后剩下小于4个字节
             // rust的 &[u8] 是胖指针，带长度信息的，会做range check，所以是安全的。
             // 虽然decode_fixed32 中也是解码4字节，但传入整个data在方法上不明确，因此传 [position..(position + 4)], 可以更加方便理解，对性能无影响
-            let w = Coding::decode_fixed32(&data[position..(position + 4)]);
+            let w = unsafe { decoder.uncheck_get_fixed32() };
             // 向后移动4个字节
             position += 4;
 
