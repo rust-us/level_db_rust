@@ -39,14 +39,14 @@ impl FilterPolicy for TestHashFilter {
         len = max(len, need_capacity);
 
         let mut dst_chars = vec![0; len];
-
+        let mut encoder = Encoder::with_vec(&mut dst_chars);
         // for [0, len)
         for i in 0..keys.len() {
             let h = Hash::hash_code(keys[i].as_ref(), 1); // seed 固定为 1
 
-            let mut encoder = Encoder::with_vec(&mut dst_chars);
-            encoder.put_fixed32(h).expect("TODO: panic message");
+            encoder.put_fixed32(h).expect("Encoder:with_vec.put_fixed32 error");
         }
+        debug!("debug: dst_chars:{:?}", dst_chars);
 
         Slice::from_vec(dst_chars)
     }
@@ -54,14 +54,8 @@ impl FilterPolicy for TestHashFilter {
     fn key_may_match(&self, key: &Slice, bloom_filter: &Slice) -> bool {
         let h = Hash::hash_code(key.to_vec().as_ref(), 1);
 
-        let bloom_filter_data: &[u8] = bloom_filter.as_ref();
-        let len = bloom_filter_data.len();
-
-        let mut pos = 0;
-        while pos < len {
-            let buf = &bloom_filter_data[pos..(pos + 4)];
-
-            let mut decoder = Decoder::with_buf(buf);
+        let mut decoder = Decoder::with_buf(bloom_filter);
+        loop {
             if !decoder.can_get() {
                 return false;
             }
@@ -69,11 +63,7 @@ impl FilterPolicy for TestHashFilter {
             if h == h_bl {
                 return true;
             }
-
-            pos += 4;
         }
-
-        false
     }
 }
 
