@@ -1,9 +1,8 @@
 use std::borrow::BorrowMut;
 use std::cmp::max;
 use std::usize::MAX;
-use crate::traits::coding_trait::CodingTrait;
 use crate::traits::filter_policy_trait::FilterPolicy;
-use crate::util::coding::Coding;
+use crate::util::coding::Decoder;
 use crate::util::hash::Hash;
 use crate::util::slice::Slice;
 
@@ -45,7 +44,7 @@ impl FilterPolicy for TestHashFilter {
         // for [0, len)
         for i in 0..keys.len() {
             let h = Hash::hash_code(keys[i].as_ref(), 1); // seed 固定为 1
-            offset = Coding::put_fixed32(bloom_filter, offset, h);
+            // offset = Coding::put_fixed32(bloom_filter, offset, h);
         }
 
         Slice::from_buf(bloom_filter)
@@ -59,11 +58,15 @@ impl FilterPolicy for TestHashFilter {
 
         let mut pos = 0;
         while pos < len {
-            let buf = &bloom_filter_data[pos..(pos+4)];
+            let buf = &bloom_filter_data[pos..(pos + 4)];
 
-            let h_bl = Coding::decode_fixed32(buf);
+            let mut decoder = Decoder::with_buf(buf);
+            if !decoder.can_get() {
+                return false;
+            }
+            let h_bl = unsafe { decoder.uncheck_get_fixed32() };
             if h == h_bl {
-                return true
+                return true;
             }
 
             pos += 4;
@@ -83,7 +86,7 @@ fn test_create_filter() {
     let s2 = Slice::try_from("world").unwrap();
     let s3 = Slice::try_from("hello world").unwrap();
 
-    let mut keys : Vec<&Slice>  = Vec::new();
+    let mut keys: Vec<&Slice> = Vec::new();
     keys.push(&s1);
     keys.push(&s2);
     keys.push(&s3);
@@ -103,17 +106,17 @@ fn test_create_filter() {
 
     // 因为不存在，所以验证不通过
     let key_not_match = policy.key_may_match(&Slice::try_from("helloworld").unwrap(),
-                                         &bloom_filter);
+                                             &bloom_filter);
     assert!(!key_not_match);
 
     // 因为存在，所以验证通过
     let key_may_match = policy.key_may_match(&Slice::try_from("hello world").unwrap(),
-                                         &bloom_filter);
+                                             &bloom_filter);
     assert!(key_may_match);
 
     // 因为不存在，所以验证不通过
     let key_not_match = policy.key_may_match(&Slice::try_from("foo").unwrap(),
-                                         &bloom_filter);
+                                             &bloom_filter);
     assert!(!key_not_match);
 
     // 验证通过
@@ -138,7 +141,7 @@ fn test_create_filter_with_long_len() {
     let s2 = Slice::try_from("world").unwrap();
     let s3 = Slice::try_from("hello world").unwrap();
 
-    let mut keys : Vec<&Slice>  = Vec::new();
+    let mut keys: Vec<&Slice> = Vec::new();
     keys.push(&s1);
     keys.push(&s2);
     keys.push(&s3);
@@ -193,7 +196,7 @@ fn test_create_filter_with_short_len() {
     let s2 = Slice::try_from("world").unwrap();
     let s3 = Slice::try_from("hello world").unwrap();
 
-    let mut keys : Vec<&Slice>  = Vec::new();
+    let mut keys: Vec<&Slice> = Vec::new();
     keys.push(&s1);
     keys.push(&s2);
     keys.push(&s3);

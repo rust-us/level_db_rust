@@ -5,9 +5,7 @@ mod test {
     use crate::table::filter_block;
     use crate::table::filter_block::{FilterBlock, FilterBlockBuilder, FilterBlockReader};
     use crate::table::filter_block_test_filter_policy::TestHashFilter;
-    use crate::traits::coding_trait::CodingTrait;
     use crate::traits::filter_policy_trait::FilterPolicy;
-    use crate::util::coding::Coding;
     use crate::util::slice::Slice;
     use crate::util::hash::{Hash, ToHash};
 

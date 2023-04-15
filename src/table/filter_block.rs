@@ -1,9 +1,8 @@
 use std::io::Write;
 use std::sync::Arc;
 use crate::debug;
-use crate::traits::coding_trait::CodingTrait;
 use crate::traits::filter_policy_trait::{FilterPolicy, FilterPolicyPtr};
-use crate::util::coding::Coding;
+use crate::util::coding::Encoder;
 use crate::util::slice::Slice;
 
 use crate::util::Result;
@@ -124,7 +123,7 @@ pub struct FilterBlockReader {
     // Number of entries in offset array
     num: usize,
     // Encoding parameter (see kFilterBaseLg in .cc file)
-    base_lg: usize
+    base_lg: usize,
 }
 
 impl FilterBlock for FilterBlockBuilder {
@@ -133,11 +132,11 @@ impl FilterBlock for FilterBlockBuilder {
     }
 
     fn new_with_policy_capacity(policy: FilterPolicyPtr, capacity: usize) -> Self {
-        let keys:Vec<u8> = Vec::with_capacity(capacity);
-        let start:Vec<usize> =  Vec::with_capacity(capacity);
-        let result:Vec<u8> =  Vec::with_capacity(capacity);
-        let tmp_keys:Vec<Slice> = vec![];
-        let filter_offsets:Vec<u32> = vec![];
+        let keys: Vec<u8> = Vec::with_capacity(capacity);
+        let start: Vec<usize> = Vec::with_capacity(capacity);
+        let result: Vec<u8> = Vec::with_capacity(capacity);
+        let tmp_keys: Vec<Slice> = vec![];
+        let filter_offsets: Vec<u32> = vec![];
 
         Self {
             policy,
@@ -145,7 +144,7 @@ impl FilterBlock for FilterBlockBuilder {
             start,
             result,
             tmp_keys,
-            filter_offsets
+            filter_offsets,
         }
     }
 
@@ -154,7 +153,7 @@ impl FilterBlock for FilterBlockBuilder {
         let filters_number = block_offset / (FILTER_BASE as u64);
 
         let len = self.filter_offsets.len() as u64;
-        assert!(filters_number >=  len);
+        assert!(filters_number >= len);
 
         // 当已经生成的filter的数目小于需要生成的filter的总数时，那么就继续创建filter。
         while filters_number > len {
@@ -180,17 +179,16 @@ impl FilterBlock for FilterBlockBuilder {
         let array_offset = self.result.len() as u32;
 
         // 当前需要写入的位置。result 中可能存在数据，因此为 offset ==> self.result.len()  的位置
-        let mut offset: usize = self.result.len();
         let dst: &mut Vec<u8> = &mut self.result;
         // let mut dst_append = self.result.as_mut_slice();
+        let mut encoder = Encoder::with_vec(dst);
         for i in 0..self.filter_offsets.len() {
-            offset = Coding::put_fixed32_with_vex(dst, self.filter_offsets[i]);
+            encoder.put_fixed32(self.filter_offsets[i])?;
         }
-
-        offset = Coding::put_fixed32_with_vex(dst, array_offset);
+        encoder.put_fixed32(array_offset)?;
 
         // Save encoding parameter in result
-        Coding::put_varint64_with_vex(dst, FILTER_BASE_LG as u64);
+        encoder.put_varint64(FILTER_BASE_LG as u64)?;
 
         Ok(Slice::from_buf(&self.result))
     }
@@ -245,9 +243,9 @@ impl FilterBlockBuilder {
         // 依次拿到每个key
         for i in 0..num_keys {
             // 拿到key的长度
-            let length = self.start[i+1] - self.start[i];
+            let length = self.start[i + 1] - self.start[i];
             // 这里拿到每个key的数据
-            let base = &self.keys[self.start[i]..(self.start[i]+length)];
+            let base = &self.keys[self.start[i]..(self.start[i] + length)];
 
             // 生成相应的key，并且放到tmp_keys里面
             let mut tmp_key = Vec::with_capacity(length);
@@ -265,7 +263,7 @@ impl FilterBlockBuilder {
             keys.push(&tmp_key);
         }
         // let create_filter:Slice = self.policy.create_filter_with_len(num_keys, keys);
-        let create_filter:Slice = self.policy.create_filter(keys);
+        let create_filter: Slice = self.policy.create_filter(keys);
         debug!("create_filter:{:?}.", create_filter);
 
         self.result.write(create_filter.as_ref());
@@ -291,8 +289,8 @@ impl FilterBlockReader {
                 data,
                 offset,
                 num: 0,
-                base_lg: 0
-            }
+                base_lg: 0,
+            };
         };
 
         // let buf = contents.as_ref()[contents_len-5..];
@@ -305,7 +303,7 @@ impl FilterBlockReader {
             data,
             offset,
             num: 0,
-            base_lg: 0
+            base_lg: 0,
         }
     }
 

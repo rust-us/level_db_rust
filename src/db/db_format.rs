@@ -3,9 +3,8 @@ use std::io::Write;
 use std::sync::Arc;
 use crate::db::db_format::ValueType::{KTypeDeletion, KTypeValue};
 use crate::db::file_meta_data::FileMetaData;
-use crate::traits::coding_trait::CodingTrait;
 use crate::traits::comparator_trait::Comparator;
-use crate::util::coding::Coding;
+use crate::util::coding::{Encoder, varint_length};
 use crate::util::slice::Slice;
 use crate::util::unsafe_slice::UnsafeSlice;
 
@@ -20,17 +19,17 @@ pub enum ValueType {
 pub struct ParsedInternalKey {
     user_key: Slice,
     sequence: u64,
-    value_type: ValueType
+    value_type: ValueType,
 }
 
 #[derive(Debug)]
 pub struct InternalKey {
-    rep_: Slice
+    rep_: Slice,
 }
 
 /// InternalKeyComparator
 pub struct InternalKeyComparator {
-    user_comparator_: Arc<dyn Comparator>
+    user_comparator_: Arc<dyn Comparator>,
 }
 
 /// 查找键
@@ -93,7 +92,6 @@ impl Default for ParsedInternalKey {
 }
 
 impl ParsedInternalKey {
-
     pub fn debug_string(&self) -> Slice {
         Slice::default()
     }
@@ -119,13 +117,13 @@ impl ParsedInternalKey {
     /// Attempt to parse an internal key from "internal_key".  On success,
     /// stores the parsed data in "*result", and returns true.
     /// On error, returns false, leaves "*result" in an undefined state.
-    pub fn parse_internal_key(internal_key : Slice, target: ParsedInternalKey) -> bool {
+    pub fn parse_internal_key(internal_key: Slice, target: ParsedInternalKey) -> bool {
         // line 173
         todo!()
     }
 
     /// Returns the user key portion of an internal key.
-    pub fn extract_user_key(internal_key : Slice) -> Slice {
+    pub fn extract_user_key(internal_key: Slice) -> Slice {
         todo!()
     }
 }
@@ -154,7 +152,7 @@ impl InternalKey {
         ParsedInternalKey::new(user_key, sequence, value_type)
             .append_internal_key(result);
 
-        Self{
+        Self {
             // rep_: result
             // todo result值如何赋值
             rep_: Slice::default()
@@ -261,16 +259,17 @@ impl LookupKey {
         let need = user_key_size + 13; // A conservative estimate
         let mut data = Vec::with_capacity(need);
         let buf = data.as_mut_slice();
-        let klength = Coding::varint_length(user_key_size + 8);
-        let mut offset = 0;
+        let mut encoder = Encoder::with_buf(buf);
         // write key size
-        offset = Coding::encode_varint32(klength as u32, buf, offset);
-        // write key slice
-        offset += (&mut buf[offset..]).write(user_key.as_ref()).expect("write user_key");
-        // write sequence number and value type
-        Coding::encode_fixed64(
-            pack_sequence_and_type(sequence, ValueType::KTypeValue),
-                buf, offset);
+        let klength = varint_length((user_key_size + 8) as u64);
+        // 需要保证写入的数据不会超过buf.len(), 否则会溢出
+        unsafe {
+            encoder.uncheck_put_varint32(klength as u32);
+            // write key slice
+            encoder.uncheck_put_buf(user_key.as_ref());
+            // write sequence number and value type
+            encoder.uncheck_put_fixed64(pack_sequence_and_type(sequence, ValueType::KTypeValue));
+        }
 
         LookupKey {
             data: Slice::from_vec(data),
@@ -327,6 +326,7 @@ pub fn pack_sequence_and_type(seq_no: usize, v_type: ValueType) -> u64 {
 }
 
 pub struct Config {}
+
 impl Config {
     /// Maximum encoding length of a BlockHandle
     pub const K_NUM_LEVELS: usize = 7;
