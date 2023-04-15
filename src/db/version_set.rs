@@ -5,7 +5,9 @@ use crate::db::file_meta_data::FileMetaData;
 use crate::db::table_cache::TableCache;
 use crate::db::version_edit::VersionEdit;
 use crate::traits::comparator_trait::Comparator;
-use crate::util::options::{Env, Options, ReadOptions};
+use crate::util::cache::Cache;
+use crate::util::env::Env;
+use crate::util::options::{Options, ReadOptions};
 use crate::util::slice::Slice;
 use crate::util::Result;
 
@@ -92,7 +94,9 @@ pub struct Compaction {
     // size_t level_ptrs_[config::kNumLevels];
 }
 
-// .h   line 68 - 71
+/// Lookup the value for key.  If found, store it in *val and
+/// return OK.  Else return a non-OK status.  Fills *stats.
+/// REQUIRES: lock is not held
 struct GetStats {
     seek_file: Rc<FileMetaData>,
     seek_file_level: i32

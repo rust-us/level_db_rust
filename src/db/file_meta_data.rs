@@ -77,6 +77,10 @@ impl FileMetaData {
         self.file_size
     }
 
+    pub fn set_file_size(&mut self, file_size: u64) {
+        self.file_size = file_size;
+    }
+
     /// Smallest internal key served by table
     pub fn get_smallest(&self) -> &InternalKey {
         &self.smallest

@@ -5,15 +5,15 @@ use std::ptr::null_mut;
 use std::sync::{Arc, RwLock};
 
 use rand::prelude::*;
+
 use crate::debug;
 use crate::traits::comparator_trait::Comparator;
 use crate::traits::DataIterator;
-
-use crate::util::arena::ArenaRef;
 use crate::util::{Arena, Result};
+use crate::util::arena::ArenaRef;
 use crate::util::slice::Slice;
-use crate::util::unsafe_slice::UnsafeSlice;
 use crate::util::status::{LevelError, Status};
+use crate::util::unsafe_slice::UnsafeSlice;
 
 type RawNode = *mut Node;
 
@@ -213,6 +213,10 @@ impl<Cmp: Comparator> SkipList<Cmp> {
         false
     }
 
+    unsafe fn find_eq_or_greater<R: AsRef<[u8]>>(&self, key: &R) -> Option<RawNode> {
+        todo!()
+    }
+
     #[inline]
     pub fn max_height(&self) -> usize {
         MAX_LEVEL
@@ -282,31 +286,31 @@ impl<Cmp: Comparator> ToString for SkipList<Cmp> {
 impl Node {
     #[inline]
     fn create(src: UnsafeSlice, level: usize, arena: ArenaRef) -> RawNode {
-        let node = box Self {
+        let node = Box::new(Self {
             key: Some(src),
             next_elems: allocate_next_elems(arena),
             level,
-        };
+        });
         Box::into_raw(node)
     }
 
     #[inline]
     fn create_head(arena: ArenaRef) -> RawNode {
-        let node = box Self {
+        let node = Box::new(Self {
             key: None,
             next_elems: allocate_next_elems(arena),
             level: MAX_LEVEL,
-        };
+        });
         Box::into_raw(node)
     }
 
     #[inline]
     fn create_tail() -> RawNode {
-        let node = box Self {
+        let node = Box::new(Self {
             key: None,
             next_elems: null_mut(),
             level: 0,
-        };
+        });
         Box::into_raw(node)
     }
 
@@ -345,6 +349,28 @@ impl Node {
     unsafe fn set_node(&mut self, level: usize, node: RawNode) {
         assert!(level < MAX_LEVEL);
         self.next_elems.offset(level as isize).write(node);
+    }
+
+    /// 找到最后一个数据元素
+    unsafe fn seek_to_last(&self) -> Option<RawNode> {
+        if self.is_tail() {
+            return None;
+        }
+        let mut pre = self;
+        let mut cur = &*self.next_top_node();
+        loop {
+            if cur.is_tail() {
+                return Some(pre as *const Node as *mut Node);
+            }
+            pre = cur;
+            cur = &*cur.next_top_node();
+        }
+    }
+
+    /// 找到最上层的下一个元素
+    #[inline]
+    unsafe fn next_top_node(&self) -> RawNode {
+        self.get_node(self.level - 1)
     }
 }
 
@@ -410,7 +436,6 @@ impl<Cmp: Comparator> Iterator for Iter<Cmp> {
 }
 
 impl<Cmp: Comparator> DataIterator for Iter<Cmp> {
-
     #[inline]
     fn valid(&self) -> bool {
         unsafe {
@@ -420,12 +445,16 @@ impl<Cmp: Comparator> DataIterator for Iter<Cmp> {
 
     #[inline]
     fn seek_to_first(&mut self) {
-        self.current = self.head
+        self.current = unsafe {
+            (&*self.head).get_node(0)
+        }
     }
 
     #[inline]
     fn seek_to_last(&mut self) {
-        self.current = self.tail
+        unsafe {
+            self.current = (&*self.current).seek_to_last().unwrap_or(self.tail)
+        }
     }
 
     fn seek(&mut self, key: &Slice) {
@@ -453,6 +482,10 @@ impl<Cmp: Comparator> DataIterator for Iter<Cmp> {
     }
 
     fn value(&self) -> UnsafeSlice {
+        todo!()
+    }
+
+    fn status(&self) -> Status {
         todo!()
     }
 }

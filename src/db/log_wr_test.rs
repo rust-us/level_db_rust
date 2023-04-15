@@ -11,7 +11,7 @@ mod test {
 
     #[test]
     fn write() -> Result<()> {
-        let file = box File::create("../../1.bin")?;
+        let file = Box::new(File::create("../../1.bin")?);
         let mut writer = LogWriter::new(file);
         let sample: Vec<u8> = ('0'..='9').map(|a|a as u8).collect();
         for i in 0..100 {
@@ -23,7 +23,7 @@ mod test {
 
     #[test]
     fn read() -> Result<()> {
-        let file = box File::open("../../1.bin")?;
+        let file = Box::new(File::open("../../1.bin")?);
         let mut reader = LogReader::new(file, true, 0);
         let sample: Vec<u8> = ('0'..='9').map(|a|a as u8).collect();
         for i in 0..100 {

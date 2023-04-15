@@ -71,31 +71,41 @@ RUSTFLAGS='--cfg CORE_DEBUG="false"' cargo build --release
 
 ### 1.1.0 版本, 完成基础零部件
 
-| 功能模块                                                                             | 完成人                  | 进度  |
-|----------------------------------------------------------------------------------|----------------------|-----|
-| util.Options(ReadOptions, WriteOptions)                                          | kazeseiriou          |     |
-| util.ENV(WritableFile, SequentialFile, RandomAccessFile, FileLock)               | lxd5866              |     |
-| util.Logger                                                                      | peach                |     |
-| table.Block, BlockBuilder, FilterBlockBuilder                                    | colagy               |     |
-| FilterBlock, FilterBlockReader                                                   | colagy               |     |
-| table.format(Footer, BlockHandle)                                                | 半支烟                  | 20% |
-| db.dbformat(InternalKeyComparator, InternalFilterPolicy, LookupKey, InternalKey) | 半支烟                  | 20% |
-| db.SkipList                                                                      | wangboo              | 80% |
-| table.Iterator(DBIter, MergingIterator, TwoLevelIterator...)                     | kazeseiriou          |     |
-| IteratorWrapper                                                                  | kazeseiriou          |     |
-| db.MemTable(MemTable, MemTableIterator)                                          | wangboo,tzcyujunyong | 20% | 
-| SSTable                                                                          | fengyang             | 0%  |
-| table.Table                                                                      | peach,tzcyujunyong   |     |
-| db.leveldb_util                                                                  | wangboo              |     |
-| db.log_format                                                                    | wangboo              |     |
-| db.LogReader                                                                     | wangboo              | 90% |
-| db.LogWriter                                                                     | wangboo              | 90% |
-| db.TableCache                                                                    | colagy               | 10% |
-| LinkedList                                                                       | fengyang             | 60% |
-| db.VersionEdit(Tag, VersionEdit, FileMetaData)                                   | fengyang             | 10% |
-| db.VersionSet(Version, LevelFileNumIterator, SaverState)                         | fengyang             | 10% |
-| WriteBatch                                                                       | tzcyujunyong         |     |
-| <website>                                                                        | 半支烟                  |     |
+| 功能模块                                                                             | 完成人                  | 进度   |
+|----------------------------------------------------------------------------------|----------------------|------|
+| util.Options(ReadOptions, WriteOptions)                                          | kazeseiriou,wangboo  | 0%   |
+| util.ENV(SequentialFile, RandomAccessFile, FileLock)                             | lxd5866              | 0%   |
+| util.Logger/Log日志库                                                               | peach                | 50%  |
+| table.format(Footer, BlockHandle)                                                | 半支烟                  | 20%  |
+| db.dbformat(InternalKeyComparator, InternalFilterPolicy, LookupKey, InternalKey) | 半支烟                  | 20%  |
+| db.SkipList                                                                      | wangboo              | 100% |
+| table.Iterator(DBIter、EmptyIterator)                                             | kazeseiriou          | 0%   |
+| table.Iterator(merger.MergingIterator)                                           | kazeseiriou          | 0%   |
+| table.Iterator(TwoLevelIterator)                                                 | kazeseiriou          | 0%   |
+| table.Iterator(tabletest.KeyConvertingIterator)                                  | kazeseiriou          | 0%   |
+| table.Iterator(dbtest.ModelIter)                                                 | kazeseiriou          | 0%   |
+| table.Iterator(Block::Iter)                                                      | wangboo              | 0%   |
+| IteratorWrapper                                                                  | kazeseiriou          | 0%   |
+| db.MemTable(MemTable, MemTableIterator)                                          | wangboo,tzcyujunyong | 20%  | 
+| db.Builder                                                                       | fengyang             | 85%  |
+| table.table_builder                                                              | fengyang             | 30%  |
+| table.Block                                                                      | fengyang             | 30%  |
+| table.BlockBuilder                                                               | fengyang             | 30%  |
+| table.FilterBlockBuilder                                                         | fengyang             | 30%  |
+| FilterBlock, FilterBlockReader                                                   | fengyang             | 80%  |
+| SSTable                                                                          | fengyang             | 0%   |
+| table.Table                                                                      | peach,tzcyujunyong   | 30%  |
+| db.leveldb_util                                                                  | wangboo              | 0%   |
+| db.log_format                                                                    | wangboo              | 90%  |
+| db.LogReader                                                                     | wangboo              | 90%  |
+| db.LogWriter                                                                     | wangboo              | 90%  |
+| db.TableCache                                                                    | colagy               | 10%  |
+| LinkedList                                                                       | fengyang             | 60%  |
+| db.VersionEdit(Tag, VersionEdit, FileMetaData)                                   | fengyang             | 20%  |
+| db.VersionSet(Version, LevelFileNumIterator, SaverState)                         | fengyang             | 20%  |
+| WriteBatch                                                                       | tzcyujunyong,wangboo | 50%  |
+| db.filename                                                                      |                      |      |
+| <website>                                                                        | 半支烟                  | 40%  |
 
 
 

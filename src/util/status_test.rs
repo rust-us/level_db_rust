@@ -100,7 +100,7 @@ mod test {
     }
 
     #[test]
-    fn test_level_error_toString() {
+    fn test_level_error_to_string() {
         // ok
         let status: Status = LevelError::ok();
         assert_eq!("OK", status.to_string());

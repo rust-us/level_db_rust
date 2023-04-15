@@ -5,7 +5,7 @@ mod test {
     use crate::util::slice::Slice;
 
     #[test]
-    fn test_Tag() {
+    fn test_tag() {
         let tag = Tag::kCompactPointer;
         assert_eq!(tag.get_value(), 5);
 
@@ -26,13 +26,29 @@ mod test {
     }
 
     #[test]
-    fn test_version_edit_decode_from() {
+    fn test_version_edit_decode_from_default() {
         let source = Slice::from("a");
 
         let mut version_edit = VersionEdit::new();
         let status = version_edit.decode_from(&source);
-        println!("status: {}.", status.get_error());
-        // todo
-        // assert_eq!(target.len(), 2);
+        assert!(&status.is_corruption());
+        assert_eq!(&status.get_msg(), "VersionEdit: unknown tag");
+    }
+
+    #[test]
+    fn test_version_edit_decode_from() {
+        let source = Slice::from("a");
+
+        let mut version_edit = VersionEdit::new_with_log_number(6);
+        let status = version_edit.decode_from(&source);
+        assert!(&status.is_corruption());
+        assert_eq!(&status.get_msg(), "VersionEdit: unknown tag");
+    }
+
+    #[test]
+    fn test_version_edit_debug_string() {
+        let mut version_edit = VersionEdit::new_with_log_number(6);
+        let debug_str = version_edit.debug_string();
+        println!("debug_str: \n {}", debug_str);
     }
 }
