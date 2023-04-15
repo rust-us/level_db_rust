@@ -1,3 +1,5 @@
+#![feature(core_ffi_c)]
+#![feature(core_intrinsics)]
 extern crate core;
 
 pub mod db;

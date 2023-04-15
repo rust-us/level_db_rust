@@ -1,6 +1,5 @@
 use std::io::Write;
-use crate::traits::coding_trait::CodingTrait;
-use crate::util::coding::Coding;
+use crate::util::coding::Encoder;
 use crate::util::crc::{AsCrc, CRC};
 use crate::util::slice::Slice;
 use crate::util::Result;
@@ -73,13 +72,13 @@ impl LogWriter {
     }
 
     fn emit_physical_record(&mut self, record_type: u8, data: &[u8]) -> Result<()> {
+        let mut crc = CRC::extend(self.type_crc[record_type as usize], data);
+        crc = CRC::mask(crc);
         let mut header = [0_u8; K_HEADER_SIZE];
+        Encoder::with_buf(&mut header).put_varint32(crc);
         header[4] = (data.len() & 0xff) as u8;
         header[5] = (data.len() >> 8) as u8;
         header[6] = record_type;
-        let mut crc = CRC::extend(self.type_crc[record_type as usize], data);
-        crc = CRC::mask(crc);
-        Coding::encode_fixed32(crc, header.as_mut(), 0);
         self.file_writer.write(header.as_ref())?;
         self.block_offset += K_HEADER_SIZE;
         if !data.is_empty() {
