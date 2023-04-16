@@ -33,17 +33,16 @@ pub fn varint_length(mut value: u64) -> usize {
     len
 }
 
-/// 默认为大端bytes 小端bytes会转为大端bytes
+/// 默认为小端bytes 大端bytes会转为小端bytes
+#[cfg(target_endian = "little")]
 macro_rules! swap_bytes {
-    ($x: expr, noswap) => ($x);
-    ($x: expr, swap) => ($x.swap_bytes());
-    ($x:expr)=>{
-        if cfg!(target_endian = "big") {
-            swap_bytes!($x, noswap)
-        } else {
-            swap_bytes!($x, swap)
-        }
-    }
+    ($x:expr) => ($x)
+}
+
+/// 默认为小端bytes 大端bytes会转为小端bytes
+#[cfg(target_endian = "big")]
+macro_rules! swap_bytes {
+    ($x:expr) => ($x.swap_bytes())
 }
 
 /// 判断数据类型所需的字节数
@@ -1437,7 +1436,6 @@ fn test_read_buf() {
     let buf = unsafe { uncheck_read_buf(&Vector(&vec), 5, 4) };
     println!("{:?}", buf);
     assert_eq!(&[1_u8, 2, 3, 4] as &[u8; 4], buf.deref());
-
 }
 
 #[test]
@@ -1854,4 +1852,18 @@ fn test_type_capacity() {
     let type_capacity = type_capacity!(u64);
     println!("u64: {}", type_capacity);
     assert_eq!(8, type_capacity);
+}
+
+#[test]
+fn test_swap_bytes() {
+    let value = 0x04030201_u32;
+    let new_value = swap_bytes!(value);
+    println!("value: {:?}, new_value: {:?}", value, new_value);
+    assert_eq!(value, new_value);
+    // 小端存储bytes
+    let mut buf = [0x01, 0x02, 0x03, 0x04];
+    let decode = unsafe { uncheck_decode_fixed32(&Buffer(&buf), 0) };
+    // 小端存储的0x01,0x02,0x03,0x04解出来的数据要等于0x04030201_u32
+    println!("value: {:?}, decode: {:?}", value, decode);
+    assert_eq!(value, decode);
 }

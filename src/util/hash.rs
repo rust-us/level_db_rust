@@ -144,7 +144,7 @@ impl Hash {
 
         // 每次按照四字节长度读取字节流中的数据 w，并使用普通的哈希函数计算哈希值。
         let mut position: usize = 0;
-        while position + 4 <= limit {
+        while decoder.can_get() && position + 4 <= limit {
             //每次解码前4个字节，直到最后剩下小于4个字节
             // rust的 &[u8] 是胖指针，带长度信息的，会做range check，所以是安全的。
             // 虽然decode_fixed32 中也是解码4字节，但传入整个data在方法上不明确，因此传 [position..(position + 4)], 可以更加方便理解，对性能无影响
