@@ -9,7 +9,7 @@ use crate::util::Result;
 use crate::util::slice::Slice;
 use crate::util::status::LevelError;
 
-/// 获取变长编码的长度
+/// 获取变长编码的长度 varint需要的字节数
 ///
 /// # Arguments
 ///
@@ -26,6 +26,8 @@ use crate::util::status::LevelError;
 /// ```
 pub fn varint_length(mut value: u64) -> usize {
     let mut len = 1;
+    // varint每7位编码一次, 所以相对于8位一个字节的原数据, 大数进行varint编码的总字节会多于原来的字节数
+    // 当value右移之后 > 128, 说明下一位还有数据
     while value >= 128 {
         value >>= 7;
         len += 1;
@@ -33,13 +35,13 @@ pub fn varint_length(mut value: u64) -> usize {
     len
 }
 
-/// 默认为小端bytes 大端bytes会转为小端bytes
+/// 默认为小端bytes 当系统为小端时, 这个宏会生效, 小端系统居多
 #[cfg(target_endian = "little")]
 macro_rules! swap_bytes {
     ($x:expr) => ($x)
 }
 
-/// 默认为小端bytes 大端bytes会转为小端bytes
+/// 大端bytes会转为小端bytes 当系统为大端时, 这个宏会生效
 #[cfg(target_endian = "big")]
 macro_rules! swap_bytes {
     ($x:expr) => ($x.swap_bytes())
@@ -47,26 +49,35 @@ macro_rules! swap_bytes {
 
 /// 判断数据类型所需的字节数
 macro_rules! type_capacity {
+    // u32占4个字节
     (u32) => (4);
+    // u64占8个字节
     (u64) => (8)
 }
 
 /// vec扩容 计算容量差值 将vec扩容到所需的容量并会更新vec的长度信息
 macro_rules! vec_resize {
     ($vec: ident, $len: expr, $offset: expr) => {
+        // 偏移量 + 写入的长度 >= vec.len() 需要扩容
         if $offset + $len >= $vec.len() {
-            let add = $offset + $len - $vec.len();
-            // 手动扩容
-            $vec.reserve(add);
-            // 需要手动更新容量
-            unsafe { $vec.set_len($vec.len() + add); }
+            // 扩容操作并不常用, 标记为冷代码
+            #[cold]
+            {
+                // 扩容长度为 偏移量 + 写入长度 与vec.len()的差值
+                let add = $offset + $len - $vec.len();
+                // 手动扩容 并不一定会扩容, capacity如果剩余容量
+                $vec.reserve(add);
+                // 需要手动更新容量
+                unsafe { $vec.set_len($vec.len() + add); }
+            }
         }
     }
 }
 
 /// 从MutEncoderData中获取读写指针 如果是MutVector类型,当要写入的长度大于vec容量时会手动扩容
 macro_rules! get_mut_ptr {
-    ($data: ident, $len: expr, $offset: ident)=>{
+    // data: 数据容器, len: 要写入的长度(vec时使用), offset: 当前写入的位置(vec时使用)
+    ($data: ident, $len: expr, $offset: ident) => {
         match $data {
             MutVector(vec) => {
                 let length = $len;
@@ -107,18 +118,29 @@ macro_rules! get_ptr {
 
 /// 检查长度 长度不足以写入或者读取时返回错误
 macro_rules! check_length {
-    ($offset: expr, $write_len: expr, $data_len: expr) => {
-        if $offset + $write_len >= $data_len {
+    ($offset: expr, $write_len: expr, $data_len: expr, write) => {
+        // 偏移量 + 写入长度 >= 容器的长度时, 会抛出异常
+        if $offset + $write_len > $data_len {
             return Err(LevelError::invalid_argument(
                 Slice::from("offset + write_len must < data_len"),
-                Slice::from(format!("offset = {}, write_len = {} data_len = {}", $offset, $write_len, $data_len))));
+                Slice::from(format!("offset = {}, write_len = {}, data_len = {}", $offset, $write_len, $data_len))));
         }
     };
     ($offset: expr, $limit: expr) => {
+        // 偏移量 >= 容器的长度时, 会抛出异常
         if $offset >= $limit {
             return Err(LevelError::invalid_argument(
                 Slice::from("offset must < limit"),
                 Slice::from(format!("offset = {}, limit = {}", $offset, $limit))
+            ));
+        }
+    };
+    ($offset: expr, $read_len: expr, $limit: expr, read) => {
+        // 偏移量 + 读取长度 >= 容器的长度时, 会抛出异常
+        if $offset + $read_len > $limit {
+            return Err(LevelError::invalid_argument(
+                Slice::from("offset + read_len must < limit"),
+                Slice::from(format!("offset = {}, read_len = {}, limit = {}", $offset, $read_len, $limit))
             ));
         }
     }
@@ -145,13 +167,14 @@ macro_rules! encode_fixed {
         ///
         /// ```
         ///  let mut vec = vec![];
-        ///  // [0, 0, 4, 210]
+        ///  // [210, 4, 0, 0]
         ///  unsafe {
         ///     uncheck_encode_fixed32(&mut MutVector(&mut vec), 0, 1234);
         ///  }
         /// ```
         #[inline]
         unsafe fn $name(data: &mut MutEncodeData, offset: usize, value: $type) {
+            // 取可变指针
             let mut_ptr = get_mut_ptr!(data, type_capacity!($capacity), offset);
             unsafe {
                 // 移动指针
@@ -189,26 +212,32 @@ encode_fixed!(uncheck_encode_fixed64, u64, u64);
 ///  unsafe { offset = uncheck_encode_varint32(&mut MutVector(&mut vec), offset, 65535); }
 /// ```
 unsafe fn uncheck_encode_varint32(data: &mut MutEncodeData, offset: usize, value: u32) -> usize {
+    // 获取varint 需要编码的长度
     let length = varint_length(value as u64);
+    // 获取读写指针写入数据
     let mut_ptr = get_mut_ptr!(data, length, offset);
 
-    return if value < (1 << 7) {
+    // 32位字节数较少 直接循环展开
+    return if length == 1 {
         ptr::write(mut_ptr.add(offset), value as u8);
         offset + 1
-    } else if value < (1 << 14) {
+    } else if length == 2 {
+        // 直接写入数组 不多次写入一个字节
+        // 每次写7个bit不要符号位
+        // 最后一位小于128
         ptr::write(mut_ptr.add(offset) as *mut [u8; 2], [
             (value | 128) as u8,
             (value >> 7) as u8,
         ]);
         offset + 2
-    } else if value < (1 << 21) {
+    } else if length == 3 {
         ptr::write(mut_ptr.add(offset) as *mut [u8; 3], [
             (value | 128) as u8,
             (value >> 7 | 128) as u8,
             (value >> 14) as u8,
         ]);
         offset + 3
-    } else if value < (1 << 28) {
+    } else if length == 4 {
         ptr::write(mut_ptr.add(offset) as *mut [u8; 4], [
             (value | 128) as u8,
             (value >> 7 | 128) as u8,
@@ -253,6 +282,7 @@ unsafe fn uncheck_encode_varint64(data: &mut MutEncodeData, mut offset: usize, m
     let length = varint_length(value);
     let mut_ptr = get_mut_ptr!(data, length, offset);
 
+    // 每次写7个bit, 如果剩于的值 >= 128, 说明还需要再编码, 最后一位会小于128直接写入即可
     while value >= 128 {
         ptr::write(mut_ptr.add(offset), (value | 128) as u8);
         value >>= 7;
@@ -323,13 +353,15 @@ macro_rules! decode_varint {
         unsafe fn $name(data: &EncodeData, mut offset: usize, limit: usize) -> ($type, usize) {
             let ptr = get_ptr!(data);
 
-            // shift的类型是u32
+            // shift的类型是u32, shift为移动的位数, 32位最大28, 64位最大63
             let mut shift = 0 as u32;
             let mut i = offset;
             let mut value = 0 as $type;
             while shift <= $max_shift && i < limit {
+                // 解码一个byte
                 let byte = unsafe { ptr::read(ptr.add(i)) };
                 i += 1;
+                // 如果解码的byte > 128, 说明后面还有字节需要继续解码
                 if byte & 128 != 0 {
                     value |= (((byte & 127) as $type).overflowing_shl(shift).0) as $type;
                     offset += 1;
@@ -372,8 +404,8 @@ decode_varint!(uncheck_decode_varint64, u64, 63);
 /// ```
 unsafe fn uncheck_write_buf(data: &mut MutEncodeData, offset: usize, buf: &[u8]) {
     let mut_ptr = get_mut_ptr!(data, buf.len(), offset).add(offset);
+    // 从buf中拷贝数据写入到指针中
     ptr::copy_nonoverlapping(buf.as_ptr(), mut_ptr, buf.len());
-    intrinsics::forget(buf);
 }
 
 
@@ -398,35 +430,53 @@ unsafe fn uncheck_write_buf(data: &mut MutEncodeData, offset: usize, buf: &[u8])
 /// ```
 unsafe fn uncheck_read_buf(data: &EncodeData, offset: usize, len: usize) -> Slice {
     let ptr: *const u8 = get_ptr!(data).add(offset);
+    // 分配一块内存长度为buf的长度
     let dst: *mut u8 = alloc(Layout::from_size_align_unchecked(len, 4));
+    // 将数据拷贝到这块内存上
     intrinsics::copy_nonoverlapping(ptr, dst, len);
+    // 使用slice包装内存
     Slice::from_raw_parts(dst, len)
 }
 
+/// 编码的数据 只读的
 #[derive(Debug)]
 enum EncodeData<'a> {
+    // vec类型
     Vector(&'a Vec<u8>),
+    // buf类型
     Buffer(&'a [u8]),
+    // slice类型
     Slices(&'a Slice),
 }
 
+/// 编码的数据 可变的
 #[derive(Debug)]
 enum MutEncodeData<'a> {
+    // vec类型, 可以扩容
     MutVector(&'a mut Vec<u8>),
+    // buf类型, 不可扩容
     MutBuffer(&'a mut [u8]),
+    // slice类型, 不可扩容
     MutSlices(&'a mut Slice),
 }
 
+/// 编码器
+/// 会维护偏移量, 如果是vec类型会自动扩容
 #[derive(Debug)]
 pub struct Encoder<'a> {
+    // 编码偏移量, 编码时会维护偏移量
     offset: usize,
+    // 数据容器
     data: MutEncodeData<'a>,
 }
 
 #[derive(Debug)]
 pub struct Decoder<'a> {
+    // 解码偏移量, 解码时会维护偏移量
     offset: usize,
+    // 数据容器
     data: EncodeData<'a>,
+    // 最大可解码长度
     limit: usize,
 }
 
@@ -456,6 +506,7 @@ macro_rules! put_fixed {
         ///     }
         /// ```
         pub unsafe fn $name(&mut self, value: $type) {
+            // 调用编码方法
             $var_name(&mut self.data, self.offset, value);
             self.offset += type_capacity!($capacity);
         }
@@ -480,7 +531,8 @@ macro_rules! put_fixed {
         /// ```
         pub fn $name(&mut self, value: $type) -> Result<()> {
             // vec类型自动扩容, buf 和 slice类型检查长度
-            if let MutVector(_) = self.data {} else { check_length!(self.offset, type_capacity!($capacity), self.len()) };
+            if let MutVector(_) = self.data {} else { check_length!(self.offset, type_capacity!($capacity), self.len(), write) };
+            // 调用编码方法
             unsafe {$var_name(&mut self.data, self.offset, value);}
             self.offset += type_capacity!($capacity);
             Ok(())
@@ -514,6 +566,7 @@ macro_rules! put_varint {
         ///     }
         /// ```
         pub unsafe fn $name(&mut self, value: $type) {
+            // 调用编码方法
             self.offset = $var_name(&mut self.data, self.offset, value);
         }
     };
@@ -537,7 +590,8 @@ macro_rules! put_varint {
         /// ```
         pub fn $name(&mut self, value: $type) -> Result<()> {
             // vec类型自动扩容, buf 和 slice类型检查长度
-            if let MutVector(_) = self.data {} else { check_length!(self.offset, varint_length(value as u64), self.len()) };
+            if let MutVector(_) = self.data {} else { check_length!(self.offset, varint_length(value as u64), self.len(), write) };
+            // 调用编码方法
             unsafe { self.offset = $var_name(&mut self.data, self.offset, value) }
             Ok(())
         }
@@ -695,7 +749,7 @@ impl<'a> Encoder<'a> {
     /// ```
     pub fn put_buf(&mut self, buf: &[u8]) -> Result<()> {
         // vec类型自动扩容 buf 和 slice类型检查长度
-        if let MutVector(_) = self.data {} else { check_length!(self.offset, buf.len(), self.len()) };
+        if let MutVector(_) = self.data {} else { check_length!(self.offset, buf.len(), self.len(), write) };
         unsafe { uncheck_write_buf(&mut self.data, self.offset, buf); }
         self.offset += buf.len();
         Ok(())
@@ -829,6 +883,7 @@ macro_rules! get_fixed {
         /// ```
         #[inline]
         pub unsafe fn $name(&mut self) -> $type {
+            // 调用解码方法
             let value = $var_name(&self.data, self.offset);
             self.offset += type_capacity!($capacity);
             value
@@ -852,7 +907,8 @@ macro_rules! get_fixed {
         /// ```
         #[inline]
         pub fn $name(&mut self) -> Result<$type> {
-            check_length!(self.offset, self.limit);
+            check_length!(self.offset, type_capacity!($capacity), self.limit, read);
+            // 调用解码方法
             let value = unsafe { $var_name(&self.data, self.offset) };
             self.offset += type_capacity!($capacity);
             Ok(value)
@@ -877,6 +933,7 @@ macro_rules! get_varint {
         /// ```
         #[inline]
         pub unsafe fn $name(&mut self) -> $type {
+            // 调用解码方法
             let res = $var_name(&self.data, self.offset, self.limit);
             self.offset = res.1;
             res.0
@@ -899,6 +956,7 @@ macro_rules! get_varint {
         #[inline]
         pub fn $name(&mut self) -> Result<$type> {
             check_length!(self.offset, self.limit);
+            // 调用解码方法
             let res = unsafe { $var_name(&self.data, self.offset, self.limit) };
             self.offset = res.1;
             Ok(res.0)
@@ -1017,6 +1075,7 @@ impl<'a> Decoder<'a> {
     pub fn get_length_prefixed_slice(&mut self) -> Result<Slice> {
         check_length!(self.offset, self.limit);
         let size = unsafe { self.uncheck_get_varint32() } as usize;
+        check_length!(self.offset, size, self.limit, read);
         unsafe { Ok(self.uncheck_get_buf(size)) }
     }
 
@@ -1066,7 +1125,7 @@ impl<'a> Decoder<'a> {
     ///  let buf = decoder.get_buf(3)?;
     /// ```
     pub fn get_buf(&self, len: usize) -> Result<Slice> {
-        check_length!(self.offset, len, self.limit);
+        check_length!(self.offset, len, self.limit, read);
         unsafe {
             Ok(uncheck_read_buf(&self.data, self.offset, len))
         }
@@ -1121,7 +1180,7 @@ impl<'a> Decoder<'a> {
     /// let value = decoder.get_varint32()?;
     /// ```
     pub fn skip(&mut self, skip: usize) -> Result<usize> {
-        check_length!(self.offset, self.limit);
+        check_length!(self.offset, skip, self.limit, read);
         self.offset += skip;
         Ok(self.offset)
     }
@@ -1216,13 +1275,13 @@ fn test_encode_fixed() {
     let mut vec = vec![];
     unsafe { uncheck_encode_fixed32(&mut MutVector(&mut vec), 0, 1234); }
     println!("{:?}", vec);
-    assert_eq!(vec![0, 0, 4, 210], vec);
+    assert_eq!(vec![210, 4, 0, 0], vec);
     assert_eq!(4, vec.len());
 
     unsafe { uncheck_encode_fixed32(&mut MutVector(&mut vec), 4, 3_0000_0000); }
     println!("{:?}", vec);
     assert_eq!(8, vec.len());
-    assert_eq!(vec![0, 0, 4, 210, 17, 225, 163, 0], vec);
+    assert_eq!(vec![210, 4, 0, 0, 0, 163, 225, 17], vec);
 
     let mut vec = vec![];
     unsafe { uncheck_encode_fixed64(&mut MutVector(&mut vec), 0, 8_3980_4651_1103); }
@@ -1232,7 +1291,7 @@ fn test_encode_fixed() {
     unsafe { uncheck_encode_fixed64(&mut MutVector(&mut vec), 8, 900_3372_0368_5477_5808); }
     println!("{:?}", vec);
     assert_eq!(16, vec.len());
-    assert_eq!(vec![0, 0, 7, 163, 82, 148, 63, 255, 124, 242, 103, 42, 101, 106, 0, 0], vec);
+    assert_eq!(vec![255, 63, 148, 82, 163, 7, 0, 0, 0, 0, 106, 101, 42, 103, 242, 124], vec);
 }
 
 #[test]
@@ -1246,7 +1305,7 @@ fn test_decode_fixed() {
         uncheck_encode_fixed32(&mut MutVector(&mut vec), 16, 10000000);
     }
     println!("{:?}", vec);
-    assert_eq!(vec![0, 0, 4, 210, 0, 0, 0, 128, 0, 0, 0, 255, 0, 0, 255, 255, 0, 152, 150, 128], vec);
+    assert_eq!(vec![210, 4, 0, 0, 128, 0, 0, 0, 255, 0, 0, 0, 255, 255, 0, 0, 128, 150, 152, 0], vec);
 
     let result = unsafe { uncheck_decode_fixed32(&Vector(&vec), 0) };
     println!("{}", result);
@@ -1274,7 +1333,7 @@ fn test_decode_fixed() {
         uncheck_encode_fixed64(&mut MutVector(&mut vec), 8, 900_3372_0368_5477_5808);
     }
     println!("{:?}", vec);
-    assert_eq!(vec![0, 0, 7, 163, 82, 148, 63, 255, 124, 242, 103, 42, 101, 106, 0, 0], vec);
+    assert_eq!(vec![255, 63, 148, 82, 163, 7, 0, 0, 0, 0, 106, 101, 42, 103, 242, 124], vec);
 
     let result = unsafe { uncheck_decode_fixed64(&Vector(&vec), 0) };
     println!("{}", result);
@@ -1498,9 +1557,10 @@ fn test_put_fixed() -> Result<()> {
         encoder.uncheck_put_fixed64(900_3372_0368_5477_5808);
         println!("{:?}", &encoder);
         if let MutVector(data) = encoder.data {
-            assert_eq!(&mut vec![0, 0, 0, 2, 0, 0, 0, 128, 0, 0, 0, 255, 0, 0, 255, 255, 0, 152, 150,
-                                 128, 0, 0, 0, 0, 0, 10, 0, 175, 0, 0, 7, 163, 82, 148, 63, 255, 124,
-                                 242, 103, 42, 101, 106, 0, 0],
+            assert_eq!(&mut vec![
+                2, 0, 0, 0, 128, 0, 0, 0, 255, 0, 0, 0, 255, 255, 0, 0, 128, 150, 152, 0, 175, 0,
+                10, 0, 0, 0, 0, 0, 255, 63, 148, 82, 163, 7, 0, 0, 0, 0, 106, 101, 42, 103, 242, 124
+            ],
                        data);
         }
     }
@@ -1517,9 +1577,9 @@ fn test_put_fixed() -> Result<()> {
     encoder.put_fixed64(900_3372_0368_5477_5808)?;
     println!("{:?}", &encoder);
     if let MutVector(data) = encoder.data {
-        assert_eq!(&mut vec![0, 0, 0, 2, 0, 0, 0, 128, 0, 0, 0, 255, 0, 0, 255, 255, 0, 152, 150,
-                             128, 0, 0, 0, 0, 0, 10, 0, 175, 0, 0, 7, 163, 82, 148, 63, 255, 124,
-                             242, 103, 42, 101, 106, 0, 0],
+        assert_eq!(&mut vec![
+            2, 0, 0, 0, 128, 0, 0, 0, 255, 0, 0, 0, 255, 255, 0, 0, 128, 150, 152, 0, 175, 0, 10,
+            0, 0, 0, 0, 0, 255, 63, 148, 82, 163, 7, 0, 0, 0, 0, 106, 101, 42, 103, 242, 124],
                    data);
     }
 
@@ -1573,7 +1633,7 @@ fn test_get_fixed() -> Result<()> {
         println!("{:?}", &encoder.data);
         println!("{:?}", &encoder);
         if let MutVector(data) = encoder.data {
-            assert_eq!(&mut vec![0, 0, 0, 2, 0, 0, 0, 128, 0, 0, 0, 255, 0, 0, 255, 255, 0, 152, 150, 128, 0, 0, 0, 0, 0, 10, 0, 175, 0, 0, 7, 163, 82, 148, 63, 255, 124, 242, 103, 42, 101, 106, 0, 0],
+            assert_eq!(&mut vec![2, 0, 0, 0, 128, 0, 0, 0, 255, 0, 0, 0, 255, 255, 0, 0, 128, 150, 152, 0, 175, 0, 10, 0, 0, 0, 0, 0, 255, 63, 148, 82, 163, 7, 0, 0, 0, 0, 106, 101, 42, 103, 242, 124],
                        data);
         }
     }
@@ -1586,7 +1646,7 @@ fn test_get_fixed() -> Result<()> {
     }
     let mut decoder = Decoder::with_vec(&mut vec);
 
-    println!("{}", decoder.can_get());
+    println!("can_get: {}", decoder.can_get());
     assert_eq!(true, decoder.can_get());
 
     assert_eq!(2, unsafe { decoder.uncheck_get_fixed32() });
@@ -1598,12 +1658,12 @@ fn test_get_fixed() -> Result<()> {
     assert_eq!(8_3980_4651_1103, unsafe { decoder.uncheck_get_fixed64() });
     assert_eq!(900_3372_0368_5477_5808, unsafe { decoder.uncheck_get_fixed64() });
 
-    println!("{}", decoder.can_get());
+    println!("can_get: {}", decoder.can_get());
     assert_eq!(false, decoder.can_get());
 
     let mut decoder = Decoder::with_vec(&mut vec);
 
-    println!("{}", decoder.can_get());
+    println!("can_get: {}", decoder.can_get());
     assert_eq!(true, decoder.can_get());
 
     assert_eq!(2, decoder.get_fixed32()?);
