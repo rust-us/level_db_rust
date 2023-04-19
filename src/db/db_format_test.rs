@@ -1,5 +1,6 @@
+use crate::db::db_format::Config;
 
 #[test]
 fn test_db_format() {
-    todo!()
+    Config::K_NUM_LEVELS;
 }

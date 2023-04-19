@@ -4,7 +4,7 @@ use crate::util::slice::Slice;
 
 use crate::util::Result;
 
-struct Handle {}
+pub struct Handle {}
 
 pub struct LRUHandle<T> {
     key: Slice,

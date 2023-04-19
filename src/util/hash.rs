@@ -1,26 +1,23 @@
 use std::ops::{BitXor, Mul};
 use std::mem::size_of;
 use std::slice as stds;
+use crate::util::coding::Decoder;
 
-use crate::traits::coding_trait::CodingTrait;
-use crate::util::coding::Coding;
-use crate::util::crc::AsCrc;
 use crate::util::r#const::HASH_DEFAULT_SEED;
-use crate::util::slice;
+
 use crate::util::slice::Slice;
 
 /// 一种可以计算 hash 的特质
 pub trait ToHash {
-    #[inline]
     fn to_hash(&self) -> u32;
 
-    #[inline]
     fn to_hash_with_seed(&self, seed: u32) -> u32;
 }
 
 /// 所有基本类型 u8, i8, u16, u32 ... 的Vec都可以实现 hash 值计算
 /// Sample:
 /// ```
+/// use level_db_rust::util::hash::ToHash;
 /// let hash = vec!['a','b','c'].to_hash();
 /// ```
 impl<T: Sized> ToHash for Vec<T> {
@@ -42,6 +39,8 @@ impl<T: Sized> ToHash for Vec<T> {
 /// 所有基本类型 u8, i8, u16, u32 ... 的slice都可以实现 hash 值计算
 /// Sample:
 /// ```
+/// use level_db_rust::util::hash::ToHash;
+///
 /// let buf = ['a','b','c'];
 /// let hash_val = &buf.as_slice().to_hash();
 /// ```
@@ -66,6 +65,7 @@ impl<T: Sized> ToHash for &[T] {
 /// 实现了 &str 转 ToHash 的特质
 /// Sample:
 /// ```
+/// use level_db_rust::util::hash::ToHash;
 /// let hash = "abc".to_hash();
 /// ```
 impl ToHash for &str {
@@ -83,6 +83,9 @@ impl ToHash for &str {
 /// 实现了 Slice 转 ToHash 的特质
 /// Sample:
 /// ```
+///     use level_db_rust::util::hash::ToHash;
+///     use level_db_rust::util::slice::Slice;
+///
 ///     let val = "aabbccd";
 ///     let slice: Slice = Slice::from_buf(val.as_bytes());
 ///     let slice_hash_val = slice.to_hash();
@@ -102,6 +105,8 @@ impl ToHash for Slice {
 /// 实现了 String 转 ToHash 的特质
 /// Sample:
 /// ```
+///     use level_db_rust::util::hash::ToHash;
+///
 ///     let val = "aabbccd";
 ///     let val_s = String::from(val);
 ///     let string_hash_val = val_s.to_hash();
@@ -124,21 +129,26 @@ pub struct Hash {}
 impl Hash {
     #[inline]
     pub fn hash_code(data: &[u8], seed: u32) -> u32 {
+        let n = data.len();
+
+        // Similar to murmur hash
+        // uint32_t ==> unsigned int  ==> u32
         let murmur_hash: u32 = 0xc6a4a793;
         let r: u32 = 24;
 
-        let limit: usize = data.len();
-        let mul_first = limit.mul(murmur_hash as usize); // x = data_size * murmur_hash
+        let limit: usize = n;
+        let mul_first = n.mul(murmur_hash as usize); // x = data_size * murmur_hash
         let mut h: u32 = seed.bitxor(mul_first as u32);  // h = seed ^ x
+
+        let mut decoder = Decoder::with_buf(data);
 
         // 每次按照四字节长度读取字节流中的数据 w，并使用普通的哈希函数计算哈希值。
         let mut position: usize = 0;
-        while position + 4 <= limit {
+        while decoder.can_get() && position + 4 <= limit {
             //每次解码前4个字节，直到最后剩下小于4个字节
             // rust的 &[u8] 是胖指针，带长度信息的，会做range check，所以是安全的。
             // 虽然decode_fixed32 中也是解码4字节，但传入整个data在方法上不明确，因此传 [position..(position + 4)], 可以更加方便理解，对性能无影响
-            let w = Coding::decode_fixed32(&data[position..(position + 4)]);
-
+            let w = unsafe { decoder.uncheck_get_fixed32() };
             // 向后移动4个字节
             position += 4;
 

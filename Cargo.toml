@@ -6,12 +6,35 @@ edition = "2021"
 [lib]
 name = "level_db_rust"
 path = "src/lib.rs"
+# 过程宏
+proc-macro = false
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+rand = "0.8.5"
+tokio = "1.24.1"
+jemallocator = "0.5"
+jemalloc-sys = { version = "0.5", features = ["stats"] }
 
+[dev-dependencies]
+criterion = { version = "0.4.0", features = ["html_reports"] }
+crc32fast = "1.3.2"
+skiplist = "0.4.0"
 
 [profile.dev]
 
+
 [profile.release]
+
+[[bench]]
+name = "crc_bench"
+harness = false
+
+[[bench]]
+name = "skiplist_bench"
+harness = false
+
+[[bench]]
+name = "u32_shift"
+harness = false

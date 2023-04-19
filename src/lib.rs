@@ -1,9 +1,14 @@
-#![feature(box_syntax)]
+#![feature(core_ffi_c)]
+#![feature(core_intrinsics)]
+extern crate core;
 
-mod db;
+pub mod db;
 mod table;
-mod util;
+pub mod util;
 mod traits;
+
+#[global_allocator]
+static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 
 mod test {
 
