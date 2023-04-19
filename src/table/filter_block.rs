@@ -42,8 +42,9 @@ pub trait FilterBlock {
     ///
     /// # Arguments
     ///
-    /// * `_block_offset`: filter block的 偏移量. 当给定block_offset的时候。需要创建的filter的数目也就确定了。
-    ///
+    /// * `_block_offset`:  sstable 里 data block 的偏移量.
+    ///          注意这里传入的参数block_offset跟 filter block 内的数据无关，这个值是 sstable 里 data block 的偏移量，新的 data block 产生时就会调用。
+    ///          根据这个值，计算总共需要多少个 filter，然后依次调用GenerateFilter，如果block_offset较小可能一次也不会调用，较大可能多次调用，因此，data block 和 filter data 不是一一对应的。
     /// returns: ()
     ///
     /// # Examples
@@ -72,6 +73,9 @@ pub trait FilterBlock {
 
     /// 构造filterBlock
     ///
+    /// Filter block的结构:
+    ///
+    ///
     /// # Examples
     ///
     /// ```
@@ -97,6 +101,7 @@ pub struct FilterBlockBuilder {
     // 指向一个具体的filter_policy
     policy: FilterPolicyPtr,
 
+    /* keys 记录了参数key，start 则记录了在 keys 的偏移量，两者结合可以还原出key */
     // 包含了所有展开的keys。并且这些所有的keys都是存放在一起的。(通过 AddKey 达到这个目的)
     keys: Vec<u8>,
     // 记录当前这个key在keys_里面的offset
@@ -166,6 +171,7 @@ impl FilterBlock for FilterBlockBuilder {
     }
 
     fn add_key(&mut self, key: &Slice) {
+        // start_记录key在keys的offset，因此可以还原出key
         self.start.push(self.keys.len());
         self.keys.write(key.as_str().as_bytes()).expect("add_key error!");
     }
@@ -220,11 +226,12 @@ impl FilterBlock for FilterBlockBuilder {
 
 impl FilterBlockBuilder {
     /// 创建新的 filter
+    /// 主要是更新result_和filter_offsets_
     fn generate_new_filter(&mut self) {
         // 拿到key的数目
         let num_keys = self.start.len();
 
-        // 如果当前key数目还是0
+        // 如果相比上一个filter data没有新的key, 那么只更新offsets数组就返回
         if num_keys == 0 {
             // 如果key数目为0，这里应该是表示要新生成一个filter.  这时应该是重新记录下offset了
             // Fast path if there are no keys for this filter
@@ -233,7 +240,8 @@ impl FilterBlockBuilder {
         }
 
         /* Make list of keys from flattened key structure */
-        // start_里面记录下offset
+        // start_里面记录下offset.
+        // starts最后一个元素是keys_的总大小，此时starts元素个数=num_keys + 1. 这样 [starts[i], starts[i+1]) 就可以还原所有的key了
         self.start.push(self.keys.len());
         // 需要多少个key
         // 如果 new_len 大于 len ，则 Vec 由差异扩展，每个额外的插槽都用 value 填充。
