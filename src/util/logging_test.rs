@@ -32,7 +32,7 @@ mod test{
 
         let mut num: u64 = 0;
 
-        let r = Logging::consume_decimal_number(&mut sin, &mut num);
+        let r = Logging::consume_decimal_number(&mut sin);
 
         //sin.remove_prefix(20);
         println!("转换结果：{}, sin = {}, num = {}", r, String::from(sin), num)
