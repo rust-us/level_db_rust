@@ -2,12 +2,11 @@
 mod test {
     use std::borrow::BorrowMut;
     use std::sync::Arc;
+    use crate::debug;
     use crate::table::filter_block;
     use crate::table::filter_block::{FilterBlock, FilterBlockBuilder, FilterBlockReader};
     use crate::table::filter_block_test_filter_policy::TestHashFilter;
-    use crate::traits::coding_trait::CodingTrait;
     use crate::traits::filter_policy_trait::FilterPolicy;
-    use crate::util::coding::Coding;
     use crate::util::slice::Slice;
     use crate::util::hash::{Hash, ToHash};
 
@@ -63,11 +62,12 @@ mod test {
         filter_block_builder.add_key_from_str("hello");
 
         let sliceRs: Result<Slice> = filter_block_builder.finish();
-        assert_eq!("a", "a");
+        debug!("sliceRs:{:?}", &sliceRs);
 
         let reader = FilterBlockReader::new_with_policy(
             policy.clone(), &sliceRs.unwrap());
 
+        // todo  key_may_match  not impl
         // assert!(reader.key_may_match(100, &Slice::from("foo")));
         // assert!(reader.key_may_match(100, &Slice::from("bar")));
         // assert!(reader.key_may_match(100, &Slice::from("box")));

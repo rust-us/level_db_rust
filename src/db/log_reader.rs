@@ -3,8 +3,7 @@ use std::io::{Read, Seek, Write};
 use std::io::SeekFrom::Start;
 
 use crate::db::log_writer::{K_BLOCK_SIZE, K_FIRST_TYPE, K_FULL_TYPE, K_LAST_TYPE, K_MIDDLE_TYPE};
-use crate::traits::coding_trait::CodingTrait;
-use crate::util::coding::Coding;
+use crate::util::coding::Decoder;
 use crate::util::crc::{AsCrc, CRC};
 use crate::util::Result;
 use crate::util::slice::Slice;
@@ -101,7 +100,9 @@ impl LogReader {
             return Ok(());
         }
         let crc_bytes = &self.buf[(self.buf_read_idx - 7)..(self.buf_read_idx - 3)];
-        let expect = Coding::decode_fixed32(crc_bytes);
+        let mut decoder = Decoder::with_buf(crc_bytes);
+
+        let expect = decoder.get_fixed32()?;
         let data = &self.buf[(self.buf_read_idx - 1)..(self.buf_read_idx + data_len)];
         let crc = data.as_crc();
         let mask = CRC::mask(crc);

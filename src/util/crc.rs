@@ -1,7 +1,6 @@
 use std::mem::size_of;
 use std::slice;
-use crate::traits::coding_trait::CodingTrait;
-use crate::util::coding::Coding;
+use crate::util::coding::{Decoder};
 use crate::util::slice::Slice;
 
 static K_MASK_DELTA: u32 = 0xa282ead8;
@@ -240,7 +239,6 @@ const K_STRIDE_EXTENSION_TABLE3: [u32; 256] = [
 /// 可以被计算 crc 值的特质
 /// 默认实现了 &[T], Vec[T], Slice, &str, String
 pub trait AsCrc {
-
     #[inline]
     fn as_crc(&self) -> u32 {
         self.as_crc_extend(0)
@@ -281,7 +279,7 @@ impl AsCrc for Slice {
     }
 }
 
-impl <T: Sized> AsCrc for Vec<T> {
+impl<T: Sized> AsCrc for Vec<T> {
     #[inline]
     fn as_crc_extend(&self, crc: u32) -> u32 {
         self.as_slice().as_crc_extend(crc)
@@ -324,8 +322,8 @@ macro_rules! step1 {
 
 /// Process one of the 4 strides of 4-byte data.
 macro_rules! step4 {
-    ($name: ident, $data: tt, $s: tt, $i: tt) => {
-        $name = Coding::decode_fixed32(&$data[$s+$i*4..]) ^
+    ($name: ident, $data: tt, $decoder: ident, $s: tt, $i: tt) => {
+        $name = unsafe{ $decoder.uncheck_get_fixed32() } ^
             K_STRIDE_EXTENSION_TABLE3[$name as u8 as usize] ^
             K_STRIDE_EXTENSION_TABLE2[($name >> 8) as u8 as usize] ^
             K_STRIDE_EXTENSION_TABLE1[($name >> 16) as u8 as usize] ^
@@ -335,11 +333,11 @@ macro_rules! step4 {
 
 /// Process a 16-byte swath of 4 strides, each of which has 4 bytes of data.
 macro_rules! step16 {
-    ($c0: tt, $c1: tt, $c2: tt, $c3: tt, $data: tt, $s: tt) => {
-        step4!($c0, $data, $s, 0);
-        step4!($c1, $data, $s, 1);
-        step4!($c2, $data, $s, 2);
-        step4!($c3, $data, $s, 3);
+    ($c0: tt, $c1: tt, $c2: tt, $c3: tt, $data: tt, $decoder: ident, $s: tt) => {
+        step4!($c0, $data, $decoder, $s, 0);
+        step4!($c1, $data, $decoder, $s, 1);
+        step4!($c2, $data, $decoder, $s, 2);
+        step4!($c3, $data, $decoder, $s, 3);
         $s += 16;
     }
 }
@@ -386,18 +384,19 @@ impl CRC {
         }
 
         if n - s >= 16 {
-            let mut crc0 = Coding::decode_fixed32(&data[s..]) ^ l;
-            let mut crc1 = Coding::decode_fixed32(&data[(s + 4)..]);
-            let mut crc2 = Coding::decode_fixed32(&data[(s + 8)..]);
-            let mut crc3 = Coding::decode_fixed32(&data[(s + 12)..]);
+            let mut decoder = Decoder::with_buf(data);
+            let mut crc0 = unsafe { decoder.uncheck_get_fixed32() } ^ l;
+            let mut crc1 = unsafe { decoder.uncheck_get_fixed32() };
+            let mut crc2 = unsafe { decoder.uncheck_get_fixed32() };
+            let mut crc3 = unsafe { decoder.uncheck_get_fixed32() };
             s += 16;
             // println!("c0: {:x}, c1: {:x}, c2: {:x}, c3: {:x}, s: {}", crc0, crc1, crc2, crc3, s);
             while (n - s) >= 16 {
-                step16!(crc0, crc1, crc2, crc3, data, s);
+                step16!(crc0, crc1, crc2, crc3, data, decoder, s);
                 // println!("step16, c0: {:x}, c1: {:x}, c2: {:x}, c3: {:x}, s: {}", crc0, crc1, crc2, crc3, s);
             }
             while (n - s) >= 4 {
-                step4!(crc0, data, s, 0);
+                step4!(crc0, data, decoder, s, 0);
                 // swap variables
                 (crc1, crc2, crc3) = (crc0, crc1, crc2);
                 s += 4;

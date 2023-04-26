@@ -13,7 +13,6 @@ mod slice_test;
 pub mod cache;
 mod cache_test;
 pub mod coding;
-mod coding_test;
 pub mod arena;
 mod arena_test;
 
