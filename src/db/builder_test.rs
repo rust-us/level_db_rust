@@ -7,11 +7,6 @@ mod test {
 
     #[test]
     fn test_build_table() {
-
-        // BuildTable::build_table(&Slice::from("a"), Options::default(),
-        //                         TableCache::new(),
-        //                         Box::new());
         println!("get_name: {}", "a");
-
     }
 }

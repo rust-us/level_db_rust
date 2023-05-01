@@ -1,4 +1,4 @@
-use std::ffi::{c_char, c_void};
+use core::ffi::{c_char, c_void};
 use std::ptr::{null, null_mut};
 
 extern "C" fn write_cb(_: *mut c_void, message: *const c_char) {

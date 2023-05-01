@@ -3,6 +3,7 @@ mod test {
     use crate::db::version_edit;
     use crate::db::version_edit::{Tag, VersionEdit};
     use crate::util::slice::Slice;
+    use crate::util::Result;
 
     #[test]
     fn test_tag() {
@@ -15,14 +16,16 @@ mod test {
     }
 
     #[test]
-    fn test_version_edit_encode_to() {
+    fn test_version_edit_encode_to() -> Result<()> {
         let mut target: Vec<u8> = vec![];
 
         let version_edit = VersionEdit::new_with_log_number(6);
-        version_edit.encode_to(&mut target);
+        version_edit.encode_to(&mut target)?;
         println!("target: {}.", &target.len());
         // todo
         // assert_eq!(target.len(), 2);
+
+        Ok(())
     }
 
     #[test]

@@ -4,7 +4,7 @@ use crate::util::options::ReadOptions;
 use crate::util::slice::Slice;
 use crate::util::Result;
 
-struct Saver {}
+pub struct Saver {}
 
 pub struct TableCache {}
 
@@ -31,9 +31,10 @@ impl TableCache {
     /// ```
     ///
     /// ```
-    pub fn get<F>(&self, _options: &ReadOptions, _file_number: u64, _file_size: usize, _k: &Slice, _arg: &mut Saver, _handle_result: F)
-        where F: FnMut(&mut Saver, &Slice, &Slice) -> Result<()> {
-        ()
+    pub fn get<F>(&self, _options: &ReadOptions, _file_number: u64, _file_size: usize,
+                  _k: &Slice, _arg: &mut Saver, _handle_result: F)
+        where F: FnMut(&mut Saver, &Slice, &Slice)  {
+        todo!()
     }
     /// 根据文件号消除缓存
     ///
