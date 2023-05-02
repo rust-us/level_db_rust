@@ -7,7 +7,8 @@ use crate::traits::DataIterator;
 use crate::util::arena::ArenaRef;
 use crate::util::slice::Slice;
 use crate::util::{Arena, Result};
-use crate::util::coding::{Encoder, varint_length};
+use crate::util::coding::{Decoder, Encoder, varint_length};
+use crate::util::status::{LevelError, Status};
 use crate::util::unsafe_slice::UnsafeSlice;
 
 /// 内存表
@@ -109,29 +110,34 @@ impl<Cmp: Comparator> MemTable<Cmp> {
             // all entries with overly large sequence numbers.
             let entry = iter.key();
             unsafe {
-                let klength = entry.sub_slice(0, 5).to_slice();
-                let key_length = Coding::get_varint32(&klength) as usize;
-                let var_klength = Coding::varint_length(key_length);
-                let user_key = entry.sub_slice(var_klength, key_length - 8);
-                if self.cmp.compare(user_key.as_ref(), _key.user_key().as_ref()).unwrap().is_eq() {
-                    let tag = Coding::decode_fixed64(entry.sub_slice(var_klength + key_length - 8, 8).as_ref());
-                    let value_type = ValueType::try_from((tag & 0xff) as i32);
-                    match value_type {
-                        Ok(ValueType::KTypeValue) => return Ok(Some(self.get_length_prefixed_slice(entry.sub_slice(var_klength + key_length, entry.len() - var_klength + key_length).as_ref()))),
-                        Ok(ValueType::KTypeDeletion) => return Ok(None),
-                        _ => return Ok(None)
-                    }
-                }
-                return Ok(None)
+                let slice = entry.to_slice();
+                let mut decoder = Decoder::with_slice(&slice);
+                let klength = decoder.uncheck_get_varint32();
+                let user_key = decoder.get_buf((klength - 8) as usize);
+                let tag = decoder.get_fixed64();
+                return self.cmp.compare(user_key.unwrap().as_ref(), _key.user_key().as_ref())
+                    .filter(|x| x.is_eq())
+                    .map(|_| ValueType::try_from((tag.unwrap() & 0xff) as i32))
+                    .map_or(Ok(None), |x| {
+                        match x {
+                            Ok(v) => Ok(Some(v)),
+                            Err(e) => Err(Status::wrapper_str(LevelError::KCorruption, &e))
+                        }
+                    })
+                    .map(|vt| {
+                        vt.map(|v| {
+                            match v {
+                               ValueType::KTypeValue => {
+                                   let vlength = decoder.get_varint32();
+                                   Some(decoder.get_buf(vlength.unwrap() as usize).unwrap())
+                               },
+                                ValueType::KTypeDeletion => None
+                            }
+                        }).unwrap_or(None)
+                    }).or(Ok(None));
             }
         }
         return Ok(None)
-    }
-
-    fn get_length_prefixed_slice(&self, data: &[u8]) -> Slice {
-        let vlength = Slice::from_buf(&data[..5]);
-        let key_length = Coding::get_varint32(&vlength) as usize;
-        Slice::from_buf(&data[key_length..])
     }
 }
 
