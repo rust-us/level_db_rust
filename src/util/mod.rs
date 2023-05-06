@@ -11,7 +11,6 @@ pub mod r#const;
 pub mod slice;
 mod slice_test;
 pub mod cache;
-mod cache_test;
 pub mod coding;
 pub mod arena;
 mod arena_test;

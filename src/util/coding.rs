@@ -1,7 +1,6 @@
 use std::{intrinsics, ptr};
 use std::alloc::{alloc, Layout};
 use std::ops::Deref;
-use jemalloc_sys::malloc;
 
 use crate::util::coding::EncodeData::{Buffer, Slices, Vector};
 use crate::util::coding::MutEncodeData::{MutBuffer, MutSlices, MutVector};
@@ -1921,7 +1920,7 @@ fn test_swap_bytes() {
     println!("value: {:?}, new_value: {:?}", value, new_value);
     assert_eq!(value, new_value);
     // 小端存储bytes
-    let mut buf = [0x01, 0x02, 0x03, 0x04];
+    let buf = [0x01, 0x02, 0x03, 0x04];
     let decode = unsafe { uncheck_decode_fixed32(&Buffer(&buf), 0) };
     // 小端存储的0x01,0x02,0x03,0x04解出来的数据要等于0x04030201_u32
     println!("value: {:?}, decode: {:?}", value, decode);
