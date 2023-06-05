@@ -47,6 +47,9 @@ pub mod unsafe_slice;
 pub mod env;
 mod env_test;
 pub mod mem_debug;
+// pub mod error;
+// mod error_test;
+// pub mod error_code;
 
 /// 定义别名
 pub type Result<T> = result::Result<T, Status>;
