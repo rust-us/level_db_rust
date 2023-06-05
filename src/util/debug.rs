@@ -10,7 +10,7 @@ macro_rules! debug {
     };
     ($($arg:tt)*) => {{
         use std::io::Write;
-        std::io::stdout().write(format!($($arg)*).as_bytes());
+        std::io::stdout().write(format!($($arg)*).as_bytes()).unwrap();
         debug!();
     }};
 }
