@@ -131,7 +131,7 @@ impl ParsedInternalKey {
 
     /// Returns the user key portion of an internal key.
     pub unsafe fn extract_user_key_with_u8(internal_key: &[u8]) -> Slice {
-        assert!(internal_key.len() >= 8);
+        // assert!(internal_key.len() >= 8);
 
         Slice::from_buf(internal_key)
         // todo
@@ -204,7 +204,7 @@ impl InternalKey {
     }
 
     pub fn user_key(self) -> Slice {
-        ParsedInternalKey::extract_user_key(self.rep_)
+        unsafe { ParsedInternalKey::extract_user_key(self.rep_) }
     }
 
     pub fn set_from(self, p: ParsedInternalKey) {
@@ -256,8 +256,8 @@ impl Comparator for InternalKeyComparator {
         );
 
         if r.unwrap() == Ordering::Equal {
-            let anum = Decoder::get_fixed64(akey);
-            let bnum = Decoder::get_fixed64(bkey);
+            let anum = Decoder::with_buf(akey).get_fixed64().unwrap();
+            let bnum = Decoder::with_buf(bkey).get_fixed64().unwrap();
 
             if anum > bnum {
                 r = Option::from(Ordering::Less);
