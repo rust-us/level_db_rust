@@ -12,7 +12,7 @@
 //         ErrorCode::Ok;
 //         let err: StatusError = StatusError::KNotFound("a".to_string());
 //         let ok_err: StatusError = StatusError::KOk();
-//
+//         ErrorCode::
 //         debug!("{:?}", err.borrow());
 //         // assert_eq!("KNotFound("a")", err.borrow());
 //

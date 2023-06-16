@@ -2,7 +2,7 @@ use std::borrow::Borrow;
 use std::fs::File;
 use std::sync::Arc;
 use crate::table::block_builder::BlockBuilder;
-use crate::table::filter_block::{FilterBlock, FilterBlockBuilder};
+use crate::table::filter_block::{FilterBlock, FilterBlockBuilder, FilterBlockBuilderPtr};
 use crate::table::format::BlockHandle;
 use crate::traits::filter_policy_trait::FilterPolicy;
 use crate::util::options::{CompressionType, OptionsPtr, Options};
@@ -42,7 +42,7 @@ struct Rep<> {
     closed: bool,
 
     // 生成 SSTable 中的元数据区域
-    filter_block: Option<FilterBlockBuilder>,
+    filter_block: Option<FilterBlockBuilderPtr>,
     // 判断是否需要生成 SSTable中的数据索引， SSTable中每次生成一个完整的块之后，需要将该值置为 true， 说明需要为该块添加索引
     pending_index_entry: bool,
     // Handle to add to index block
@@ -55,13 +55,16 @@ struct Rep<> {
 
 impl TableBuilder {
     pub fn new_with_writable_file(options: OptionsPtr, writable_file: Arc<File>) -> Self {
-        let rep = Rep::new(options, writable_file);
+        let mut rep = Rep::new(options, writable_file);
 
-        // Self {
-        //     rep
+        // todo
+        // if rep.filter_block.is_some() {
+        //     rep.filter_block.unwrap().as_mut().start_block(0);
         // }
 
-        todo!()
+        Self {
+            rep: Box::new(rep)
+        }
     }
 
     /// 写入 entry
@@ -108,14 +111,20 @@ impl TableBuilder {
 
 impl Rep {
     pub fn new(opt: OptionsPtr, writableFile: Arc<File>) -> Self {
-        let mut filter_block: Option<FilterBlockBuilder>;
+        let mut filter_block: Option<FilterBlockBuilderPtr>;
         if opt.filter_policy.is_none() {
             filter_block = None;
         }else {
-            filter_block = Some(FilterBlockBuilder::new_with_policy(opt.filter_policy.clone().unwrap()));
+            filter_block = Some(
+                Arc::new(Box::new(
+                    FilterBlockBuilder::new_with_policy(opt.filter_policy.clone().unwrap())
+                ))
+            );
         }
-        // TODo if let sytax
-        // let filter_block = opt.filter_policy.map(|e|FilterBlockBuilder::new_with_policy(e.clone().unwrap()));
+        // todo maybe try if let sytax
+        let filter_block1 = opt.filter_policy.clone().map(
+            |e| Arc::new(Box::new(FilterBlockBuilder::new_with_policy(e.clone())))
+        );
 
         Self {
             options: opt.clone(),

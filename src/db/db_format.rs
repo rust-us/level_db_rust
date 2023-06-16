@@ -1,10 +1,12 @@
 use std::cmp::Ordering;
 use std::io::Write;
+use std::ops::Deref;
 use std::sync::Arc;
 use crate::db::db_format::ValueType::{KTypeDeletion, KTypeValue};
 use crate::db::file_meta_data::FileMetaData;
 use crate::traits::comparator_trait::Comparator;
-use crate::util::coding::{Encoder, varint_length};
+use crate::util::coding::{Decoder, Encoder, varint_length};
+use crate::util::comparator::BytewiseComparatorImpl;
 use crate::util::slice::Slice;
 use crate::util::unsafe_slice::UnsafeSlice;
 
@@ -123,8 +125,17 @@ impl ParsedInternalKey {
     }
 
     /// Returns the user key portion of an internal key.
-    pub fn extract_user_key(internal_key: Slice) -> Slice {
-        todo!()
+    pub unsafe fn extract_user_key(internal_key: Slice) -> Slice {
+        ParsedInternalKey::extract_user_key_with_u8(internal_key.deref())
+    }
+
+    /// Returns the user key portion of an internal key.
+    pub unsafe fn extract_user_key_with_u8(internal_key: &[u8]) -> Slice {
+        assert!(internal_key.len() >= 8);
+
+        Slice::from_buf(internal_key)
+        // todo
+        // Slice::from_buf(internal_key.deref(), internal_key.size() - 8)
     }
 }
 
@@ -208,13 +219,17 @@ impl InternalKey {
 
 impl Default for InternalKeyComparator {
     fn default() -> Self {
-        todo!()
+        Self {
+            user_comparator_: Arc::new(InternalKeyComparator::create()),
+        }
     }
 }
 
 impl InternalKeyComparator {
-    pub fn create(_cmp: Box<dyn Comparator>) -> Box<Self> {
-        todo!()
+    pub fn create() -> InternalKeyComparator {
+        Self {
+            user_comparator_: Arc::new(BytewiseComparatorImpl::default())
+        }
     }
 
     pub fn user_comparator(&self) -> Box<dyn Comparator> {
@@ -230,12 +245,28 @@ impl InternalKeyComparator {
 /// InternalKeyComparator 比较器: 用来比较内部键（Internal Key）。
 /// 内部键值是为了方便处理，将原普通键、序列号和值类型组成的新键。
 impl Comparator for InternalKeyComparator {
-    // fn new(c: Box<ComparatorTrait>) -> InternalKeyComparator {
-    //     todo!()
-    // }
+    fn compare(&self, akey: &[u8], bkey: &[u8]) -> Option<Ordering> {
+        // Order by:
+        //    increasing user key (according to user-supplied comparator)
+        //    decreasing sequence number
+        //    decreasing type (though sequence# should be enough to disambiguate)
+        let mut r = self.user_comparator_.compare(
+            unsafe { ParsedInternalKey::extract_user_key_with_u8(akey) }.deref(),
+            unsafe { ParsedInternalKey::extract_user_key_with_u8(bkey) }.deref()
+        );
 
-    fn compare(&self, _a: &[u8], _b: &[u8]) -> Option<Ordering> {
-        todo!()
+        if r.unwrap() == Ordering::Equal {
+            let anum = Decoder::get_fixed64(akey);
+            let bnum = Decoder::get_fixed64(bkey);
+
+            if anum > bnum {
+                r = Option::from(Ordering::Less);
+            } else if anum < bnum {
+                r = Option::from(Ordering::Greater);
+            }
+        }
+
+        r
     }
 
     fn get_name(&self) -> String {

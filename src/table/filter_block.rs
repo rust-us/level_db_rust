@@ -1,4 +1,5 @@
 use std::io::Write;
+use std::ops::{Deref, DerefMut};
 use std::sync::Arc;
 use crate::debug;
 use crate::traits::filter_policy_trait::{FilterPolicy, FilterPolicyPtr};
@@ -95,6 +96,8 @@ pub trait FilterBlock {
 
     fn get_tmp_filter_offsets(&self) -> Vec<u32>;
 }
+
+pub type FilterBlockBuilderPtr = Arc<Box<FilterBlockBuilder>>;
 
 /// SSTable 文件里面的 meta block 构建器, 按内存里面指定的格式整理在内存中
 pub struct FilterBlockBuilder {

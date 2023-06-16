@@ -1,4 +1,6 @@
+use std::cmp::{min, Ordering};
 use std::fs::File;
+use std::ops::Deref;
 use std::sync::Arc;
 use crate::util::options::{Options, OptionsPtr};
 use crate::util::slice::Slice;
@@ -23,23 +25,39 @@ pub struct BlockBuilder {
     options: OptionsPtr,
 
     // 目标缓冲区，也就是按照输出格式处理好的内存区域
-    buffer: Slice,
+    buffer: Vec<u32>,
 
-    // SSTable 生成后的文件
-    file: Arc<File>,
+    // Restart points
+    restarts: Vec<usize>,
 
-    offset: u64,
-    status: Status,
+    // Number of entries emitted since restart
+    counter: u32,
+    // Has Finish() been called?
+    finished: bool,
 
-    // 生成 SSTable 中的数据区域
-    data_block: BlockBuilderPtr,
-    // 生成 SSTable 中的数据索引区域
-    index_block: BlockBuilderPtr,
+    last_key: String
 }
 
 impl BlockBuilder {
     pub fn new(options: OptionsPtr) -> Self {
-        todo!()
+        assert!(options.block_restart_interval >= 1);
+
+        let mut restarts = vec![];
+        // First restart point is at offset 0
+        restarts.push(0);
+
+        Self {
+            options,
+            buffer: vec![],
+            restarts,
+            counter: 0,
+            finished: false,
+            last_key: "".to_string(),
+        }
+    }
+
+    pub fn get_restarts(self) -> Vec<usize> {
+        self.restarts
     }
 
     /// 向datablock增加entry
@@ -56,8 +74,29 @@ impl BlockBuilder {
     /// ```
     ///
     /// ```
-    pub fn add(&mut self, _key: &Slice, _value: &Slice) {
-        todo!()
+    pub fn add(&mut self, key: Slice, value: Slice) {
+        let last_key_piece = Slice::from(&self.last_key);
+        assert!(!self.finished);
+        assert!(self.counter <= self.options.block_restart_interval);
+        assert!(!self.buffer.is_empty() // No values yet?
+            //  > 0
+            || self.options.cmp.compare(key.deref(), last_key_piece.deref()).unwrap() != Ordering::Less
+        );
+
+        let mut shared = 0;
+
+        if self.counter < self.options.block_restart_interval {
+            // See how much sharing to do with previous string
+            let min_length = min(last_key_piece.size(), key.len());
+            while ((shared < min_length) && (last_key_piece[shared] == key[shared])) {
+                shared += 1;
+            }
+        }else {
+            // Restart compression
+            self.restarts.push(self.buffer.len());
+            self.counter = 0;
+        }
+
     }
 
     /// 重置builder
@@ -68,7 +107,15 @@ impl BlockBuilder {
     /// block_builder.reset();
     /// ```
     pub fn reset(&mut self) {
-        todo!()
+        self.buffer.clear();
+
+        self.restarts.clear();
+        // First restart point is at offset 0
+        self.restarts.push(0);
+
+        self.counter = 0;
+        self.finished = false;
+        self.last_key.clear();
     }
 
     /// 追加Restart points

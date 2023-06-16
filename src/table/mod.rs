@@ -1,5 +1,6 @@
 pub mod block;
 pub mod block_builder;
+mod block_builder_test;
 pub mod filter_block;
 mod filter_block_test;
 mod filter_block_test_filter_policy;
