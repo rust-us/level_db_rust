@@ -1,7 +1,9 @@
 use std::cmp::{min, Ordering};
 use std::fs::File;
+use std::io::Write;
 use std::ops::Deref;
 use std::sync::Arc;
+use crate::util::coding::Encoder;
 use crate::util::options::{Options, OptionsPtr};
 use crate::util::slice::Slice;
 
@@ -25,7 +27,7 @@ pub struct BlockBuilder {
     options: OptionsPtr,
 
     // 目标缓冲区，也就是按照输出格式处理好的内存区域
-    buffer: Vec<u32>,
+    buffer: Vec<u8>,
 
     // Restart points
     restarts: Vec<usize>,
@@ -97,6 +99,29 @@ impl BlockBuilder {
             self.counter = 0;
         }
 
+        let non_shared = key.size() - shared;
+
+        // Add "<shared><non_shared><value_size>" to buffer_
+        let mut encoder = Encoder::with_buf(&mut self.buffer);
+        encoder.put_varint32(shared as u32);
+        encoder.put_varint32(non_shared as u32);
+        encoder.put_varint32(value.size() as u32);
+
+        // Add string delta to buffer_ followed by value
+        // is buffer_.append(key.data() + shared, non_shared);
+        self.buffer.write(key.deref());
+
+        // is  buffer_.append(value.data(), value.size());
+        self.buffer.write(value.deref());
+
+        // Update state
+        // last_key_.resize(shared);
+        self.last_key.reserve(shared);
+        self.last_key.push(key.as_str());
+
+        // last_key_.append(key.data() + shared, non_shared);
+        // assert(Slice(last_key_) == key);
+        // counter_++;
     }
 
     /// 重置builder
